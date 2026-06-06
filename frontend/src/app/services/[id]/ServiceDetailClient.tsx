@@ -1,34 +1,23 @@
 "use client";
 
 import { useNavigate, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowLeft, MessageCircle, Phone, MapPin, Sparkles, Share2 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { toast } from "sonner";
-
-import type { Service, Category } from "@/types";
+import { useCatalog } from "@/hooks/useCatalog";
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
-  const [service, setService] = useState<Service | null>(null);
-
-  useEffect(() => {
-    const resolvedId = (id === "_" && typeof window !== "undefined")
-      ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
-      : id;
-    const rawServices = localStorage.getItem("vizha_admin_services");
-    const servicesList: Service[] = rawServices ? JSON.parse(rawServices) : [];
-    const foundService = servicesList.find((s) => s.id === resolvedId);
-    
-    if (foundService) {
-      const rawCategories = localStorage.getItem("vizha_admin_categories");
-      const categoriesList: Category[] = rawCategories ? JSON.parse(rawCategories) : [];
-      const cat = categoriesList.find((c) => c.id === foundService.category_id);
-      setService({ ...foundService, categories: cat });
-    }
-  }, [id]);
+  const { services, categories, loading } = useCatalog();
+  const resolvedId = (id === "_" && typeof window !== "undefined")
+    ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
+    : id;
+  const foundService = services.find((s) => s.id === resolvedId) || null;
+  const service = foundService
+    ? { ...foundService, categories: categories.find((c) => c.id === foundService.category_id) }
+    : null;
 
   function handleShare() {
     if (!service) return;
@@ -42,6 +31,14 @@ export default function ServiceDetailClient({ id }: { id: string }) {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Link copied to clipboard!");
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-12 w-12 border-4 border-[#e11d48] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   if (!service) {

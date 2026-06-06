@@ -9,11 +9,11 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { LuxuryBanner } from "@/components/layout/LuxuryBanner";
 import { HallCard } from "@/components/features/HallCard";
 import { useLang } from "@/context/LanguageContext";
-import type { Hall } from "@/types";
+import { useCatalog } from "@/hooks/useCatalog";
 
 export default function HallsPage() {
   const { t, lang } = useLang();
-  const [allHalls, setAllHalls] = useState<Hall[]>([]);
+  const { halls: allHalls, loading } = useCatalog();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("All");
   const [onlyAC, setOnlyAC] = useState(false);
@@ -30,11 +30,6 @@ export default function HallsPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const raw = localStorage.getItem("vizha_admin_halls");
-    setAllHalls(raw ? JSON.parse(raw) : []);
-  }, []);
-
   const LOCATIONS = useMemo(() => {
     const locationsSet = new Set<string>();
 
@@ -47,26 +42,6 @@ export default function HallsPage() {
         }
       }
     });
-
-    try {
-      const rawServices = localStorage.getItem("vizha_admin_services");
-      if (rawServices) {
-        const servicesList = JSON.parse(rawServices);
-        if (Array.isArray(servicesList)) {
-          servicesList.forEach((s: any) => {
-            if (s.location) {
-              const loc = s.location.trim();
-              if (loc) {
-                const normalized = loc.charAt(0).toUpperCase() + loc.slice(1).toLowerCase();
-                locationsSet.add(normalized);
-              }
-            }
-          });
-        }
-      }
-    } catch (e) {
-      console.error("Error loading services locations for halls page:", e);
-    }
 
     return ["All", ...Array.from(locationsSet).sort()];
   }, [allHalls]);
@@ -116,7 +91,7 @@ export default function HallsPage() {
       {/* Floating Filter Card */}
       <div className="max-w-4xl mx-auto px-5 sm:px-8 -mt-10 relative z-10 mb-8">
         <div className="bg-white rounded-3xl p-5 shadow-[0_20px_50px_rgba(225,29,72,0.06)] border border-rose-100/80 space-y-4">
-          
+
           {/* Search bar */}
           <div className="relative group">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
@@ -163,11 +138,10 @@ export default function HallsPage() {
           {/* Filters toggle */}
           <div className="flex items-center gap-3">
             <button onClick={() => setShowFilters(!showFilters)}
-              className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold border transition-all cursor-pointer ${
-                showFilters 
-                  ? "bg-gradient-to-r from-[#e11d48] to-[#be123c] text-white border-transparent shadow-md shadow-[#e11d48]/10" 
+              className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold border transition-all cursor-pointer ${showFilters
+                  ? "bg-gradient-to-r from-[#e11d48] to-[#be123c] text-white border-transparent shadow-md shadow-[#e11d48]/10"
                   : "bg-white text-gray-700 border-rose-100 hover:border-rose-200 hover:bg-rose-50/40"
-              }`}
+                }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" /> Additional Filters
             </button>
@@ -205,7 +179,13 @@ export default function HallsPage() {
           <p className="text-xs font-bold text-[#881337] uppercase tracking-wider">{filtered.length} halls found</p>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="h-96 rounded-3xl shimmer" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
             <div className="text-6xl mb-4">🏛️</div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">No halls found</h3>

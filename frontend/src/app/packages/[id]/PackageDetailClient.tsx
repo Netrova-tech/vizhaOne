@@ -1,11 +1,11 @@
 "use client";
 
 import { useNavigate, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowLeft, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { useCatalog } from "@/hooks/useCatalog";
 
 
 
@@ -15,23 +15,21 @@ const packageGradients: Record<string, string> = {
   vip: "from-amber-500 to-amber-700",
 };
 
-type PkgData = {
-  id: string; name: string; package_type: string; description: string;
-  total_price: number; features: string[]; is_active: boolean;
-};
-
 export default function PackageDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
-  const [pkg, setPkg] = useState<PkgData | null>(null);
+  const { packages, loading } = useCatalog();
+  const resolvedId = (id === "_" && typeof window !== "undefined")
+    ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
+    : id;
+  const pkg = packages.find((p) => p.id === resolvedId) || null;
 
-  useEffect(() => {
-    const resolvedId = (id === "_" && typeof window !== "undefined")
-      ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
-      : id;
-    const raw = localStorage.getItem("vizha_admin_packages");
-    const pkgs: PkgData[] = raw ? JSON.parse(raw) : [];
-    setPkg(pkgs.find((p) => p.id === resolvedId) || null);
-  }, [id]);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-12 w-12 border-4 border-[#e11d48] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!pkg) return (
     <div className="min-h-screen flex items-center justify-center">

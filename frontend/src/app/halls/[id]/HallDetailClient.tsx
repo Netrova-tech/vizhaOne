@@ -14,7 +14,9 @@ import { HallGallery } from "@/components/features/HallGallery";
 import { AvailabilityCalendar } from "@/components/features/AvailabilityCalendar";
 import { generateDemoSlots, HALL_AMENITIES } from "@/data/halls";
 import { useLang } from "@/context/LanguageContext";
-import type { SlotType, SlotStatus, Service, Hall } from "@/types";
+import { useCatalog } from "@/hooks/useCatalog";
+import { fetchHallServiceIds } from "@/lib/catalogApi";
+import type { SlotType, SlotStatus, Service } from "@/types";
 import { toast } from "sonner";
 import { createBookingWithSync, createInquiry, getBookingsWithFallback, type Booking } from "@/lib/api";
 import { CategoryIcon } from "@/lib/iconMap";
@@ -47,6 +49,7 @@ function getTodayLocalDateString() {
 export default function HallDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const { halls, services: allServices, categories, loading } = useCatalog();
   const [tab, setTab] = useState<Tab>("overview");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedEndDate, setSelectedEndDate] = useState<string>("");
@@ -84,46 +87,31 @@ export default function HallDetailClient({ id }: { id: string }) {
     startDate: string; endDate: string; slot: string; hallName: string;
   } | null>(null);
 
-  const [hall, setHall] = useState<Hall | null>(null);
   const [vendors, setVendors] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const resolvedId = (id === "_" && typeof window !== "undefined")
+    ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
+    : id;
+  const hall = halls.find((item) => item.id === resolvedId) || null;
 
   useEffect(() => {
-    const resolvedId = (id === "_" && typeof window !== "undefined")
-      ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
-      : id;
-
-    const hallsRaw = localStorage.getItem("vizha_admin_halls");
-    const halls: Hall[] = hallsRaw ? JSON.parse(hallsRaw) : [];
-    setHall(halls.find((h) => h.id === resolvedId) || null);
-
     async function loadLinkedServices() {
       try {
-        const res = await fetch(`/api/catalog/hall-services/${resolvedId}`);
-        const linkedIds: string[] = await res.json();
-        const allServicesRaw = localStorage.getItem("vizha_admin_services");
-        const allServices: Service[] = allServicesRaw ? JSON.parse(allServicesRaw) : [];
-        const categoriesRaw = localStorage.getItem("vizha_admin_categories");
-        const allCategories: any[] = categoriesRaw ? JSON.parse(categoriesRaw) : [];
-        const filteredServices = allServices.filter((s) => linkedIds.includes(s.id)).map((s) => {
-          const cat = allCategories.find((c) => c.id === s.category_id);
-          return { ...s, categories: cat };
+        const linkedIds = await fetchHallServiceIds(resolvedId);
+        const filteredServices = allServices.filter((service) => linkedIds.includes(service.id)).map((service) => {
+          const cat = categories.find((category) => category.id === service.category_id);
+          return { ...service, categories: cat };
         });
         setVendors(filteredServices);
-        // Keep localStorage up to date
-        localStorage.setItem(`vizha_hall_services_${resolvedId}`, JSON.stringify(linkedIds));
         return;
       } catch (err) {
         console.warn("Failed to load linked services from DB, falling back to local storage", err);
       }
       try {
         const linkedIds: string[] = JSON.parse(localStorage.getItem(`vizha_hall_services_${resolvedId}`) || "[]");
-        const allServices: Service[] = JSON.parse(localStorage.getItem("vizha_admin_services") || "[]");
-        const categoriesRaw = localStorage.getItem("vizha_admin_categories");
-        const allCategories: any[] = categoriesRaw ? JSON.parse(categoriesRaw) : [];
-        const filteredServices = allServices.filter((s) => linkedIds.includes(s.id)).map((s) => {
-          const cat = allCategories.find((c) => c.id === s.category_id);
-          return { ...s, categories: cat };
+        const filteredServices = allServices.filter((service) => linkedIds.includes(service.id)).map((service) => {
+          const cat = categories.find((category) => category.id === service.category_id);
+          return { ...service, categories: cat };
         });
         setVendors(filteredServices);
       } catch {
@@ -168,7 +156,7 @@ export default function HallDetailClient({ id }: { id: string }) {
       window.removeEventListener("storage", refreshBookings);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [id]);
+  }, [resolvedId, allServices, categories]);
 
   const slots = useMemo(() => {
     if (!hall) return [];
@@ -185,6 +173,12 @@ export default function HallDetailClient({ id }: { id: string }) {
       };
     });
   }, [hall?.id, bookings]);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="h-12 w-12 border-4 border-[#e11d48] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!hall) return (
     <div className="min-h-screen flex items-center justify-center">
