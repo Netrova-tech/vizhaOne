@@ -1,0 +1,3 @@
+# Fallback rewrites for dynamic routes (admin-added halls & packages)
+/halls/*      /halls/_/     200
+/packages/*   /packages/_/  200

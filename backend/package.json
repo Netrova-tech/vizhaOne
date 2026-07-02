@@ -1,0 +1,26 @@
+{
+  "name": "vizhaone-backend",
+  "private": true,
+  "version": "0.1.0",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "build": "node -e \"console.log('Backend build step not required')\"",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.2",
+    "multer": "^2.1.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "eslint": "^9.39.1",
+    "globals": "^16.4.0",
+    "nodemon": "^3.1.10",
+    "typescript-eslint": "^8.46.1"
+  }
+}
