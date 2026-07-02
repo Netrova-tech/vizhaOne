@@ -6,11 +6,9 @@ import { motion } from "framer-motion";
 import { Lock, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { apiUrl } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [pin, setPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -27,9 +25,8 @@ export default function LoginPage() {
   async function enterAdmin(user = adminUser) {
     localStorage.setItem("vizha_demo_user", JSON.stringify(user));
     window.dispatchEvent(new Event("vizha_auth_change"));
-    await refreshUser();
     toast.success("Welcome back, Admin! 👑");
-    navigate("/admin");
+    window.location.assign("/admin");
   }
 
   useEffect(() => {

@@ -884,7 +884,21 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 text-center">
+        <div className="h-12 w-12 border-4 border-[#e11d48] border-t-transparent rounded-full animate-spin mb-4" />
+        <h1 className="text-xl font-bold text-gray-900">Opening admin panel...</h1>
+        <p className="mt-2 text-sm text-gray-500">Please verify admin access if this takes more than a moment.</p>
+        <Link
+          to="/auth/login?role=admin"
+          className="mt-5 rounded-2xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-white"
+        >
+          Admin Login
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
