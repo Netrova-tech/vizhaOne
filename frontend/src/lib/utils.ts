@@ -7,6 +7,11 @@ export function cn(...inputs: ClassValue[]) {
 
 export function apiUrl(path: string): string {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const configuredBase = (import.meta as any).env?.VITE_API_BASE_URL?.replace(/\/$/, "");
+
+  if (configuredBase) {
+    return `${configuredBase}${cleanPath}`;
+  }
 
   if (typeof window !== "undefined") {
     const { hostname, port, protocol } = window.location;

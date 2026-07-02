@@ -3,7 +3,9 @@
  * Handles communication with the backend API
  */
 
-const API_BASE = "/api";
+import { apiUrl } from "@/lib/utils";
+
+const API_BASE = apiUrl("/api");
 
 interface ApiResponse<T> {
   success: boolean;

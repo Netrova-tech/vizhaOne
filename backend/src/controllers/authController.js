@@ -9,10 +9,12 @@ const {
 } = require("../services/authService");
 
 function getAdminCookieOptions(maxAge) {
+  const isProduction = process.env.NODE_ENV === "production";
+
   return {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
     path: "/",
     maxAge: maxAge ? maxAge * 1000 : undefined,
   };

@@ -1,8 +1,7 @@
 import type { Category, EventPackage, Hall, Service } from "@/types";
 import { DEMO_CATEGORIES, DEMO_PACKAGES, DEMO_SERVICES } from "@/data/demo";
 import { DEMO_HALLS } from "@/data/halls";
-
-const API_BASE = "/api";
+import { apiUrl } from "@/lib/utils";
 
 export interface PublicCatalog {
   categories: Category[];
@@ -49,7 +48,7 @@ export function getFallbackCatalog(): PublicCatalog {
 
 export async function fetchPublicCatalog(): Promise<PublicCatalog> {
   try {
-    const response = await fetch(`${API_BASE}/catalog`, {
+    const response = await fetch(apiUrl("/api/catalog"), {
       headers: { Accept: "application/json" },
     });
 
@@ -73,7 +72,7 @@ export async function fetchPublicCatalog(): Promise<PublicCatalog> {
 
 export async function fetchHallServiceIds(hallId: string): Promise<string[]> {
   try {
-    const response = await fetch(`${API_BASE}/catalog/hall-services/${hallId}`);
+    const response = await fetch(apiUrl(`/api/catalog/hall-services/${hallId}`));
     if (!response.ok) return [];
 
     const data = await response.json().catch(() => null);
