@@ -1,4 +1,4 @@
-import { ArrowRight, Gift, Hash, QrCode, Sparkles, WandSparkles } from "lucide-react";
+import { ArrowRight, Building2, Gift, Hash, QrCode, Sparkles, WandSparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -35,6 +35,16 @@ const tools = [
     gradient: "from-amber-950 via-orange-700 to-amber-500",
     glow: "bg-amber-200/30",
   },
+  {
+    href: "/vendor-onboarding",
+    icon: Building2,
+    eyebrow: "Grow your business",
+    title: "Add Your Services",
+    description: "Register your business, pricing and contact details. Connect with our team on WhatsApp and get onboarded within 24 hours.",
+    action: "Register as a vendor",
+    gradient: "from-emerald-950 via-teal-700 to-emerald-500",
+    glow: "bg-emerald-200/30",
+  },
 ];
 
 export default function CreatePage() {
@@ -59,7 +69,7 @@ export default function CreatePage() {
         </section>
 
         <section className="relative z-10 mx-auto -mt-9 max-w-7xl px-5 pb-24">
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2">
             {tools.map((tool, index) => (
               <Link
                 key={tool.href}

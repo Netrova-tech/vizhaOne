@@ -123,7 +123,7 @@ export default function PartnerPlansPage() {
             </div>
             <div>
               <p className="text-base font-black">Add your services on VizhaOne</p>
-              <p className="text-sm font-medium text-white/80">Vendor ah? Your business profile, photos, price, Call & WhatsApp button ellam show pannunga.</p>
+              <p className="text-sm font-medium text-white/80">Showcase your business profile, photos, pricing, and direct Call and WhatsApp buttons.</p>
             </div>
           </div>
           <a

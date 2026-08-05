@@ -143,10 +143,10 @@ export function Navbar() {
             {/* Desktop utilities */}
             <div className="hidden md:flex items-center gap-2 justify-self-end">
               <Link
-                to="/partner-plans"
+                to="/vendor-onboarding"
                 className={cn(
                   "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-[0.12em] shadow-lg shadow-rose-900/15 transition-all",
-                  pathname.startsWith("/partner-plans")
+                  pathname.startsWith("/vendor-onboarding")
                     ? "bg-[#881337] text-white"
                     : "bg-[#e11d48] text-white hover:bg-[#be123c]"
                 )}

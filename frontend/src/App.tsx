@@ -20,6 +20,7 @@ import InvitationGeneratorPage from "@/app/invitations/page";
 import PublicInvitationPage from "@/app/invitations/public/page";
 import ReferralsPage from "@/app/referrals/page";
 import CreatePage from "@/app/create/page";
+import VendorOnboardingPage from "@/app/vendor-onboarding/page";
 import { AppProviders } from "@/components/app/AppProviders";
 import { ScrollToTop } from "@/components/app/ScrollToTop";
 import { BlogPostRoute } from "@/routes/BlogPostRoute";
@@ -58,6 +59,7 @@ export default function App() {
         <Route path="/invite/:slug" element={<PublicInvitationPage />} />
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/create" element={<CreatePage />} />
+        <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
         <Route path="**" element={<NotFoundPage />} />
       </Routes>
     </AppProviders>

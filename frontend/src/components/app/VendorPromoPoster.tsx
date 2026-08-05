@@ -91,11 +91,11 @@ export function VendorPromoPoster() {
 
           <div className="mt-6">
             <Link
-              to="/partner-plans"
+              to="/vendor-onboarding"
               onClick={closePoster}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#e11d48] px-5 py-4 text-base font-black text-white shadow-xl shadow-rose-900/15 transition hover:bg-[#be123c]"
             >
-              View Partner Plans <ArrowRight className="h-4 w-4" />
+              Register Your Service <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
