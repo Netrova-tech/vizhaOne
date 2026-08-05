@@ -112,6 +112,21 @@ export function SiteFooter() {
                 >
                   <MessageCircle className="h-4 w-4" /> WhatsApp
                 </a>
+                <a
+                  href="https://www.instagram.com/vizhaone/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Follow VizhaOne on Instagram"
+                  title="Follow @vizhaone on Instagram"
+                  className="flex h-10 items-center gap-2 rounded-full bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737] px-4 text-xs font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="5" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="17.5" cy="6.5" r="1" className="fill-current stroke-none" />
+                  </svg>
+                  Instagram
+                </a>
               </div>
             </div>
 
