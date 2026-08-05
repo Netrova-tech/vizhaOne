@@ -37,6 +37,7 @@ export interface BookingPayload {
   mobile: string;
   guests?: string;
   message?: string;
+  referralCode?: string;
 }
 
 export interface Booking extends BookingPayload {
@@ -284,8 +285,10 @@ export function deleteLocalBooking(bookingId: string): void {
 export async function createBookingWithSync(
   booking: BookingPayload
 ): Promise<{ success: boolean; booking: Booking; synced: boolean }> {
+  const referralCode = typeof window !== "undefined" ? localStorage.getItem("vizha_referral_code") || undefined : undefined;
+  const bookingForSync = referralCode ? { ...booking, referralCode } : booking;
   const bookingWithId: Booking = {
-    ...booking,
+    ...bookingForSync,
     id: `VZH-${Date.now().toString(36).toUpperCase().slice(-6)}`,
     status: "pending",
     createdAt: new Date().toISOString(),
@@ -295,10 +298,11 @@ export async function createBookingWithSync(
 
   // Try to sync with backend
   try {
-    const backendBooking = await createBooking(booking);
+    const backendBooking = await createBooking(bookingForSync);
     synced = true;
     // Also save to localStorage as cache
     saveLocalBooking(backendBooking);
+    if (referralCode) localStorage.removeItem("vizha_referral_code");
     return { success: true, booking: backendBooking, synced: true };
   } catch (err) {
     if (err instanceof ApiError && err.status < 500) {

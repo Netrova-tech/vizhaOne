@@ -6,3 +6,11 @@ build/
 *.log
 .DS_Store
 Thumbs.db
+.tools/
+mingit.zip
+node-v*-win-x64.zip
+backend.log
+backend-error.log
+frontend.log
+frontend-error.log
+.remote-repo/

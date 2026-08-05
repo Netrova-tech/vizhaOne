@@ -25,6 +25,8 @@ const FOOTER_LINKS = [
       { name: "Cost Calculator", href: "/calculator" },
       { name: "Categories", href: "/categories" },
       { name: "Halls", href: "/halls" },
+      { name: "Invitation Maker", href: "/invitations" },
+      { name: "Hashtag Generator", href: "/tools/hashtag-generator" },
     ],
   },
   {
@@ -36,6 +38,7 @@ const FOOTER_LINKS = [
       { name: "FAQ", href: "/faq" },
       { name: "Privacy Policy", href: "/privacy" },
       { name: "Terms of Service", href: "/terms" },
+      { name: "Referral Rewards", href: "/referrals" },
     ],
   },
 ];

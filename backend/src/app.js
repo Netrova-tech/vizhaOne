@@ -7,6 +7,8 @@ const { createBookingRouter } = require("./routes/bookingRoutes");
 const { createSignupRouter } = require("./routes/signupRoutes");
 const { createUploadRouter } = require("./routes/uploadRoutes");
 const { createAdminRouter } = require("./routes/adminRoutes");
+const { createInvitationRouter } = require("./routes/invitationRoutes");
+const { createReferralRouter } = require("./routes/referralRoutes");
 
 function createApp({ store }) {
   const app = express();
@@ -49,6 +51,8 @@ function createApp({ store }) {
   app.use("/api/admin", createAdminRouter({ store }));
   app.use("/api/track-signup", createSignupRouter({ store }));
   app.use("/api/uploads", createUploadRouter());
+  app.use("/api/invitations", createInvitationRouter());
+  app.use("/api/referrals", createReferralRouter());
 
   return app;
 }

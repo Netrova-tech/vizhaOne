@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, Building2, BarChart2, LayoutDashboard, LogOut, MessageSquare, Calculator, Sparkles } from "lucide-react";
+import { Home, LayoutGrid, Building2, BarChart2, LayoutDashboard, LogOut, MessageSquare, Calculator, Sparkles, WandSparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,7 +11,7 @@ const navItems = [
   { href: "/halls",    label: "Hall",     icon: Building2   },
   { href: "/services", label: "Services", icon: LayoutGrid  },
   { href: "/calculator", label: "Plan",     icon: Calculator  },
-  { href: "/partner-plans", label: "Join", icon: Sparkles  },
+  { href: "/create", label: "Create", icon: WandSparkles  },
 ];
 
 export function MobileBottomNav() {

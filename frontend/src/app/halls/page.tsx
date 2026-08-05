@@ -18,7 +18,8 @@ export default function HallsPage() {
   const [location, setLocation] = useState("All");
   const [onlyAC, setOnlyAC] = useState(false);
   const [onlyParking, setOnlyParking] = useState(false);
-  const [maxPrice, setMaxPrice] = useState(99999999);
+  const [maxPrice, setMaxPrice] = useState(1000000);
+  const [priceSort, setPriceSort] = useState<"default" | "low-high" | "high-low">("default");
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
@@ -64,8 +65,12 @@ export default function HallsPage() {
     }
     if (onlyAC) halls = halls.filter((h) => h.has_ac);
     if (onlyParking) halls = halls.filter((h) => h.has_parking);
+    halls = halls.filter((h) => Number(h.price_per_day || 0) <= maxPrice);
+    if (priceSort !== "default") {
+      halls.sort((a, b) => priceSort === "low-high" ? Number(a.price_per_day || 0) - Number(b.price_per_day || 0) : Number(b.price_per_day || 0) - Number(a.price_per_day || 0));
+    }
     return halls;
-  }, [allHalls, searchQuery, location, onlyAC, onlyParking]);
+  }, [allHalls, searchQuery, location, onlyAC, onlyParking, maxPrice, priceSort]);
 
   const hallsPerPage = isMobile ? 5 : 6;
   const totalPages = Math.ceil(filtered.length / hallsPerPage);
@@ -74,7 +79,7 @@ export default function HallsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, location, onlyAC, onlyParking]);
+  }, [searchQuery, location, onlyAC, onlyParking, maxPrice, priceSort]);
 
   return (
     <div className="min-h-screen luxury-page">
@@ -117,6 +122,17 @@ export default function HallsPage() {
                 name / location
               </span>
             )}
+          </div>
+
+          <div className="grid gap-4 rounded-2xl border border-rose-100 bg-rose-50/20 p-4 sm:grid-cols-[1fr_220px] sm:items-end">
+            <label className="block">
+              <span className="mb-2 flex items-center justify-between text-xs font-black uppercase tracking-wider text-gray-600">Maximum price <strong className="text-[#e11d48]">₹{maxPrice.toLocaleString("en-IN")}</strong></span>
+              <input type="range" min="0" max="1000000" step="10000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#e11d48]" />
+              <span className="mt-1 flex justify-between text-[10px] font-bold text-gray-400"><span>₹0</span><span>₹10 Lakhs</span></span>
+            </label>
+            <label className="block text-xs font-black uppercase tracking-wider text-gray-600">Sort by price
+              <select value={priceSort} onChange={(e) => setPriceSort(e.target.value as typeof priceSort)} className="mt-2 w-full rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm font-bold normal-case tracking-normal text-gray-700 outline-none focus:border-[#e11d48]"><option value="default">Recommended</option><option value="low-high">Price: Low to High</option><option value="high-low">Price: High to Low</option></select>
+            </label>
           </div>
 
           {/* Location input */}
@@ -189,7 +205,7 @@ export default function HallsPage() {
           <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
             <div className="text-6xl mb-4">🏛️</div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">No halls found</h3>
-            <button onClick={() => { setSearchQuery(""); setLocation("All"); setOnlyAC(false); setOnlyParking(false); }}
+            <button onClick={() => { setSearchQuery(""); setLocation("All"); setOnlyAC(false); setOnlyParking(false); setMaxPrice(1000000); setPriceSort("default"); }}
               className="mt-4 px-6 py-2.5 bg-gradient-to-r from-[#e11d48] to-[#be123c] text-white rounded-xl text-sm font-semibold hover:opacity-95 transition-opacity shadow-lg shadow-[#e11d48]/10 cursor-pointer">
               Clear Filters
             </button>

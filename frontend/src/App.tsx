@@ -15,6 +15,11 @@ import PrivacyPage from "@/app/privacy/page";
 import PartnerPlansPage from "@/app/partner-plans/page";
 import ServicesPage from "@/app/services/page";
 import TermsPage from "@/app/terms/page";
+import HashtagGeneratorPage from "@/app/tools/hashtag-generator/page";
+import InvitationGeneratorPage from "@/app/invitations/page";
+import PublicInvitationPage from "@/app/invitations/public/page";
+import ReferralsPage from "@/app/referrals/page";
+import CreatePage from "@/app/create/page";
 import { AppProviders } from "@/components/app/AppProviders";
 import { ScrollToTop } from "@/components/app/ScrollToTop";
 import { BlogPostRoute } from "@/routes/BlogPostRoute";
@@ -48,6 +53,11 @@ export default function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:id" element={<ServiceDetailRoute />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/tools/hashtag-generator" element={<HashtagGeneratorPage />} />
+        <Route path="/invitations" element={<InvitationGeneratorPage />} />
+        <Route path="/invite/:slug" element={<PublicInvitationPage />} />
+        <Route path="/referrals" element={<ReferralsPage />} />
+        <Route path="/create" element={<CreatePage />} />
         <Route path="**" element={<NotFoundPage />} />
       </Routes>
     </AppProviders>

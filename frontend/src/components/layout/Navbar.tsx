@@ -21,6 +21,7 @@ const navLinks = [
   { href: "/halls",      labelKey: "halls",      label: "Halls"    },
   { href: "/services",   labelKey: "services",   label: "Services" },
   { href: "/calculator", labelKey: "calculator", label: "Plan"     },
+  { href: "/create", labelKey: "home", label: "Create"     },
 ];
 
 
@@ -88,7 +89,7 @@ export function Navbar() {
                         ? "text-white bg-gradient-to-r from-[#e11d48] to-[#db2777] shadow-sm"
                         : "text-[#881337]/75 hover:text-[#e11d48] hover:bg-white/70"
                     )}>
-                    {t(link.labelKey as Parameters<typeof t>[0])}
+                    {link.label === "Create" ? link.label : t(link.labelKey as Parameters<typeof t>[0])}
                   </Link>
                 );
               })}

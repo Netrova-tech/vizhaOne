@@ -29,6 +29,8 @@ function ServicesContent() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
+  const [maxPrice, setMaxPrice] = useState(1000000);
+  const [priceSort, setPriceSort] = useState<"default" | "low-high" | "high-low">("default");
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
@@ -109,7 +111,7 @@ function ServicesContent() {
 
   const filtered = useMemo(() => {
     const base = services.length ? services : (DEMO_SERVICES as Service[]);
-    return base.filter((s) => {
+    const results = base.filter((s) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesSearch =
@@ -121,14 +123,24 @@ function ServicesContent() {
       }
       if (selectedCategory && s.category_id !== selectedCategory) return false;
       if (selectedLocation !== "All Locations" && !s.location?.toLowerCase().includes(selectedLocation.toLowerCase())) return false;
+      const price = Number(s.price_min ?? s.price ?? 0);
+      if (price > maxPrice) return false;
       return true;
     });
-  }, [services, searchQuery, selectedCategory, selectedLocation]);
+    if (priceSort !== "default") {
+      results.sort((a, b) => {
+        const priceA = Number(a.price_min ?? a.price ?? 0);
+        const priceB = Number(b.price_min ?? b.price ?? 0);
+        return priceSort === "low-high" ? priceA - priceB : priceB - priceA;
+      });
+    }
+    return results;
+  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort]);
 
   // Reset to page 1 on filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedLocation]);
+  }, [searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort]);
 
   const itemsPerPage = isMobile ? 5 : 6;
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -226,6 +238,22 @@ function ServicesContent() {
           )}
         </div>
 
+        {/* Price filter and sorting */}
+        <div className="mb-5 grid gap-4 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm sm:grid-cols-[1fr_220px] sm:items-end">
+          <label className="block">
+            <span className="mb-2 flex items-center justify-between text-xs font-black uppercase tracking-wider text-gray-600">
+              Maximum price <strong className="text-[#e11d48]">₹{maxPrice.toLocaleString("en-IN")}</strong>
+            </span>
+            <input type="range" min="0" max="1000000" step="10000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#e11d48]" />
+            <span className="mt-1 flex justify-between text-[10px] font-bold text-gray-400"><span>₹0</span><span>₹10 Lakhs</span></span>
+          </label>
+          <label className="block text-xs font-black uppercase tracking-wider text-gray-600">Sort by price
+            <select value={priceSort} onChange={(e) => setPriceSort(e.target.value as typeof priceSort)} className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50/30 px-4 py-3 text-sm font-bold normal-case tracking-normal text-gray-700 outline-none focus:border-[#e11d48]">
+              <option value="default">Recommended</option><option value="low-high">Price: Low to High</option><option value="high-low">Price: High to Low</option>
+            </select>
+          </label>
+        </div>
+
         {/* Toolbar */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           <div className="relative">
@@ -272,7 +300,7 @@ function ServicesContent() {
           <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">No services found</h3>
-            <button onClick={() => { setSearchQuery(""); setSelectedCategory(""); setSelectedLocation("All Locations"); }}
+            <button onClick={() => { setSearchQuery(""); setSelectedCategory(""); setSelectedLocation("All Locations"); setMaxPrice(1000000); setPriceSort("default"); }}
               className="mt-4 px-6 py-2.5 bg-[#e11d48] text-white rounded-xl text-sm font-semibold hover:bg-[#be123c] cursor-pointer">
               Clear Filters
             </button>

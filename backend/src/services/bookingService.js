@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Booking = require("../models/Booking");
+const { registerReferral, syncBookingReward } = require("./referralService");
 
 const RESERVED_BOOKING_STATUSES = new Set(["approved", "in_progress", "completed"]);
 
@@ -121,7 +122,16 @@ async function createBooking(store, payload) {
 
   if (mongoose.connection.readyState === 1) {
     const doc = await Booking.create(booking);
-    return toClient(doc);
+    const clientBooking = toClient(doc);
+    if (payload.referralCode) {
+      try {
+        await registerReferral({ code: payload.referralCode, referredMobile: payload.mobile, bookingId: clientBooking.id });
+      } catch (error) {
+        await Booking.deleteOne({ _id: doc._id });
+        throw error;
+      }
+    }
+    return clientBooking;
   }
 
   const bookings = store.get("bookings");
@@ -149,7 +159,9 @@ async function updateBooking(store, bookingId, updates) {
     }
 
     const doc = await Booking.findOneAndUpdate(query, updates, { new: true, runValidators: true }).lean();
-    return doc ? toClient(doc) : null;
+    const result = doc ? toClient(doc) : null;
+    if (result && updates.status) await syncBookingReward(result.id, updates.status);
+    return result;
   }
 
   const bookings = store.get("bookings");
