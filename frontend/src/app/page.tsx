@@ -69,11 +69,11 @@ export default function HomePage() {
           <ScrollReveal direction="left">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <p className="text-[#e11d48] text-xs font-bold uppercase tracking-[0.2em] mb-2">What We Offer</p>
+                <p className="text-[#e11d48] text-xs font-bold uppercase tracking-[0.2em] mb-2">Start Your Celebration</p>
                 <h2 className="luxury-heading-accent text-3xl sm:text-4xl font-display font-semibold text-[#9f1239] leading-tight">
-                  Browse by Category
+                  What are you planning?
                 </h2>
-                <p className="text-gray-500 mt-2 text-base">{categories.length} service types for every aspect of your event</p>
+                <p className="text-gray-500 mt-2 text-base">Choose from {categories.length} trusted service categories and start building your perfect event</p>
               </div>
               <Link to="/categories"
                 className="hidden sm:flex items-center gap-1.5 text-[#e11d48] text-sm font-bold hover:gap-3 transition-all group">

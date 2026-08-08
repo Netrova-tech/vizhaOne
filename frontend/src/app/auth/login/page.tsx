@@ -128,7 +128,7 @@ export default function LoginPage() {
           </span>
           <span className="text-amber-500 text-2xl ml-1">✦</span>
         </div>
-        <p className="text-gray-400 text-xs font-semibold mb-6">One Platform for Every Celebration 🎊</p>
+        <p className="text-gray-400 text-xs font-semibold mb-6">Plan, Find &amp; Book Everything for Your Celebration</p>
 
         {isAdminLogin ? (
           <div className="w-full">

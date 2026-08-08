@@ -10,9 +10,9 @@ const SLIDES = [
     id: "venues",
     image: "/hero/slide-1.jpg",
     label: "Premium Events",
-    title: "One Platform for Every Celebration",
+    title: "Plan Your Entire Celebration in One Place.",
     subtitle:
-      "Book marriage halls, catering, decoration and 19+ services stress-free. Check availability and send your booking request via WhatsApp.",
+      "VizhaOne — Plan, Find & Book Everything for Your Celebration.",
     primary: { href: "/halls", label: "Browse Halls", icon: true },
     secondary: { href: "/calculator", label: "Plan Event" },
   },

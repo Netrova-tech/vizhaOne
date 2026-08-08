@@ -10,8 +10,8 @@ export const translations = {
     login: "Login",
     admin: "Admin",
     // Hero
-    heroTitle: "One Platform for Every Celebration",
-    heroSub: "Book vendors, manage events, and arrange functions stress-free.",
+    heroTitle: "Plan Your Entire Celebration in One Place.",
+    heroSub: "VizhaOne — Plan, Find & Book Everything for Your Celebration.",
     exploreServices: "Explore Services",
     calculateCost: "Calculate Cost",
     // Halls

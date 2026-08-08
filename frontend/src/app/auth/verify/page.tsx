@@ -154,7 +154,7 @@ function VerifyContent() {
               style={{ background: "linear-gradient(135deg,#ec4899,#9333ea)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>One</span>
             <span className="text-amber-500 text-xl ml-1">✦</span>
           </div>
-          <p className="text-gray-500 text-sm mb-8">One Platform for Every Celebration</p>
+          <p className="text-gray-500 text-sm mb-8">Plan, Find &amp; Book Everything for Your Celebration</p>
 
           {/* OTP status card */}
           <div className="w-full max-w-xs rounded-2xl p-5 shadow-sm"

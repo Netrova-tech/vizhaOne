@@ -212,49 +212,50 @@ async function verifyAdminPin(store, pin) {
   }
 
   const user = createAdminUser();
+  let adminUser = user;
+  let initialized = false;
 
-  if (mongoose.connection.readyState !== 1) {
-    return { error: "Database is not connected", status: 503 };
+  if (mongoose.connection.readyState === 1) {
+    const existingPin = await AdminPin.findOne({ key: ADMIN_PIN_KEY });
+    initialized = !existingPin;
+
+    if (!existingPin) {
+      const salt = crypto.randomBytes(16).toString("hex");
+
+      await AdminPin.create({
+        key: ADMIN_PIN_KEY,
+        salt,
+        pinHash: hashPin(trimmedPin, salt),
+      });
+    } else if (!verifyPin(trimmedPin, existingPin.salt, existingPin.pinHash)) {
+      existingPin.pinHash = hashPin(trimmedPin, existingPin.salt);
+      await existingPin.save();
+    }
+
+    const existingUser = await User.findOne({ externalId: user.id });
+    adminUser = {
+      ...user,
+      name: existingUser?.name || user.name,
+      mobile: existingUser?.mobile || user.mobile,
+    };
+
+    await User.findOneAndUpdate(
+      { externalId: user.id },
+      {
+        externalId: adminUser.id,
+        role: adminUser.role,
+        mobile: adminUser.mobile,
+        name: adminUser.name,
+      },
+      { upsert: true, new: true }
+    );
   }
-
-  const existingPin = await AdminPin.findOne({ key: ADMIN_PIN_KEY });
-
-  if (!existingPin) {
-    const salt = crypto.randomBytes(16).toString("hex");
-
-    await AdminPin.create({
-      key: ADMIN_PIN_KEY,
-      salt,
-      pinHash: hashPin(trimmedPin, salt),
-    });
-  } else if (!verifyPin(trimmedPin, existingPin.salt, existingPin.pinHash)) {
-    existingPin.pinHash = hashPin(trimmedPin, existingPin.salt);
-    await existingPin.save();
-  }
-
-  const existingUser = await User.findOne({ externalId: user.id });
-  const adminUser = {
-    ...user,
-    name: existingUser?.name || user.name,
-    mobile: existingUser?.mobile || user.mobile,
-  };
-
-  await User.findOneAndUpdate(
-    { externalId: user.id },
-    {
-      externalId: adminUser.id,
-      role: adminUser.role,
-      mobile: adminUser.mobile,
-      name: adminUser.name,
-    },
-    { upsert: true, new: true }
-  );
 
   if (!store.get("users").find((entry) => entry.id === adminUser.id)) {
     store.push("users", adminUser);
   }
 
-  return { success: true, user: adminUser, initialized: !existingPin };
+  return { success: true, user: adminUser, initialized };
 }
 
 module.exports = {
