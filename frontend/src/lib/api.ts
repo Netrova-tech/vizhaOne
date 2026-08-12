@@ -136,7 +136,7 @@ export async function getAdminAnalytics(): Promise<{
 }
 
 /**
- * Create a booking in the backend (MongoDB)
+ * Create a booking in the unified PostgreSQL backend
  */
 export async function createBooking(booking: BookingPayload): Promise<Booking> {
   try {
@@ -279,7 +279,7 @@ export function deleteLocalBooking(bookingId: string): void {
 
 /**
  * Create booking with both backend and localStorage sync
- * - Tries to save to MongoDB first
+ * - Tries to save to the backend first
  * - Falls back to localStorage if backend is unavailable
  */
 export async function createBookingWithSync(
@@ -317,7 +317,7 @@ export async function createBookingWithSync(
 
 /**
  * Update booking status with sync
- * - Tries to update in MongoDB first
+ * - Tries to update through the backend first
  * - Falls back to localStorage if backend is unavailable
  */
 export async function updateBookingStatusWithSync(

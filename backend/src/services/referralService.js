@@ -1,72 +1,46 @@
 const crypto = require("node:crypto");
-const mongoose = require("mongoose");
-const ReferralWallet = require("../models/ReferralWallet");
-
+const { query, transaction } = require("../db/pool");
 const normalizeMobile = (value) => String(value || "").replace(/\D/g, "").slice(-10);
-
-function makeCode(mobile) {
-  return `VIZHA${mobile.slice(-4)}${crypto.randomBytes(2).toString("hex")}`.toUpperCase();
-}
+const makeCode = (mobile) => `VIZHA${mobile.slice(-4)}${crypto.randomBytes(2).toString("hex")}`.toUpperCase();
 
 async function getOrCreateWallet(mobileValue) {
   const ownerMobile = normalizeMobile(mobileValue);
-  if (ownerMobile.length !== 10) {
-    const error = new Error("Enter a valid 10-digit mobile number"); error.status = 400; throw error;
-  }
-  if (mongoose.connection.readyState !== 1) {
-    const error = new Error("Database is not connected"); error.status = 503; throw error;
-  }
-  let wallet = await ReferralWallet.findOne({ ownerMobile });
-  if (!wallet) wallet = await ReferralWallet.create({ ownerMobile, code: makeCode(ownerMobile) });
-  return wallet;
+  if (ownerMobile.length !== 10) { const e = new Error("Enter a valid 10-digit mobile number"); e.status = 400; throw e; }
+  const result = await query(`INSERT INTO referral_wallets(owner_mobile,code) VALUES($1,$2)
+    ON CONFLICT(owner_mobile) DO UPDATE SET owner_mobile=EXCLUDED.owner_mobile RETURNING *`, [ownerMobile, makeCode(ownerMobile)]);
+  return result.rows[0];
 }
-
 async function registerReferral({ code, referredMobile, bookingId }) {
   if (!code) return null;
   const mobile = normalizeMobile(referredMobile);
-  const wallet = await ReferralWallet.findOne({ code: String(code).trim().toUpperCase() });
-  if (!wallet) { const error = new Error("Invalid referral code"); error.status = 400; throw error; }
-  if (wallet.ownerMobile === mobile) { const error = new Error("Self-referral is not allowed"); error.status = 400; throw error; }
-  const duplicate = await ReferralWallet.findOne({ "entries.referredMobile": mobile, "entries.status": { $ne: "reversed" } });
-  if (duplicate) { const error = new Error("This mobile number has already used a referral"); error.status = 400; throw error; }
-  wallet.entries.push({ bookingId, referredMobile: mobile, points: 10, status: "pending" });
-  await wallet.save();
-  return wallet;
+  return transaction(async (client) => {
+    const wallet = (await client.query("SELECT * FROM referral_wallets WHERE code=$1 FOR UPDATE", [String(code).trim().toUpperCase()])).rows[0];
+    if (!wallet) { const e = new Error("Invalid referral code"); e.status = 400; throw e; }
+    if (wallet.owner_mobile === mobile) { const e = new Error("Self-referral is not allowed"); e.status = 400; throw e; }
+    try { await client.query("INSERT INTO referral_transactions(wallet_id,booking_id,referred_mobile,points,status) VALUES($1,$2,$3,10,'pending')", [wallet.id, bookingId, mobile]); }
+    catch (error) { if (error.code === "23505") { const e = new Error("This mobile number has already used a referral"); e.status = 400; throw e; } throw error; }
+    return wallet;
+  });
 }
-
 async function syncBookingReward(bookingId, status) {
-  const wallet = await ReferralWallet.findOne({ "entries.bookingId": bookingId });
-  if (!wallet) return;
-  const entry = wallet.entries.find((item) => item.bookingId === bookingId);
-  if (!entry) return;
-  if (status === "completed" && entry.status === "pending") {
-    entry.status = "confirmed"; entry.confirmedAt = new Date();
-    wallet.points += entry.points; wallet.totalReferrals += 1;
-  } else if (status === "cancelled" && entry.status !== "reversed") {
-    if (entry.status === "confirmed") {
-      wallet.points = Math.max(0, wallet.points - entry.points);
-      wallet.totalReferrals = Math.max(0, wallet.totalReferrals - 1);
+  return transaction(async (client) => {
+    const entry = (await client.query("SELECT * FROM referral_transactions WHERE booking_id=$1 FOR UPDATE", [bookingId])).rows[0];
+    if (!entry) return null;
+    if (status === "completed" && entry.status === "pending") {
+      await client.query("UPDATE referral_transactions SET status='confirmed',confirmed_at=now() WHERE id=$1", [entry.id]);
+      await client.query("UPDATE referral_wallets SET points=points+$1,total_referrals=total_referrals+1 WHERE id=$2", [entry.points, entry.wallet_id]);
+    } else if (status === "cancelled" && entry.status !== "reversed") {
+      await client.query("UPDATE referral_transactions SET status='reversed' WHERE id=$1", [entry.id]);
+      if (entry.status === "confirmed") await client.query("UPDATE referral_wallets SET points=GREATEST(0,points-$1),total_referrals=GREATEST(0,total_referrals-1) WHERE id=$2", [entry.points, entry.wallet_id]);
     }
-    entry.status = "reversed";
-  }
-  await wallet.save();
+    return true;
+  });
 }
-
 async function walletSummary(mobile) {
   const wallet = await getOrCreateWallet(mobile);
-  return {
-    code: wallet.code, ownerMobile: wallet.ownerMobile, points: wallet.points,
-    totalReferrals: wallet.totalReferrals, rewardReady: wallet.points >= 100,
-    rewardValue: wallet.points >= 100 ? 999 : 0,
-    entries: [...wallet.entries].reverse().map((entry) => ({
-      bookingId: entry.bookingId,
-      referredMobile: `****${entry.referredMobile.slice(-4)}`,
-      points: entry.points,
-      status: entry.status,
-      createdAt: entry.createdAt,
-      confirmedAt: entry.confirmedAt,
-    })),
-  };
+  const entries = (await query("SELECT * FROM referral_transactions WHERE wallet_id=$1 ORDER BY created_at DESC", [wallet.id])).rows;
+  return { code: wallet.code, ownerMobile: wallet.owner_mobile, points: wallet.points, totalReferrals: wallet.total_referrals,
+    rewardReady: wallet.points >= 100, rewardValue: wallet.points >= 100 ? 999 : 0,
+    entries: entries.map((e) => ({ bookingId:e.booking_id,referredMobile:`****${e.referred_mobile.slice(-4)}`,points:e.points,status:e.status,createdAt:e.created_at,confirmedAt:e.confirmed_at })) };
 }
-
 module.exports = { getOrCreateWallet, registerReferral, syncBookingReward, walletSummary, normalizeMobile };

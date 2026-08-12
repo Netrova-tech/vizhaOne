@@ -1,0 +1,13 @@
+/node_modules
+/.next
+/out
+/android/.gradle
+/android/app/build
+/.env.local
+/.android-build
+/*.apk
+/*.aab
+/.device-ui.xml
+/.signin-result.png
+/.v*.png
+/.vizhaone-*.png

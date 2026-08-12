@@ -1,0 +1,2 @@
+const fs=require("node:fs"),path=require("node:path");require("dotenv").config({path:path.resolve(__dirname,"../../.env")});const{getPool}=require("./pool");
+(async()=>{const sql=fs.readFileSync(path.join(__dirname,"schema.sql"),"utf8");await getPool().query(sql);console.log("Supabase PostgreSQL schema migration complete");await getPool().end()})().catch(e=>{console.error(e.message);process.exit(1)});

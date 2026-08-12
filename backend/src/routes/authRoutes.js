@@ -6,6 +6,10 @@ const {
   updateAdminProfileController,
   verifyAdminPinController,
   verifyOtpController,
+  registerController,
+  loginController,
+  mobileMeController,
+  mobileProfileController,
 } = require("../controllers/authController");
 
 function createAuthRouter({ store }) {
@@ -17,6 +21,10 @@ function createAuthRouter({ store }) {
   router.put("/admin-profile", updateAdminProfileController);
   router.post("/request-otp", (req, res) => requestOtpController(req, res, store));
   router.post("/verify-otp", (req, res) => verifyOtpController(req, res, store));
+  router.post("/register", registerController);
+  router.post("/login", loginController);
+  router.get("/mobile-me", mobileMeController);
+  router.put("/profile", mobileProfileController);
 
   return router;
 }

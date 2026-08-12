@@ -1,0 +1,1 @@
+require("dotenv").config();const{getPool}=require("./pool");(async()=>{const r=await getPool().query("select current_database() database, now() server_time");console.log(r.rows[0]);await getPool().end()})().catch(e=>{console.error(e.message);process.exit(1)});

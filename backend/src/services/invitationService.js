@@ -1,61 +1,7 @@
-const crypto = require("node:crypto");
-const mongoose = require("mongoose");
-const Invitation = require("../models/Invitation");
-
-function cleanSlug(value) {
-  return String(value || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 45) || "event";
-}
-
-function toClient(doc) {
-  const item = doc.toObject ? doc.toObject() : { ...doc };
-  item.id = String(item._id || item.id);
-  delete item._id;
-  delete item.__v;
-  return item;
-}
-
-async function createInvitation(payload) {
-  const required = ["eventType", "primaryName", "eventDate", "eventTime", "venue"];
-  if (required.some((key) => !String(payload[key] || "").trim())) {
-    const error = new Error("Please complete all required invitation details");
-    error.status = 400;
-    throw error;
-  }
-  if (payload.eventType === "other" && !String(payload.customEventType || "").trim()) {
-    const error = new Error("Please enter your celebration name");
-    error.status = 400;
-    throw error;
-  }
-  if (mongoose.connection.readyState !== 1) {
-    const error = new Error("Database is not connected");
-    error.status = 503;
-    throw error;
-  }
-  const base = cleanSlug(`${payload.primaryName}-${payload.secondaryName || payload.eventType}`);
-  const slug = `${base}-${crypto.randomBytes(3).toString("hex")}`;
-  const doc = await Invitation.create({ ...payload, slug, premium: false, rsvps: [] });
-  return toClient(doc);
-}
-
-async function getInvitation(slug) {
-  if (mongoose.connection.readyState !== 1) return null;
-  const doc = await Invitation.findOne({ slug }).lean();
-  return doc ? toClient(doc) : null;
-}
-
-async function addRsvp(slug, payload) {
-  if (!String(payload.name || "").trim() || typeof payload.attending !== "boolean") {
-    const error = new Error("Name and attendance response are required");
-    error.status = 400;
-    throw error;
-  }
-  const rsvp = {
-    name: String(payload.name).trim(), mobile: String(payload.mobile || "").trim(),
-    attending: payload.attending, guests: payload.attending ? Math.max(1, Math.min(Number(payload.guests) || 1, 20)) : 0,
-    mealPreference: payload.mealPreference || "unspecified", message: String(payload.message || "").slice(0, 300),
-  };
-  const doc = await Invitation.findOneAndUpdate({ slug }, { $push: { rsvps: rsvp } }, { new: true });
-  return doc ? toClient(doc) : null;
-}
-
-module.exports = { createInvitation, getInvitation, addRsvp };
+const crypto=require("node:crypto"); const {query,transaction}=require("../db/pool");
+const clean=(v)=>String(v||"event").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"").slice(0,45)||"event";
+const map=(i,r=[])=>i&&({id:i.id,slug:i.slug,eventType:i.event_type,customEventType:i.custom_event_type,primaryName:i.primary_name,secondaryName:i.secondary_name,hostName:i.host_name,eventDate:i.event_date,eventTime:i.event_time,venue:i.venue,mapUrl:i.map_url,photoUrl:i.photo_url,language:i.language,theme:i.theme,hashtag:i.hashtag,message:i.message,premium:i.premium,rsvps:r.map(x=>({id:x.id,name:x.name,mobile:x.mobile,attending:x.attending,guests:x.guests,mealPreference:x.meal_preference,message:x.message,createdAt:x.created_at})),createdAt:i.created_at,updatedAt:i.updated_at});
+async function createInvitation(p){const required=["eventType","primaryName","eventDate","eventTime","venue"];if(required.some(k=>!String(p[k]||"").trim())){const e=new Error("Please complete all required invitation details");e.status=400;throw e;}if(p.eventType==="other"&&!String(p.customEventType||"").trim()){const e=new Error("Please enter your celebration name");e.status=400;throw e;}const slug=`${clean(`${p.primaryName}-${p.secondaryName||p.eventType}`)}-${crypto.randomBytes(3).toString("hex")}`;const r=await query(`INSERT INTO invitations(slug,event_type,custom_event_type,primary_name,secondary_name,host_name,event_date,event_time,venue,map_url,photo_url,language,theme,hashtag,message,premium) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,false) RETURNING *`,[slug,p.eventType,p.customEventType||null,p.primaryName,p.secondaryName||null,p.hostName||null,p.eventDate,p.eventTime,p.venue,p.mapUrl||null,p.photoUrl||null,p.language||"en",p.theme||"rose",p.hashtag||null,String(p.message||"").slice(0,500)]);return map(r.rows[0]);}
+async function getInvitation(slug){const i=(await query("SELECT * FROM invitations WHERE slug=$1",[slug])).rows[0];if(!i)return null;const r=(await query("SELECT * FROM rsvps WHERE invitation_id=$1 ORDER BY created_at",[i.id])).rows;return map(i,r);}
+async function addRsvp(slug,p){if(!String(p.name||"").trim()||typeof p.attending!=="boolean"){const e=new Error("Name and attendance response are required");e.status=400;throw e;}const i=(await query("SELECT id FROM invitations WHERE slug=$1",[slug])).rows[0];if(!i)return null;await query(`INSERT INTO rsvps(invitation_id,name,mobile,attending,guests,meal_preference,message) VALUES($1,$2,$3,$4,$5,$6,$7)`,[i.id,String(p.name).trim(),String(p.mobile||"").trim()||null,p.attending,p.attending?Math.max(1,Math.min(Number(p.guests)||1,20)):0,p.mealPreference||"unspecified",String(p.message||"").slice(0,300)]);return getInvitation(slug);}
+module.exports={createInvitation,getInvitation,addRsvp};

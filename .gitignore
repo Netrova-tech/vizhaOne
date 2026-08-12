@@ -14,3 +14,8 @@ backend-error.log
 frontend.log
 frontend-error.log
 .remote-repo/
+/*.apk
+/*.aab
+/*.png
+/*.xml
+backend/npm

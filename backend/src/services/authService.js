@@ -1,8 +1,6 @@
-const mongoose = require("mongoose");
 const crypto = require("node:crypto");
-const AdminPin = require("../models/AdminPin");
-const User = require("../models/User");
-const { adminJwtSecret, adminPin, adminPinSecret } = require("../config/env");
+const { query, transaction } = require("../db/pool");
+const { adminJwtSecret, adminPin, adminPinSecret, mobileJwtSecret } = require("../config/env");
 
 const DEMO_OTP = "123456";
 const ADMIN_MOBILE = "9999999999";
@@ -27,6 +25,22 @@ function signJwt(payload) {
 
   return `${unsigned}.${signature}`;
 }
+
+function signMobileJwt(user) {
+  if (!mobileJwtSecret || mobileJwtSecret.length < 24) throw new Error("MOBILE_JWT_SECRET must be at least 24 characters");
+  const now=Math.floor(Date.now()/1000),body={sub:user.id,role:user.role,iat:now,exp:now+30*24*60*60};
+  const unsigned=`${base64UrlJson({alg:"HS256",typ:"JWT"})}.${base64UrlJson(body)}`;
+  return `${unsigned}.${crypto.createHmac("sha256",mobileJwtSecret).update(unsigned).digest("base64url")}`;
+}
+function verifyMobileJwt(token){try{const[h,p,s]=String(token||"").split("."),unsigned=`${h}.${p}`,expected=crypto.createHmac("sha256",mobileJwtSecret).update(unsigned).digest("base64url");if(!s||s.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(s),Buffer.from(expected)))return null;const data=JSON.parse(Buffer.from(p,"base64url").toString("utf8"));return data.exp>Math.floor(Date.now()/1000)?data:null;}catch{return null;}}
+const publicMobileUser=(u)=>u&&({id:u.id,role:u.role,name:u.name,mobile:u.mobile,phone:u.mobile,email:u.email,location:u.location||"",provider:u.provider||"email",avatar_url:u.avatar_url||"",created_at:u.created_at});
+const passwordDigest=(password,salt)=>crypto.scryptSync(password,salt,64).toString("hex");
+function passwordMatches(password,salt,digest){const a=Buffer.from(passwordDigest(password,salt),"hex"),b=Buffer.from(digest||"","hex");return a.length===b.length&&crypto.timingSafeEqual(a,b);}
+async function registerMobileAccount(payload={}){const name=String(payload.name||"").trim(),email=String(payload.email||"").trim().toLowerCase(),mobile=String(payload.mobile||payload.phone||"").trim(),password=String(payload.password||""),location=String(payload.location||"").trim(),role=payload.role==="service_provider"?"service_provider":"customer";if(name.length<3||!/^\S+@\S+\.\S+$/.test(email)||password.length<8||!mobile||!location){const e=new Error("Valid name, email, 8-character password, phone and location are required");e.status=400;throw e;}const salt=crypto.randomBytes(16).toString("hex"),hash=`${salt}:${passwordDigest(password,salt)}`;try{const u=(await query(`INSERT INTO users(role,name,email,mobile,password_hash,location,provider) VALUES($1,$2,$3,$4,$5,$6,'email') RETURNING *`,[role,name,email,mobile,hash,location])).rows[0],user=publicMobileUser(u);return{success:true,token:signMobileJwt(user),user};}catch(error){if(error.code==="23505"){const e=new Error("This email already has an account");e.status=409;throw e;}throw error;}}
+async function loginMobileAccount(payload={}){const email=String(payload.email||"").trim().toLowerCase(),u=(await query("SELECT * FROM users WHERE email=$1",[email])).rows[0],[salt,digest]=String(u?.password_hash||"").split(":");if(!u||!salt||!passwordMatches(String(payload.password||""),salt,digest)){const e=new Error("Invalid email or password");e.status=401;throw e;}const user=publicMobileUser(u);return{success:true,token:signMobileJwt(user),user};}
+function mobileSession(req){const h=req.headers.authorization||"";return h.startsWith("Bearer ")?verifyMobileJwt(h.slice(7)):null;}
+async function getMobileAccount(req){const s=mobileSession(req);return s?publicMobileUser((await query("SELECT * FROM users WHERE id=$1",[s.sub])).rows[0]):null;}
+async function updateMobileAccount(req,payload={}){const s=mobileSession(req);if(!s)return null;const name=String(payload.name||"").trim(),mobile=String(payload.mobile||"").trim(),location=String(payload.location||"").trim();if(name.length<3||!mobile||!location){const e=new Error("Name, phone and location are required");e.status=400;throw e;}return publicMobileUser((await query("UPDATE users SET name=$1,mobile=$2,location=$3 WHERE id=$4 RETURNING *",[name,mobile,location,s.sub])).rows[0]);}
 
 function verifyJwt(token) {
   if (!adminJwtSecret || !token) return null;
@@ -68,19 +82,8 @@ function hashPin(pin, salt) {
     .toString("hex");
 }
 
-function hashLegacyPin(pin, salt) {
-  return crypto.pbkdf2Sync(pin, salt, 120000, 64, "sha512").toString("hex");
-}
-
 function verifyPin(pin, salt, hash) {
   const entered = Buffer.from(hashPin(pin, salt), "hex");
-  const stored = Buffer.from(hash, "hex");
-
-  return entered.length === stored.length && crypto.timingSafeEqual(entered, stored);
-}
-
-function verifyLegacyPin(pin, salt, hash) {
-  const entered = Buffer.from(hashLegacyPin(pin, salt), "hex");
   const stored = Buffer.from(hash, "hex");
 
   return entered.length === stored.length && crypto.timingSafeEqual(entered, stored);
@@ -96,26 +99,15 @@ function createAdminUser() {
 }
 
 async function saveAdminUserProfile(profile) {
-  if (mongoose.connection.readyState !== 1) {
-    return { error: "Database is not connected", status: 503 };
-  }
-
   const user = {
     ...createAdminUser(),
     name: profile.name?.trim() || "Admin User",
     mobile: profile.mobile?.trim() || `+91${ADMIN_MOBILE}`,
   };
 
-  await User.findOneAndUpdate(
-    { externalId: user.id },
-    {
-      externalId: user.id,
-      role: user.role,
-      mobile: user.mobile,
-      name: user.name,
-    },
-    { upsert: true, new: true }
-  );
+  await query(`INSERT INTO users(external_id,role,mobile,name) VALUES($1,$2,$3,$4)
+    ON CONFLICT(external_id) DO UPDATE SET role=EXCLUDED.role,mobile=EXCLUDED.mobile,name=EXCLUDED.name`,
+  [user.id,user.role,user.mobile,user.name]);
 
   return { success: true, user };
 }
@@ -137,15 +129,11 @@ async function getAdminUserFromRequest(req) {
     return null;
   }
 
-  if (mongoose.connection.readyState !== 1) {
-    return createAdminUser();
-  }
-
-  const existingUser = await User.findOne({ externalId: payload.sub });
+  const existingUser = (await query("SELECT * FROM users WHERE external_id=$1", [payload.sub])).rows[0];
   if (!existingUser) return createAdminUser();
 
   return {
-    id: existingUser.externalId,
+    id: existingUser.external_id,
     role: existingUser.role,
     mobile: existingUser.mobile,
     name: existingUser.name,
@@ -163,7 +151,7 @@ async function verifyOtp(store, mobile, otp) {
     return { error: "Invalid OTP", status: 401 };
   }
 
-  const role = mobile === ADMIN_MOBILE ? "admin" : "user";
+  const role = mobile === ADMIN_MOBILE ? "admin" : "customer";
   const user = {
     id: `demo-${mobile}`,
     role,
@@ -171,23 +159,9 @@ async function verifyOtp(store, mobile, otp) {
     name: role === "admin" ? "Admin User" : "Demo User",
   };
 
-  if (mongoose.connection.readyState === 1) {
-    await User.findOneAndUpdate(
-      { externalId: user.id },
-      {
-        externalId: user.id,
-        role: user.role,
-        mobile: user.mobile,
-        name: user.name,
-      },
-      { upsert: true, new: true }
-    );
-  } else {
-    const users = store.get("users");
-    if (!users.find((entry) => entry.id === user.id)) {
-      store.push("users", user);
-    }
-  }
+  await query(`INSERT INTO users(external_id,role,mobile,name) VALUES($1,$2,$3,$4)
+    ON CONFLICT(external_id) DO UPDATE SET role=EXCLUDED.role,mobile=EXCLUDED.mobile,name=EXCLUDED.name`,
+  [user.id,user.role,user.mobile,user.name]);
 
   return { success: true, user };
 }
@@ -215,41 +189,20 @@ async function verifyAdminPin(store, pin) {
   let adminUser = user;
   let initialized = false;
 
-  if (mongoose.connection.readyState === 1) {
-    const existingPin = await AdminPin.findOne({ key: ADMIN_PIN_KEY });
+  await transaction(async (client) => {
+    const existingPin = (await client.query("SELECT * FROM admin_pins WHERE key=$1 FOR UPDATE", [ADMIN_PIN_KEY])).rows[0];
     initialized = !existingPin;
-
-    if (!existingPin) {
-      const salt = crypto.randomBytes(16).toString("hex");
-
-      await AdminPin.create({
-        key: ADMIN_PIN_KEY,
-        salt,
-        pinHash: hashPin(trimmedPin, salt),
-      });
-    } else if (!verifyPin(trimmedPin, existingPin.salt, existingPin.pinHash)) {
-      existingPin.pinHash = hashPin(trimmedPin, existingPin.salt);
-      await existingPin.save();
-    }
-
-    const existingUser = await User.findOne({ externalId: user.id });
+    if (!existingPin) { const salt=crypto.randomBytes(16).toString("hex"); await client.query("INSERT INTO admin_pins(key,salt,pin_hash) VALUES($1,$2,$3)",[ADMIN_PIN_KEY,salt,hashPin(trimmedPin,salt)]); }
+    else if (!verifyPin(trimmedPin,existingPin.salt,existingPin.pin_hash)) await client.query("UPDATE admin_pins SET pin_hash=$1 WHERE key=$2",[hashPin(trimmedPin,existingPin.salt),ADMIN_PIN_KEY]);
+    const existingUser = (await client.query("SELECT * FROM users WHERE external_id=$1",[user.id])).rows[0];
     adminUser = {
       ...user,
       name: existingUser?.name || user.name,
       mobile: existingUser?.mobile || user.mobile,
     };
-
-    await User.findOneAndUpdate(
-      { externalId: user.id },
-      {
-        externalId: adminUser.id,
-        role: adminUser.role,
-        mobile: adminUser.mobile,
-        name: adminUser.name,
-      },
-      { upsert: true, new: true }
-    );
-  }
+    await client.query(`INSERT INTO users(external_id,role,mobile,name) VALUES($1,$2,$3,$4)
+      ON CONFLICT(external_id) DO UPDATE SET role=EXCLUDED.role,mobile=EXCLUDED.mobile,name=EXCLUDED.name`,[adminUser.id,adminUser.role,adminUser.mobile,adminUser.name]);
+  });
 
   if (!store.get("users").find((entry) => entry.id === adminUser.id)) {
     store.push("users", adminUser);
@@ -266,4 +219,8 @@ module.exports = {
   saveAdminUserProfile,
   verifyAdminPin,
   verifyOtp,
+  registerMobileAccount,
+  loginMobileAccount,
+  getMobileAccount,
+  updateMobileAccount,
 };

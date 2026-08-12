@@ -1,20 +1,7 @@
-const mongoose = require("mongoose");
-const { mongoUri } = require("./env");
+const { getPool } = require("../db/pool");
 
-async function connectMongo() {
-  if (!mongoUri) {
-    throw new Error("MONGO_URI is not configured");
-  }
-
-  await mongoose.connect(mongoUri, {
-    serverSelectionTimeoutMS: 15000,
-    connectTimeoutMS: 15000,
-    socketTimeoutMS: 45000,
-    maxPoolSize: 10,
-    retryWrites: true,
-  });
+async function connectDatabase() {
+  await getPool().query("SELECT 1");
 }
 
-module.exports = {
-  connectMongo,
-};
+module.exports = { connectDatabase };

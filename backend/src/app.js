@@ -17,12 +17,18 @@ function createApp({ store }) {
      "http://localhost:3000")
     .split(",")
     .map((o) => o.trim());
+  const nativeAppOrigins = new Set([
+    "capacitor://localhost",
+    "http://localhost",
+    "https://localhost",
+  ]);
   app.use(cors({
     credentials: true,
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (nativeAppOrigins.has(origin)) return callback(null, true);
       if (process.env.NODE_ENV !== "production") {
         try {
           const { hostname } = new URL(origin);
