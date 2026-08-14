@@ -1,0 +1,17 @@
+.git
+.github
+.gradle-user
+.remote-repo
+.tools
+backups
+frontend
+mobileapp
+backend/node_modules
+backend/.env
+backend/.env.*
+*.apk
+*.zip
+*.log
+*.png
+*.xml
+.tmp-*
