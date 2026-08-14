@@ -52,6 +52,7 @@ export default function CategoriesPage() {
                       <div className="relative h-20 w-20 rounded-2xl overflow-hidden shadow-md mb-3 ring-2 ring-transparent group-hover:ring-[#e11d48]/25 transition-all">
                         <ExternalImg
                           src={cat.category_image || CAT_IMAGES[i % CAT_IMAGES.length]}
+                          fallbackSrc={services.find(service => service.category_id === cat.id)?.image_url || CAT_IMAGES[i % CAT_IMAGES.length]}
                           alt={cat.category_name}
                           fill
                           className="group-hover:scale-110 transition-transform duration-300"

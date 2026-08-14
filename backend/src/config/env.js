@@ -9,6 +9,7 @@ module.exports = {
   adminJwtSecret: process.env.ADMIN_JWT_SECRET || process.env.ADMIN_PIN_SECRET || "",
   mobileJwtSecret: process.env.MOBILE_JWT_SECRET || process.env.ADMIN_JWT_SECRET || process.env.SECRET_KEY || "",
   adminPin: process.env.ADMIN_PIN || "",
+  superAdminEmail: process.env.SUPER_ADMIN_EMAIL || "admin@vizhaone.com",
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",

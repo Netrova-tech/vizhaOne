@@ -117,6 +117,7 @@ export default function InvitationGeneratorPage() {
     setSaving(true);
     try {
       const invitation = await saveInvitation(form);
+      if (!invitation.slug) throw new Error("Invitation link was not created. Please try again.");
       setSaved(invitation);
       const url = `${window.location.origin}/invite/${invitation.slug}`;
       setQr(

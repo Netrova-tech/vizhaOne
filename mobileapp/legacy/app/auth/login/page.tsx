@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -9,11 +9,12 @@ import { apiUrl } from "@/lib/utils";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAdminLogin, setIsAdminLogin] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("admin@vizhaone.com");
   const [pin, setPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [loadingText, setLoadingText] = useState("Entering VizhaOne...");
 
   const adminUser = {
     id: "demo-9999999999",
@@ -26,37 +27,30 @@ export default function LoginPage() {
     localStorage.setItem("vizha_demo_user", JSON.stringify(user));
     window.dispatchEvent(new Event("vizha_auth_change"));
     toast.success("Welcome back, Admin! 👑");
-    window.location.assign("/admin");
+    window.location.hash = "#/admin";
+  }
+
+  function enterCustomer() {
+    const existing = localStorage.getItem("vizha_demo_user");
+    let existingRole = "";
+    try { existingRole = existing ? JSON.parse(existing).role : ""; } catch { existingRole = ""; }
+    if (!existing || existingRole === "admin") {
+      localStorage.setItem("vizha_demo_user", JSON.stringify({
+        id: "demo-user", role: "user", mobile: "+919999999999", name: "VizhaOne Customer",
+      }));
+    }
+    window.dispatchEvent(new Event("vizha_auth_change"));
+    navigate("/");
   }
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const roleParam = params.get("role");
 
     if (roleParam === "admin") {
       setIsAdminLogin(true);
-    } else {
-      setLoadingText("Entering VizhaOne...");
-      const existing = localStorage.getItem("vizha_demo_user");
-      if (!existing) {
-        const demoUser = {
-          id: "demo-user",
-          role: "user",
-          mobile: "+919999999999",
-          name: "Demo User",
-        };
-        localStorage.setItem("vizha_demo_user", JSON.stringify(demoUser));
-        window.dispatchEvent(new Event("vizha_auth_change"));
-      }
-
-      // Auto-redirect guest user after 3 seconds
-      const timer = setTimeout(() => {
-        navigate("/");
-      }, 3000);
-
-      return () => clearTimeout(timer);
     }
-  }, [navigate]);
+  }, [location.search]);
 
   async function handleAdminPinSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,11 +59,11 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch(apiUrl("/api/auth/admin-pin"), {
+      const response = await fetch(apiUrl("/api/auth/super-admin/login"), {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin }),
+        body: JSON.stringify({ email: adminEmail, password: pin }),
       });
       const result = await response.json().catch(() => null);
 
@@ -135,17 +129,27 @@ export default function LoginPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-[#e11d48] border border-rose-100 shadow-inner">
               <Lock className="h-7 w-7 animate-pulse" />
             </div>
-            <h2 className="text-2xl font-black text-gray-800 mb-1">Admin Access</h2>
-            <p className="text-gray-400 text-sm mb-6">Enter your secret PIN to verify admin credentials</p>
+            <h2 className="text-2xl font-black text-gray-800 mb-1">Super Admin Access</h2>
+            <p className="text-gray-400 text-sm mb-6">Secure access to the complete VizhaOne control center</p>
 
             <form onSubmit={handleAdminPinSubmit} className="space-y-4">
+              <input
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                type="email"
+                required
+                placeholder="Super Admin email"
+                autoComplete="username"
+                autoFocus
+                className="h-14 w-full rounded-2xl border-2 border-rose-100 bg-gray-50/50 px-5 text-sm font-semibold text-gray-700 outline-none transition focus:border-[#e11d48] focus:bg-white"
+              />
               <input
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 type="password"
                 required
                 placeholder="••••••"
-                autoFocus
+                autoComplete="current-password"
                 className="h-14 w-full rounded-2xl border-2 border-rose-100 bg-gray-50/50 px-5 text-center text-2xl font-extrabold tracking-[0.2em] text-gray-700 outline-none transition placeholder:text-gray-300 focus:border-[#e11d48] focus:bg-white"
               />
               {error && (
@@ -160,7 +164,7 @@ export default function LoginPage() {
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    <Lock className="h-4 w-4" /> Verify & Enter
+                    <Lock className="h-4 w-4" /> Sign in to Super Admin
                   </>
                 )}
               </button>
@@ -172,22 +176,19 @@ export default function LoginPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center">
+          <div className="flex w-full flex-col items-center">
             <p className="font-bold text-lg text-gray-800 mb-1">Welcome to VizhaOne! 🎊</p>
-            <p className="text-xs text-gray-400 font-medium">Loading your session...</p>
+            <p className="text-sm text-gray-500 font-medium">Choose how you want to continue</p>
             
-            {/* Loading progress indicator */}
-            <div className="mt-8 flex flex-col items-center gap-2">
-              <div className="h-1.5 w-40 bg-gray-200/50 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ background: "linear-gradient(90deg,#f97316,#ec4899)" }}
-                  initial={{ width: "0%" }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 3, ease: "linear" }}
-                />
-              </div>
-              <p className="text-[10px] text-orange-400/80 font-bold tracking-wider uppercase animate-pulse">{loadingText}</p>
+            <div className="mt-8 grid w-full gap-3">
+              <button type="button" onClick={enterCustomer}
+                className="h-16 rounded-2xl bg-gradient-to-r from-[#e11d48] to-[#be123c] text-white font-bold shadow-lg shadow-rose-500/20">
+                Continue as Customer
+              </button>
+              <button type="button" onClick={() => { setError(""); setIsAdminLogin(true); }}
+                className="h-16 rounded-2xl border-2 border-rose-200 bg-white text-[#be123c] font-bold hover:bg-rose-50">
+                Sign in as Super Admin
+              </button>
             </div>
           </div>
         )}

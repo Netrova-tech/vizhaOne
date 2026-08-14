@@ -25,8 +25,8 @@ async function uploadCloudinaryImagesController(req, res) {
   if (files.length === 0) {
     return res.status(400).json({ error: "At least one image is required" });
   }
-  if (files.length > 8) {
-    return res.status(400).json({ error: "Maximum 8 images allowed" });
+  if (files.length > 15) {
+    return res.status(400).json({ error: "Maximum 15 images allowed" });
   }
 
   try {

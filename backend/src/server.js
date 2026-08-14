@@ -10,7 +10,7 @@ app.listen(port, "0.0.0.0", () => {
   console.log(`VizhaOne backend running on http://0.0.0.0:${port}`);
 
   connectDatabase()
-    .then(() => console.log("Supabase PostgreSQL connected successfully"))
+    .then(() => console.log("PostgreSQL connected successfully"))
     .catch((error) => {
       console.error("PostgreSQL connection failed:", error.message);
     });

@@ -1,16 +1,28 @@
 "use client";
 
+import { FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowLeft, MessageCircle, Phone, MapPin, Sparkles, Share2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, Heart, MapPin, Sparkles, Share2, UsersRound, X } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { toast } from "sonner";
 import { useCatalog } from "@/hooks/useCatalog";
+import { useFavorites } from "@/hooks/useFavorites";
+import { createBooking } from "@/lib/api";
+import { formatServicePrice } from "@/lib/utils";
+import { useCart } from "@/hooks/useCart";
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
   const { services, categories, loading } = useCatalog();
+  const { isFavorite, toggle } = useFavorites();
+  const { items: cartItems, add: addToCart } = useCart();
+  const [bookingOpen,setBookingOpen]=useState(()=>typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("book")==="1");
+  const [submitting,setSubmitting]=useState(false);
+  const [confirmation,setConfirmation]=useState("");
+  const [acceptedTerms,setAcceptedTerms]=useState(false);
+  const [form,setForm]=useState({name:"",mobile:"",date:"",guests:"",eventType:"",location:"",message:""});
   const resolvedId = (id === "_" && typeof window !== "undefined")
     ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
     : id;
@@ -33,6 +45,18 @@ export default function ServiceDetailClient({ id }: { id: string }) {
     }
   }
 
+  async function submitBooking(event:FormEvent){
+    event.preventDefault();
+    if(!service)return;
+    if(!form.name.trim()||!/^\d{10}$/.test(form.mobile.trim())||!form.date||!form.guests||!form.eventType.trim()||!form.location.trim())return toast.error("Please complete all required details");
+    if(!acceptedTerms)return toast.error("Please accept the Terms and Privacy Policy");
+    setSubmitting(true);
+    try{
+      const booking=await createBooking({serviceId:service.id,serviceName:service.title,hallName:service.title,date:form.date,startDate:form.date,endDate:form.date,slot:"fullday",price:Number(service.price_min||service.price||0),name:form.name.trim(),mobile:form.mobile.trim(),guests:form.guests,message:`Event: ${form.eventType.trim()}\nLocation: ${form.location.trim()}\n${form.message.trim()}`});
+      setConfirmation(booking.id);toast.success("Booking request sent to VizhaOne");
+    }catch(error){toast.error(error instanceof Error?error.message:"Booking request failed");}finally{setSubmitting(false)}
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -51,8 +75,6 @@ export default function ServiceDetailClient({ id }: { id: string }) {
       </div>
     );
   }
-
-  const whatsappMsg = `Vanakkam! Naan "${service.title}" vendor service pathi kekanum.\n\nPlease confirm availability.`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -79,11 +101,12 @@ export default function ServiceDetailClient({ id }: { id: string }) {
                     {service.categories.category_name}
                   </span>
                 )}
+                <button onClick={()=>toggle({id:service.id,type:"service",title:service.title,price:Number(service.price_min||service.price||0),image_url:service.image_url,location:service.location})} className={`absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full border border-white/70 shadow-md backdrop-blur ${isFavorite(service.id)?"bg-rose-600 text-white":"bg-white/95 text-rose-600"}`} aria-label="Save service"><Heart className={`h-5 w-5 ${isFavorite(service.id)?"fill-current":""}`}/></button>
               </div>
 
               {/* Title & Desc */}
               <div className="p-6">
-                <div className="flex items-start justify-between gap-4 mb-2">
+                <div className="flex items-start justify-between gap-3 mb-2">
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{service.title}</h1>
                   <div className="flex items-center gap-3 shrink-0">
                     <button
@@ -111,26 +134,15 @@ export default function ServiceDetailClient({ id }: { id: string }) {
 
                 <h3 className="font-bold text-gray-900 mb-2">Description</h3>
                 <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{service.description || "No description provided."}</p>
+                <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50/50 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Service price</p><p className="mt-1 text-xl font-black text-rose-700">{formatServicePrice(service)}</p><p className="mt-1 text-[10px] text-gray-500">Final price depends on event requirements and selected package.</p></div>
               </div>
             </div>
           </div>
 
           {/* Contact Sidebar */}
           <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-6">
-              {service.vendor_mobile && (
-                <div className="space-y-2">
-                  <a href={`https://wa.me/91${service.vendor_mobile}?text=${encodeURIComponent(whatsappMsg)}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-[#e11d48] text-white rounded-2xl text-sm font-bold hover:bg-[#be123c] transition-colors shadow-md shadow-rose-100">
-                    <MessageCircle className="h-4 w-4" /> WhatsApp vendor
-                  </a>
-                  <a href={`tel:${service.vendor_mobile}`}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl text-sm font-semibold transition-colors">
-                    <Phone className="h-4 w-4" /> Call vendor
-                  </a>
-                </div>
-              )}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-3">
+              <div className="grid grid-cols-2 gap-2"><button disabled={cartItems.some(item=>item.id===service.id)} onClick={()=>{addToCart({id:service.id,title:service.title,price:Number(service.price_min||service.price||0),image_url:service.image_url,location:service.location});toast.success("Added to cart")}} className="rounded-2xl bg-gray-950 py-4 text-sm font-black text-white disabled:bg-emerald-600">{cartItems.some(item=>item.id===service.id)?"Added ✓":"Add to Cart"}</button><button onClick={()=>setBookingOpen(true)} disabled={!service.availability_status} className="rounded-2xl bg-[#e11d48] py-4 text-sm font-black text-white shadow-lg shadow-rose-100 disabled:opacity-50">Book Now</button></div>
             </div>
 
             <div className="bg-gradient-to-r from-[#e11d48] to-[#be123c] rounded-3xl p-6 text-white shadow-sm">
@@ -148,6 +160,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
 
       <MobileBottomNav />
       <div className="h-24 md:hidden" />
+      {bookingOpen&&<div className="fixed inset-0 z-[120] flex items-end bg-black/55 p-3 backdrop-blur-sm"><section className="max-h-[92dvh] w-full overflow-y-auto rounded-[30px] bg-white p-5 shadow-2xl"><div className="flex items-start justify-between"><div><p className="text-[10px] font-black uppercase tracking-widest text-rose-600">Book with VizhaOne</p><h2 className="mt-1 text-xl font-black">{service.title}</h2></div><button onClick={()=>{setBookingOpen(false);setConfirmation("")}} className="grid h-10 w-10 place-items-center rounded-full bg-gray-100"><X className="h-5 w-5"/></button></div>{confirmation?<div className="py-10 text-center"><span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 text-3xl">✓</span><h3 className="mt-5 text-xl font-black">Booking request received</h3><p className="mt-2 text-sm leading-6 text-gray-500">Please wait for a reply from our VizhaOne team. We will verify availability and contact you shortly.</p><p className="mt-4 rounded-xl bg-gray-50 p-3 text-xs font-bold text-gray-600">Request ID: {confirmation}</p></div>:<form onSubmit={submitBooking} className="mt-5 space-y-3">{[["Full name","name","text"],["Phone number","mobile","tel"],["Event date","date","date"],["Guest count","guests","number"],["Event type","eventType","text"],["Event location","location","text"]].map(([label,key,type])=><label key={key} className="block text-[11px] font-bold text-gray-600">{label} *<input required type={type} value={form[key as keyof typeof form]} onChange={e=>setForm({...form,[key]:e.target.value})} className="mt-1 min-h-12 w-full rounded-xl border border-gray-200 px-4 text-sm outline-none focus:border-rose-500"/></label>)}<label className="block text-[11px] font-bold text-gray-600">Additional requirements<textarea value={form.message} onChange={e=>setForm({...form,message:e.target.value})} className="mt-1 min-h-20 w-full rounded-xl border border-gray-200 p-3 text-sm outline-none focus:border-rose-500"/></label><label className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-[10px] leading-5 text-gray-600"><input required type="checkbox" checked={acceptedTerms} onChange={e=>setAcceptedTerms(e.target.checked)} className="mt-1 h-4 w-4 accent-rose-600"/><span>I agree to the VizhaOne <Link to="/terms" className="font-black text-rose-700">Terms & Conditions</Link> and <Link to="/privacy" className="font-black text-rose-700">Privacy Policy</Link>.</span></label><button disabled={submitting||!acceptedTerms} className="min-h-14 w-full rounded-2xl bg-rose-600 text-sm font-black text-white disabled:opacity-50">{submitting?"Sending request...":"Confirm Booking Request"}</button></form>}</section></div>}
     </div>
   );
 }

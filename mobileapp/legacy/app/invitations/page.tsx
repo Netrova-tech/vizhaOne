@@ -86,9 +86,9 @@ export default function InvitationGeneratorPage() {
     if (tag) setForm((v) => ({ ...v, hashtag: tag }));
   }, []);
   const publicWebsite = process.env.NEXT_PUBLIC_WEB_URL || "https://www.vizhaone.com";
-  const publicUrl = saved?.slug
-    ? `${publicWebsite}/invite/${saved.slug}`
-    : "";
+  const appPreviewUrl = (slug: string) => `${window.location.origin}/#/invite/${slug}`;
+  const publicUrl = saved?.slug ? appPreviewUrl(saved.slug) : "";
+  const shareUrl = saved?.slug ? `${publicWebsite}/invite/${saved.slug}` : "";
   const celebrationName =
     form.eventType === "other"
       ? form.customEventType?.trim() || "Your Celebration"
@@ -118,8 +118,9 @@ export default function InvitationGeneratorPage() {
     setSaving(true);
     try {
       const invitation = await saveInvitation(form);
+      if (!invitation.slug) throw new Error("Invitation link was not created. Please try again.");
       setSaved(invitation);
-      const url = `${publicWebsite}/invite/${invitation.slug}`;
+      const url = appPreviewUrl(invitation.slug);
       setQr(
         await QRCode.toDataURL(url, {
           width: 420,
@@ -220,7 +221,7 @@ export default function InvitationGeneratorPage() {
   }
   function share() {
     if (!publicUrl) return;
-    const text = `You're invited! View our ${celebrationName} invitation: ${publicUrl}`;
+    const text = `You're invited! View our ${celebrationName} invitation: ${shareUrl}`;
     window.open(
       `https://wa.me/?text=${encodeURIComponent(text)}`,
       "_blank",

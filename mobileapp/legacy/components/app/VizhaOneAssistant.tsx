@@ -11,7 +11,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 type ChatMessage = {
   role: "assistant" | "user";
@@ -247,6 +247,7 @@ function getAssistantReply(input: string): { text: string; actions?: QuickAction
 }
 
 export function VizhaOneAssistant() {
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [showNudge, setShowNudge] = useState(false);
   const [input, setInput] = useState("");
@@ -255,6 +256,7 @@ export function VizhaOneAssistant() {
   const [bookingStep, setBookingStep] = useState<BookingStep>("idle");
   const [draft, setDraft] = useState<BookingDraft>({});
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const hiddenOnAuth = pathname === "/sign-in" || pathname === "/sign-up" || pathname.startsWith("/auth/");
 
   useEffect(() => {
     function onScroll() {
@@ -308,6 +310,8 @@ export function VizhaOneAssistant() {
     }
     setInput("");
   }
+
+  if (hiddenOnAuth) return null;
 
   return (
     <div className="fixed bottom-[calc(82px+env(safe-area-inset-bottom,0px))] right-3 z-[70] sm:bottom-6 sm:right-6">

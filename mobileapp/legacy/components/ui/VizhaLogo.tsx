@@ -15,7 +15,7 @@ interface VizhaLogoProps {
 const sizes = {
   xs: { title: "text-[1.45rem]", tagline: "text-[0.45rem]", gap: "mt-0.5" },
   sm: { title: "text-[1.75rem]", tagline: "text-[0.5rem]",  gap: "mt-0.5" },
-  md: { title: "text-[2.1rem]",  tagline: "text-[0.55rem]", gap: "mt-0.5" },
+  md: { title: "text-[2.2rem]",  tagline: "text-[0.52rem]", gap: "mt-0.5" },
   lg: { title: "text-[2.65rem]", tagline: "text-[0.6rem]",  gap: "mt-1" },
 };
 
@@ -35,7 +35,7 @@ export function VizhaLogo({
     <div className={`inline-block select-none leading-none ${className}`}>
       {showText && (
         <>
-          <span className={`font-script ${s.title} block whitespace-nowrap`}>
+          <span className={`font-script ${s.title} block whitespace-nowrap font-medium tracking-[-0.02em]`}>
             <span style={{ color: vizhaColor }}>Vizha</span>
             <span style={{ color: oneColor }}>One</span>
           </span>

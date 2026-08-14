@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { HashRouter, useLocation, useNavigate } from "react-router-dom";
 import App from "@/App";
 
-const publicRoutes = ["/sign-in", "/sign-up", "/auth/verify", "/invite/"];
+const publicRoutes = ["/sign-in", "/sign-up", "/auth/login", "/auth/verify", "/invite/"];
 
 function AuthenticationGate({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();

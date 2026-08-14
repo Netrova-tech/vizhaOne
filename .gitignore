@@ -19,3 +19,6 @@ frontend-error.log
 /*.png
 /*.xml
 backend/npm
+backups/
+.gradle-user/
+mobileapp/vizha-fav-test.png

@@ -41,6 +41,7 @@ async function loginMobileAccount(payload={}){const email=String(payload.email||
 function mobileSession(req){const h=req.headers.authorization||"";return h.startsWith("Bearer ")?verifyMobileJwt(h.slice(7)):null;}
 async function getMobileAccount(req){const s=mobileSession(req);return s?publicMobileUser((await query("SELECT * FROM users WHERE id=$1",[s.sub])).rows[0]):null;}
 async function updateMobileAccount(req,payload={}){const s=mobileSession(req);if(!s)return null;const name=String(payload.name||"").trim(),mobile=String(payload.mobile||"").trim(),location=String(payload.location||"").trim();if(name.length<3||!mobile||!location){const e=new Error("Name, phone and location are required");e.status=400;throw e;}return publicMobileUser((await query("UPDATE users SET name=$1,mobile=$2,location=$3 WHERE id=$4 RETURNING *",[name,mobile,location,s.sub])).rows[0]);}
+async function deleteMobileAccount(req){const s=mobileSession(req);if(!s)return false;return (await query("DELETE FROM users WHERE id=$1",[s.sub])).rowCount>0;}
 
 function verifyJwt(token) {
   if (!adminJwtSecret || !token) return null;
@@ -223,4 +224,5 @@ module.exports = {
   loginMobileAccount,
   getMobileAccount,
   updateMobileAccount,
+  deleteMobileAccount,
 };

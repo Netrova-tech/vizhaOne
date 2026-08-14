@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, CheckSquare, Square,
-  ShoppingCart, MessageCircle, ArrowRight, Sparkles, Search, MapPin
+  ShoppingCart, MessageCircle, ArrowRight, Heart, Sparkles, Search, MapPin, SlidersHorizontal
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -19,15 +19,19 @@ import type { Service } from "@/types";
 
 import { toast } from "sonner";
 import { CategoryIcon } from "@/lib/iconMap";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useCart } from "@/hooks/useCart";
+import { coordinatesFor, distanceKm, loadCurrentCoordinates } from "@/lib/geo";
 
 function ServicesContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
   const initialSearch = searchParams.get("search") || "";
-  const initialLocation = searchParams.get("location") || "All Locations";
-  const initialMaxPrice = Number(searchParams.get("maxPrice") || 1000000);
-  const initialDistance = Number(searchParams.get("distance") || 25);
+  const rawLocation = searchParams.get("location") || "";
+  const initialLocation = rawLocation && !/detecting|unable|allow location|fetching/i.test(rawLocation) ? rawLocation : "All Locations";
+  const initialMaxPrice = Math.min(1000000, Math.max(0, Number(searchParams.get("maxPrice")) || 1000000));
+  const initialDistance = Math.min(1000, Math.max(1, Number(searchParams.get("distance")) || 200));
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -35,6 +39,7 @@ function ServicesContent() {
   const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
   const [distance, setDistance] = useState(initialDistance);
   const [priceSort, setPriceSort] = useState<"default" | "low-high" | "high-low">("default");
+  const [filtersOpen,setFiltersOpen]=useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
@@ -42,6 +47,19 @@ function ServicesContent() {
 
   const { services, loading } = useServices();
   const { categories } = useCategories();
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
+  const { items: cartItems, add: addToCart } = useCart();
+  const userCoordinates = useMemo(() => loadCurrentCoordinates(), []);
+  const serviceDistance = useCallback((service: Service) => { const target=coordinatesFor(service.latitude,service.longitude,service.location,service.place_name); return userCoordinates&&target?distanceKm(userCoordinates,target):null; }, [userCoordinates]);
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get("search") || "");
+    setSelectedCategory(searchParams.get("category") || "");
+    const nextLocation = searchParams.get("location") || "";
+    setSelectedLocation(nextLocation && !/detecting|unable|allow location|fetching/i.test(nextLocation) ? nextLocation : "All Locations");
+    setMaxPrice(Math.min(1000000, Math.max(0, Number(searchParams.get("maxPrice")) || 1000000)));
+    setDistance(Math.min(1000, Math.max(1, Number(searchParams.get("distance")) || 200)));
+  }, [searchParams]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
@@ -126,9 +144,11 @@ function ServicesContent() {
         if (!matchesSearch) return false;
       }
       if (selectedCategory && s.category_id !== selectedCategory) return false;
-      if (selectedLocation !== "All Locations" && !selectedLocation.includes("Detecting") && !s.location?.toLowerCase().includes(selectedLocation.toLowerCase())) return false;
+      if (selectedLocation !== "All Locations" && !s.location?.toLowerCase().includes(selectedLocation.toLowerCase())) return false;
       const price = Number(s.price_min ?? s.price ?? 0);
       if (price > maxPrice) return false;
+      const km=serviceDistance(s);
+      if(userCoordinates&&km!==null&&km>distance)return false;
       return true;
     });
     if (priceSort !== "default") {
@@ -139,7 +159,7 @@ function ServicesContent() {
       });
     }
     return results;
-  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort]);
+  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort, distance, serviceDistance, userCoordinates]);
 
   // Reset to page 1 on filter changes
   useEffect(() => {
@@ -148,7 +168,7 @@ function ServicesContent() {
 
   const itemsPerPage = isMobile ? 5 : 6;
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedServices = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedServices = filtered;
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -194,7 +214,7 @@ function ServicesContent() {
         image="/hero/slide-2.jpg"
         badge={<><Sparkles className="h-4 w-4 text-amber-300" /> Verified Vendors</>}
         title="Browse All Services"
-        subtitle={`${DEMO_SERVICES.length}+ verified vendors across Tamil Nadu for every celebration`}
+        subtitle={`${DEMO_SERVICES.length}+ verified professionals for every celebration`}
         compact
       />
 
@@ -225,25 +245,26 @@ function ServicesContent() {
             placeholder="Search by service name, vendor or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-12 py-3.5 bg-gradient-to-r from-rose-50/50 to-white border-2 border-rose-100 rounded-2xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#e11d48] focus:from-white focus:to-white transition-all shadow-sm"
+            className="w-full pl-10 pr-24 py-3.5 bg-gradient-to-r from-rose-50/50 to-white border-2 border-rose-100 rounded-2xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#e11d48] focus:from-white focus:to-white transition-all shadow-sm"
           />
           {searchQuery ? (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded-full bg-gray-200 hover:bg-rose-100 hover:text-[#e11d48] text-gray-500 transition-colors"
+              className="absolute right-14 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded-full bg-gray-200 hover:bg-rose-100 hover:text-[#e11d48] text-gray-500 transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           ) : (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+            <span className="absolute right-14 top-1/2 hidden -translate-y-1/2 text-[10px] font-bold text-gray-300 uppercase tracking-widest sm:block">
               name / vendor / location
             </span>
           )}
+          <button type="button" onClick={()=>setFiltersOpen(value=>!value)} aria-label="Open filters" className={`absolute right-2 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl ${filtersOpen?"bg-rose-600 text-white":"bg-rose-50 text-rose-700"}`}><SlidersHorizontal className="h-5 w-5"/></button>
         </div>
 
         {/* Price filter and sorting */}
-        <div className="mb-5 grid gap-4 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm sm:grid-cols-2 sm:items-end">
-          <label className="block text-xs font-black uppercase tracking-wider text-gray-600"><span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-rose-600"/>Location</span><select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)} className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50/30 px-4 py-3 text-sm font-bold normal-case tracking-normal text-gray-700 outline-none"><option value="All Locations">All locations</option>{initialLocation!=="All Locations"&&!LOCATIONS.includes(initialLocation)&&<option value={initialLocation}>{initialLocation}</option>}{LOCATIONS.filter(x=>x!=="All Locations").map(x=><option key={x}>{x}</option>)}</select></label>
+        {filtersOpen&&<div className="mb-5 grid grid-cols-2 gap-3 rounded-2xl border border-rose-100 bg-white p-3 shadow-sm sm:p-4">
+          <label className="col-span-2 block text-xs font-black uppercase tracking-wider text-gray-600"><span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-rose-600"/>Location</span><select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)} className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50/30 px-3 py-3 text-sm font-bold normal-case tracking-normal text-gray-700 outline-none"><option value="All Locations">All locations</option>{initialLocation!=="All Locations"&&!LOCATIONS.includes(initialLocation)&&<option value={initialLocation}>{initialLocation}</option>}{LOCATIONS.filter(x=>x!=="All Locations").map(x=><option key={x}>{x}</option>)}</select></label>
           <label className="block"><span className="mb-2 flex items-center justify-between text-xs font-black uppercase tracking-wider text-gray-600">Distance radius <strong className="text-[#e11d48]">{distance} km</strong></span><input type="range" min="1" max="1000" value={distance} onChange={(e)=>setDistance(Number(e.target.value))} className="w-full accent-[#e11d48]"/><span className="mt-1 flex justify-between text-[10px] font-bold text-gray-400"><span>1 km</span><span>1000 km</span></span></label>
           <label className="block">
             <span className="mb-2 flex items-center justify-between text-xs font-black uppercase tracking-wider text-gray-600">
@@ -252,33 +273,19 @@ function ServicesContent() {
             <input type="range" min="0" max="1000000" step="10000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#e11d48]" />
             <span className="mt-1 flex justify-between text-[10px] font-bold text-gray-400"><span>₹0</span><span>₹10 Lakhs</span></span>
           </label>
-          <label className="block text-xs font-black uppercase tracking-wider text-gray-600">Sort by price
+          <label className="col-span-2 block text-xs font-black uppercase tracking-wider text-gray-600">Sort by price
             <select value={priceSort} onChange={(e) => setPriceSort(e.target.value as typeof priceSort)} className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50/30 px-4 py-3 text-sm font-bold normal-case tracking-normal text-gray-700 outline-none focus:border-[#e11d48]">
               <option value="default">Recommended</option><option value="low-high">Price: Low to High</option><option value="high-low">Price: High to Low</option>
             </select>
           </label>
-        </div>
+        </div>}
 
         {/* Toolbar */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
-          <div className="relative">
-            <input
-              type="text"
-              list="services-locations"
-              value={selectedLocation === "All Locations" ? "" : selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value || "All Locations")}
-              placeholder="Enter your location..."
-              className="px-4 py-2.5 w-56 bg-white border border-rose-100 rounded-2xl text-sm font-bold text-gray-700 focus:outline-none focus:border-[#e11d48] shadow-sm cursor-text placeholder:font-normal placeholder:text-gray-400"
-            />
-            <datalist id="services-locations">
-              {LOCATIONS.filter(loc => loc !== "All Locations").map((loc) => <option key={loc} value={loc} />)}
-            </datalist>
-          </div>
-
           {/* Multi-select toggle */}
           <button
             onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold border transition-all cursor-pointer ${
+            className={`hidden items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold border transition-all cursor-pointer ${
               selectMode ? "bg-[#e11d48] text-white border-[#e11d48]" : "bg-white text-gray-700 border-rose-100 hover:bg-rose-50/40"
             }`}
           >
@@ -288,12 +295,12 @@ function ServicesContent() {
 
           {selectMode && filtered.length > 0 && (
             <button onClick={selectAll}
-              className="px-4 py-2.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl text-sm font-bold hover:bg-amber-100 transition-colors cursor-pointer">
+              className="hidden px-4 py-2.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl text-sm font-bold hover:bg-amber-100 transition-colors cursor-pointer">
               Select All ({filtered.length})
             </button>
           )}
 
-          <span className="ml-auto text-sm text-gray-500 font-semibold">{filtered.length} found</span>
+          <span className="ml-auto rounded-full bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">{filtered.length} services found</span>
         </div>
 
         {/* Grid */}
@@ -316,6 +323,7 @@ function ServicesContent() {
               {paginatedServices.map((service) => {
                 const isChecked = selected.has(service.id);
                 const hasImgError = imgErrors.has(service.id);
+                const km = serviceDistance(service);
                 return (
                   <div
                     key={service.id}
@@ -361,11 +369,25 @@ function ServicesContent() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                      <div className="absolute top-3 right-3">
+                      <div className="absolute top-3 left-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${service.availability_status ? "bg-[#e11d48] text-white" : "bg-red-500 text-white"}`}>
                           {service.availability_status ? "Available" : "Booked"}
                         </span>
                       </div>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          const alreadySaved = isFavorite(service.id);
+                          toggleFavorite({ id: service.id, type: "service", title: service.title, price: Number(service.price_min || service.price || 0), image_url: service.image_url, location: service.location });
+                          toast.success(alreadySaved ? "Removed from Saved" : "Saved to favourites");
+                        }}
+                        className={`absolute top-3 z-20 grid h-11 w-11 place-items-center rounded-full border border-white/80 shadow-lg backdrop-blur ${isFavorite(service.id) ? "bg-rose-600 text-white" : "bg-white/95 text-rose-600"}`}
+                        style={{ right: "0.75rem", left: "auto" }}
+                        aria-label={isFavorite(service.id) ? "Remove from saved" : "Save service"}
+                      >
+                        <Heart className={`h-5 w-5 ${isFavorite(service.id) ? "fill-current" : ""}`} />
+                      </button>
                       {service.categories && (
                         <div className="absolute bottom-3 left-3">
                           <span className="text-xs bg-black/50 text-white px-2 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1.5">
@@ -378,6 +400,7 @@ function ServicesContent() {
                           </span>
                         </div>
                       )}
+                      {km!==null&&<span className="absolute bottom-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-black text-rose-700 shadow">{km<1?"Under 1 km":`${Math.round(km)} km away`}</span>}
                     </div>
 
                     {/* Content */}
@@ -407,7 +430,7 @@ function ServicesContent() {
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-end mb-3">
+                      <div className="hidden">
                         {!selectMode ? (
                           <button
                             onClick={() => { setSelectMode(true); toggleSelect(service.id); }}
@@ -429,7 +452,7 @@ function ServicesContent() {
                         )}
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="hidden">
                         <button
                           onClick={() => handleAddServiceToPlan(service)}
                           disabled={!service.availability_status}
@@ -445,13 +468,17 @@ function ServicesContent() {
                           </a>
                         )}
                       </div>
+                      <div className="flex gap-2">
+                        <button disabled={cartItems.some(item=>item.id===service.id)} onClick={()=>{addToCart({id:service.id,title:service.title,price:Number(service.price_min||service.price||0),image_url:service.image_url,location:service.location});toast.success("Added to cart")}} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-gray-950 py-3 text-xs font-black text-white disabled:bg-emerald-600"><ShoppingCart className="h-4 w-4"/>{cartItems.some(item=>item.id===service.id)?"Added ✓":"Add to Cart"}</button>
+                        <button onClick={()=>navigate(`/services/${service.id}?book=1`)} disabled={!service.availability_status} className="flex-1 rounded-xl bg-[#e11d48] py-3 text-xs font-black text-white disabled:opacity-50">Book Now</button>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {totalPages > 1 && (
+            {false && totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

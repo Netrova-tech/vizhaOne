@@ -56,6 +56,67 @@ body {
   font-family: var(--font-script, 'Great Vibes', cursive);
 }
 
+.auth-luxury-shell {
+  background:
+    radial-gradient(circle at 88% 6%, rgba(117, 35, 58, 0.42), transparent 35%),
+    radial-gradient(circle at 4% 74%, rgba(114, 17, 52, 0.34), transparent 42%),
+    linear-gradient(155deg, #35101f 0%, #421121 44%, #4b1226 70%, #2d0b1b 100%);
+  color: #2b1420;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+body:has(.auth-luxury-shell) > .app-scroll-root {
+  padding-bottom: 0 !important;
+  background: #35101f;
+  scrollbar-width: none;
+}
+
+body:has(.auth-luxury-shell) > .app-scroll-root::-webkit-scrollbar,
+.auth-luxury-shell::-webkit-scrollbar {
+  display: none;
+  width: 0;
+}
+
+.auth-luxury-shell::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  opacity: 0.18;
+  background-image: radial-gradient(rgba(255, 229, 196, 0.38) 0.55px, transparent 0.55px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(to bottom, black, transparent 62%);
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 62%);
+}
+
+.auth-brand-script {
+  font-family: 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive;
+  font-weight: 500;
+  color: #ff477d;
+  background: linear-gradient(100deg, #ff416f 0%, #f21f62 43%, #cf1558 70%, #ff6b91 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.35px rgba(255, 190, 207, 0.72);
+  filter: drop-shadow(0 2px 1px rgba(35, 0, 12, 0.72)) drop-shadow(0 0 12px rgba(255, 46, 111, 0.34));
+}
+
+.auth-brand-subtitle {
+  font-family: var(--font-playfair, Georgia, serif);
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  color: #ffb4c7;
+  text-shadow: 0 2px 10px rgba(18, 0, 8, 0.42);
+  text-transform: lowercase;
+}
+
+.auth-brand-subtitle span {
+  color: #ff6f9b;
+  letter-spacing: 0.1em;
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
@@ -136,6 +197,8 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
   height: auto !important;
   padding: 0;
@@ -179,8 +242,10 @@ table { max-width: 100%; }
     -webkit-overflow-scrolling: touch;
   }
 
+  .app-scroll-root > * { max-width: 100%; }
+  main, section, article, form { min-width: 0; }
+
   button, a, input, select, textarea, label {
-    position: relative;
     touch-action: manipulation !important;
     pointer-events: auto;
   }

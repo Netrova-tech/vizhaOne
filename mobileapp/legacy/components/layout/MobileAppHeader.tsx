@@ -9,11 +9,13 @@ import {
   ClipboardCheck,
   Gift,
   Heart,
+  Info,
   LogOut,
   MapPin,
   Menu,
   PlusCircle,
   Sparkles,
+  ShoppingBag,
   UserRound,
   UsersRound,
   WandSparkles,
@@ -21,7 +23,9 @@ import {
 } from "lucide-react";
 import { VizhaLogo } from "@/components/ui/VizhaLogo";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/hooks/useCart";
 const links = [
+  ["About VizhaOne", "/about", Info],
   ["Celebration Planner", "/planner", CalendarCheck],
   ["Checklist & Reminders", "/planner/checklist", ClipboardCheck],
   ["Smart Budget", "/planner/budget", Calculator],
@@ -37,6 +41,7 @@ export function MobileAppHeader() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { count } = useCart();
   const isProvider = user?.role === "service_provider";
   function go(href: string) { setOpen(false); window.setTimeout(() => navigate(href), 0); }
   return (
@@ -49,14 +54,16 @@ export function MobileAppHeader() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link to="/" aria-label="VizhaOne home" className="justify-self-center rounded-xl bg-white px-3 py-1.5 text-center drop-shadow-sm">
-            <VizhaLogo size="md" />
+          <Link to="/" aria-label="VizhaOne home" className="min-w-0 justify-self-center text-center">
+            <VizhaLogo size="md" className="origin-center scale-[1.06]" />
           </Link>
           <Link
-            to="/profile"
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-700 text-sm font-black text-white"
+            to="/cart"
+            aria-label={`Cart with ${count} items`}
+            className="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-sm"
           >
-            {(user?.name || "V")[0].toUpperCase()}
+            <ShoppingBag className="h-5 w-5"/>
+            {count>0&&<span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count>99?"99+":count}</span>}
           </Link>
         </div>
       </header>

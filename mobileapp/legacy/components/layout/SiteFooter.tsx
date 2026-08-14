@@ -101,7 +101,7 @@ export function SiteFooter() {
                 <VizhaLogo size="xs" light showTagline />
               </div>
               <p className="text-sm text-white/70 leading-relaxed mb-5 max-w-xs">
-                Tamil Nadu&apos;s premier event marketplace. Book marriage mahals, vendors &amp; complete functions stress-free.
+                One trusted celebration marketplace. Discover venues, services and complete event solutions stress-free.
               </p>
               <div className="flex gap-3">
                 <a
@@ -154,7 +154,7 @@ export function SiteFooter() {
           <div className="border-t border-white/15 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-white/45">© 2026 vizhaOne. All rights reserved.</p>
             <p className="text-xs text-white/45 flex items-center gap-1">
-              Made with <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" /> for Tamil Nadu families
+              Made with <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" /> for every celebration
             </p>
           </div>
         </div>

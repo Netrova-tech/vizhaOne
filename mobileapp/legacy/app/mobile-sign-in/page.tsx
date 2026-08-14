@@ -1,54 +1,34 @@
-"use client";
-
+﻿"use client";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Sparkles, X } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { destination, findAccount, loginAccount, startSession, type MobileAccount } from "@/lib/mobileAuth";
 
-const DEMO_EMAIL = "demo@vizhaone.com";
-const DEMO_PASSWORD = "VizhaOne@123";
-const googleChoices = [{email:"murugan@gmail.com",name:"Murugan"},{email:"vizhaone.business@gmail.com",name:"VizhaOne Business"}];
-
-export default function MobileSignInPage() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState(DEMO_EMAIL);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
-  const [showPassword, setShowPassword] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [googleOpen,setGoogleOpen]=useState(false);
-
-  function enter(account:MobileAccount,token?:string){startSession(account,token);toast.success(`Welcome, ${account.name}!`);navigate(destination(account.role),{replace:true});}
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    try { const result=await loginAccount(email,password); enter(result.user,result.token); }
-    catch(err){ toast.error(err instanceof Error?err.message:"Login failed"); }
-    finally { setBusy(false); }
-  }
-
-  return <main className="relative flex min-h-dvh flex-col overflow-y-auto bg-gradient-to-br from-rose-50 via-white to-orange-50 px-5 pb-8 pt-[calc(30px+env(safe-area-inset-top,0px))]">
-    <div className="pointer-events-none absolute -right-28 -top-24 h-72 w-72 rounded-full bg-rose-200/40 blur-3xl" />
-    <section className="relative my-auto py-8">
-      <span className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-lg"><Sparkles className="h-8 w-8" /></span>
-      <p className="mt-7 text-xs font-black uppercase tracking-[.2em] text-rose-500">Welcome to VizhaOne</p>
-      <h1 className="mt-2 text-4xl font-black leading-tight tracking-[-.05em] text-gray-950">Celebrate without the stress.</h1>
-      <p className="mt-3 max-w-sm text-sm leading-6 text-gray-500">Sign in to access your bookings, saved vendors and referral rewards.</p>
-
-      <button type="button" onClick={()=>setGoogleOpen(true)} className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-black shadow-sm"><span className="grid h-6 w-6 place-items-center rounded-full bg-white text-lg font-black text-blue-600">G</span>Continue with Google</button>
-      <div className="my-5 flex items-center gap-3 text-[10px] font-black uppercase tracking-[.2em] text-gray-300"><span className="h-px flex-1 bg-gray-200"/>or use email<span className="h-px flex-1 bg-gray-200"/></div>
-      <form onSubmit={submit} className="space-y-4">
-        <label className="block"><span className="text-xs font-black text-gray-700">Email address</span><span className="mt-2 flex items-center rounded-2xl border border-rose-100 bg-white px-4 shadow-sm"><Mail className="h-4 w-4 text-rose-500" /><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className="min-w-0 flex-1 bg-transparent px-3 py-4 font-bold outline-none" /></span></label>
-        <label className="block"><span className="text-xs font-black text-gray-700">Password</span><span className="mt-2 flex items-center rounded-2xl border border-rose-100 bg-white px-4 shadow-sm"><LockKeyhole className="h-4 w-4 text-rose-500" /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" className="min-w-0 flex-1 bg-transparent px-3 py-4 font-bold outline-none" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="text-gray-400" aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}</button></span></label>
-        <button disabled={busy} className="w-full rounded-2xl bg-gradient-to-r from-[#be123c] to-[#e11d48] px-5 py-4 text-sm font-black text-white shadow-lg disabled:opacity-60">{busy ? "Signing in..." : "Sign in & continue"}</button>
-      </form>
-
-      <p className="mt-5 text-center text-sm text-gray-500">New to VizhaOne? <Link to="/sign-up" className="font-black text-rose-600">Create account</Link></p>
-
-      <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900"><p className="font-black">Demo login</p><p className="mt-1">Email: {DEMO_EMAIL}</p><p>Password: {DEMO_PASSWORD}</p></div>
-      <p className="mt-5 flex items-start gap-2 text-[10px] leading-5 text-gray-400"><ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-emerald-500" />By continuing, you agree to VizhaOne Terms and Privacy Policy.</p>
-    </section>
-    {googleOpen&&<div className="fixed inset-0 z-50 flex items-end bg-black/45 p-3 backdrop-blur-sm"><section className="w-full rounded-[28px] bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><div><h2 className="text-lg font-black">Choose an account</h2><p className="text-xs text-gray-400">Continue to VizhaOne</p></div><button onClick={()=>setGoogleOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-gray-100"><X className="h-5 w-5"/></button></div><div className="mt-4 space-y-2">{googleChoices.map(choice=><button key={choice.email} onClick={()=>{const old=findAccount(choice.email);setGoogleOpen(false);if(old)enter(old);else navigate(`/sign-up?provider=google&email=${encodeURIComponent(choice.email)}&name=${encodeURIComponent(choice.name)}`)}} className="flex w-full items-center gap-3 rounded-2xl border border-gray-100 p-3 text-left"><span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-red-500 font-black text-white">{choice.name[0]}</span><span className="min-w-0 flex-1"><strong className="block text-sm">{choice.name}</strong><small className="block truncate text-gray-400">{choice.email}</small></span><ArrowRight className="h-4 w-4 text-gray-400"/></button>)}</div><p className="mt-4 rounded-xl bg-blue-50 p-3 text-[10px] leading-4 text-blue-700">Testing mode: this account picker simulates Google Sign-In.</p></section></div>}
-  </main>;
+const DEMO_EMAIL="demo@vizhaone.com",DEMO_PASSWORD="VizhaOne@123";
+const googleChoices=[{email:"murugan@gmail.com",name:"Murugan"},{email:"vizhaone.business@gmail.com",name:"VizhaOne Business"}];
+export default function MobileSignInPage(){
+ const navigate=useNavigate();const[email,setEmail]=useState(DEMO_EMAIL),[password,setPassword]=useState(DEMO_PASSWORD),[show,setShow]=useState(false),[busy,setBusy]=useState(false),[googleOpen,setGoogleOpen]=useState(false);
+ function enter(account:MobileAccount,token?:string){startSession(account,token);toast.success(`Welcome, ${account.name}!`);navigate(destination(account.role),{replace:true});}
+ async function submit(e:FormEvent){e.preventDefault();setBusy(true);try{const r=await loginAccount(email.trim().toLowerCase(),password);enter(r.user,r.token);}catch(error){toast.error(error instanceof Error?error.message:"Login failed");}finally{setBusy(false)}}
+ const field="mt-2 flex min-h-14 items-center rounded-2xl border border-[#e8ddd5] bg-white/85 px-4 shadow-[0_8px_30px_rgba(72,28,45,.05)] transition focus-within:border-[#9b3655] focus-within:ring-4 focus-within:ring-[#9b3655]/10";
+ return <main className="auth-luxury-shell relative min-h-dvh overflow-y-auto px-5 pb-[calc(30px+env(safe-area-inset-bottom,0px))] pt-[calc(20px+env(safe-area-inset-top,0px))]">
+  <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_50%_5%,rgba(255,226,189,.09),transparent_44%)]"/>
+  <div className="relative mx-auto flex min-h-[calc(100dvh-50px)] max-w-md flex-col justify-center py-5">
+   <header className="mb-7 text-center"><div className="mx-auto grid h-[94px] w-[94px] place-items-center overflow-hidden rounded-[30px] border border-white/90 bg-white shadow-[0_20px_52px_rgba(15,0,7,.38),0_0_0_5px_rgba(255,231,198,.08)]"><img src="/icon.png" alt="VizhaOne emblem" className="h-full w-full object-cover"/></div><p className="auth-brand-script mt-4 text-[66px] leading-[.86]">VizhaOne</p><p className="auth-brand-subtitle mt-4 text-[13px]">events <span>&amp;</span> occasions</p></header>
+   <section className="rounded-[34px] border border-[#fff8ef]/90 bg-[#fffaf5]/96 p-6 shadow-[0_30px_90px_rgba(15,0,8,.38),0_0_0_1px_rgba(255,238,215,.2)] backdrop-blur-xl">
+    <p className="bg-[linear-gradient(90deg,#b37a35,#7b3046)] bg-clip-text text-[10px] font-black uppercase tracking-[.28em] text-transparent">Premium Events</p><h1 className="font-display mt-2 text-[30px] font-semibold leading-[1.1] tracking-[-.03em] text-[#2f1027]">Plan Your Entire Celebration in One Place.</h1><p className="mt-3 text-sm leading-6 text-[#796871]">Sign in to discover trusted professionals, manage every detail and celebrate beautifully.</p>
+    <button type="button" onClick={()=>setGoogleOpen(true)} className="mt-6 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border border-[#e8ddd5] bg-white text-sm font-extrabold text-[#34232b] shadow-sm"><span className="grid h-8 w-8 place-items-center rounded-full border border-gray-100 font-black text-blue-600">G</span>Continue with Google</button>
+    <div className="my-5 flex items-center gap-3 text-[9px] font-black uppercase tracking-[.22em] text-[#b4a5aa]"><span className="h-px flex-1 bg-[#e9dfda]"/>or sign in with email<span className="h-px flex-1 bg-[#e9dfda]"/></div>
+    <form onSubmit={submit} className="space-y-4"><label className="block text-[11px] font-extrabold uppercase tracking-wider text-[#4a303c]">Email address<span className={field}><Mail className="h-4 w-4 text-[#b00086]"/><input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" className="min-w-0 flex-1 bg-transparent px-3 py-3 font-semibold text-[#29151e] outline-none"/></span></label><label className="block text-[11px] font-extrabold uppercase tracking-wider text-[#4a303c]">Password<span className={field}><LockKeyhole className="h-4 w-4 text-[#b00086]"/><input type={show?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" className="min-w-0 flex-1 bg-transparent px-3 py-3 font-semibold text-[#29151e] outline-none"/><button type="button" onClick={()=>setShow(!show)} className="grid h-9 w-9 place-items-center text-[#8f7b83]" aria-label={show?"Hide password":"Show password"}>{show?<EyeOff className="h-5 w-5"/>:<Eye className="h-5 w-5"/>}</button></span></label><button disabled={busy} className="mt-1 min-h-14 w-full rounded-2xl bg-[linear-gradient(115deg,#6e1637,#9f3157_58%,#bd486b)] px-5 text-sm font-black text-white shadow-[0_15px_34px_rgba(73,13,38,.3)] disabled:opacity-60">{busy?"Opening your account...":"Sign in to VizhaOne"}</button></form>
+    <p className="mt-5 text-center text-sm text-[#806d75]">New to VizhaOne? <Link to="/sign-up" className="font-black text-[#8c294c]">Create an account</Link></p>
+    <a href="#/auth/login?role=admin" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#d8bdc6] bg-[#fff4f6] text-sm font-black text-[#7a2143]">
+      <ShieldCheck className="h-4 w-4"/> Super Admin Login
+    </a>
+    <details className="mt-5 rounded-2xl border border-[#eadfce] bg-[#fff7e9] px-4 py-3 text-xs text-[#705b42]"><summary className="cursor-pointer font-extrabold">Testing access</summary><p className="mt-2">{DEMO_EMAIL}</p><p>{DEMO_PASSWORD}</p></details><p className="mt-4 flex items-start justify-center gap-2 text-[10px] leading-5 text-[#97858c]"><ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-emerald-600"/>Secure sign-in powered by VizhaOne.</p>
+   </section>
+  </div>
+  {googleOpen&&<div className="fixed inset-0 z-50 flex items-end bg-[#1e0c14]/65 p-3 backdrop-blur-sm"><section className="w-full rounded-[30px] bg-[#fffaf5] p-5 shadow-2xl"><div className="flex items-center justify-between"><div><h2 className="font-display text-2xl font-semibold text-[#2b1420]">Choose an account</h2><p className="text-xs text-[#8c7880]">Continue securely to VizhaOne</p></div><button onClick={()=>setGoogleOpen(false)} className="grid h-10 w-10 place-items-center rounded-full bg-[#f1e7e2]"><X className="h-5 w-5"/></button></div><div className="mt-5 space-y-2">{googleChoices.map(c=><button key={c.email} onClick={()=>{const old=findAccount(c.email);setGoogleOpen(false);if(old)enter(old);else navigate(`/sign-up?provider=google&email=${encodeURIComponent(c.email)}&name=${encodeURIComponent(c.name)}`)}} className="flex w-full items-center gap-3 rounded-2xl border border-[#eadfd9] bg-white p-3 text-left"><span className="grid h-11 w-11 place-items-center rounded-full bg-[#7a2143] font-black text-white">{c.name[0]}</span><span className="min-w-0 flex-1"><strong className="block text-sm text-[#332029]">{c.name}</strong><small className="block truncate text-[#96838a]">{c.email}</small></span><ArrowRight className="h-4 w-4 text-[#9b3655]"/></button>)}</div><p className="mt-4 text-center text-[10px] text-[#9a858d]">Google Sign-In simulation for testing.</p></section></div>}
+ </main>;
 }
+

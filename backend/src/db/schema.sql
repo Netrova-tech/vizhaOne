@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   id text PRIMARY KEY, user_id uuid REFERENCES users(id) ON DELETE SET NULL, hall_id text REFERENCES halls(id) ON DELETE SET NULL,
   service_id text REFERENCES services(id) ON DELETE SET NULL, hall_name text, event_date date, start_date date,
   end_date date, slot text, price numeric(12,2), customer_name text NOT NULL, mobile text NOT NULL,
-  guests integer, message text, status text NOT NULL DEFAULT 'pending', referral_code text,
+  guests integer, message text, status text NOT NULL DEFAULT 'pending', rejection_reason text, referral_code text,
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS bookings_user_idx ON bookings(user_id);

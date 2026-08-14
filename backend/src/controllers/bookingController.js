@@ -1,7 +1,7 @@
-const { createBooking, listBookings, updateBooking, deleteBooking } = require("../services/bookingService");
+const { createBooking, createBulkBookings, listBookings, updateBooking, deleteBooking } = require("../services/bookingService");
 
-async function listBookingsController(_req, res, store) {
-  const bookings = await listBookings(store);
+async function listBookingsController(req, res, store) {
+  const bookings = await listBookings(store, req.query || {});
   return res.json(bookings);
 }
 
@@ -13,6 +13,7 @@ async function createBookingController(req, res, store) {
     return res.status(400).json({ error: error instanceof Error ? error.message : "Failed to create booking" });
   }
 }
+async function createBulkBookingsController(req,res,store){try{return res.status(201).json(await createBulkBookings(store,req.body||{}));}catch(error){return res.status(400).json({error:error instanceof Error?error.message:"Failed to create cart bookings"});}}
 
 async function updateBookingController(req, res, store) {
   const { id } = req.params;
@@ -40,6 +41,7 @@ async function deleteBookingController(req, res, store) {
 module.exports = {
   listBookingsController,
   createBookingController,
+  createBulkBookingsController,
   updateBookingController,
   deleteBookingController,
 };

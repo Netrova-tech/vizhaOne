@@ -97,6 +97,7 @@ export default function HomePage() {
                     <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-md ring-2 ring-transparent group-hover:ring-[#e11d48]/25 transition-all">
                       <ExternalImg
                         src={cat.category_image || CAT_IMAGES[i % CAT_IMAGES.length]}
+                        fallbackSrc={services.find(service => service.category_id === cat.id)?.image_url || CAT_IMAGES[i % CAT_IMAGES.length]}
                         alt={cat.category_name}
                         fill
                       />

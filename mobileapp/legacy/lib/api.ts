@@ -26,7 +26,9 @@ class ApiError extends Error {
 // ─── Bookings API ───────────────────────────────────────────────────────────
 
 export interface BookingPayload {
-  hallId: string;
+  hallId?: string;
+  serviceId?: string;
+  serviceName?: string;
   hallName: string;
   date: string;
   startDate?: string;
@@ -158,6 +160,7 @@ export async function createBooking(booking: BookingPayload): Promise<Booking> {
     throw err;
   }
 }
+export async function createBulkBookings(bookings:BookingPayload[]):Promise<Booking[]>{const res=await fetch(`${API_BASE}/bookings/bulk`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bookings})});if(!res.ok){const body=await res.json().catch(()=>({}));throw new ApiError(body.error||`API error: ${res.status}`,res.status)}return res.json()}
 
 /**
  * Get all bookings from the backend

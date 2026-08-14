@@ -24,12 +24,23 @@ function load(): FavoriteItem[] {
 
 function save(items: FavoriteItem[]) {
   localStorage.setItem(KEY, JSON.stringify(items));
+  window.dispatchEvent(new CustomEvent("vizha:favorites-changed", { detail: items }));
 }
 
 export function useFavorites() {
   const [items, setItems] = useState<FavoriteItem[]>([]);
 
-  useEffect(() => { setTimeout(() => setItems(load()), 0); }, []);
+  useEffect(() => {
+    const refresh = () => setItems(load());
+    const timer = setTimeout(refresh, 0);
+    window.addEventListener("vizha:favorites-changed", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("vizha:favorites-changed", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
 
   const isFavorite = useCallback((id: string) => items.some((i) => i.id === id), [items]);
 

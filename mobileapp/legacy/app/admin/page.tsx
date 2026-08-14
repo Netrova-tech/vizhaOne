@@ -19,7 +19,7 @@ import { deleteBooking, deleteLocalBooking, updateLocalBookingStatus } from "@/l
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 
-type Tab = "dashboard" | "services" | "bookings" | "categories" | "halls" | "users" | "profile";
+type Tab = "dashboard" | "services" | "hall_bookings" | "service_bookings" | "categories" | "halls" | "users" | "profile";
 
 type SignupRecord = { mobile: string; joinedAt: string; };
 
@@ -124,8 +124,12 @@ export default function AdminPage() {
   const totalServicesPages = Math.ceil(services.length / servicesPerPage);
   const paginatedServices = services.slice((servicesPage - 1) * servicesPerPage, servicesPage * servicesPerPage);
 
-  const totalBookingsPages = Math.ceil(bookings.length / itemsPerPage);
-  const paginatedBookings = bookings.slice((bookingsPage - 1) * itemsPerPage, bookingsPage * itemsPerPage);
+  const visibleBookings = bookings.filter((booking) =>
+    tab === "hall_bookings" ? Boolean((booking as any).hallId || (booking as any).hall_id) :
+    tab === "service_bookings" ? Boolean((booking as any).serviceId || (booking as any).service_id) : true
+  );
+  const totalBookingsPages = Math.ceil(visibleBookings.length / itemsPerPage);
+  const paginatedBookings = visibleBookings.slice((bookingsPage - 1) * itemsPerPage, bookingsPage * itemsPerPage);
 
   const totalCategoriesPages = Math.ceil(categories.length / categoriesPerPage);
   const paginatedCategories = categories.slice((categoriesPage - 1) * categoriesPerPage, categoriesPage * categoriesPerPage);
@@ -309,9 +313,9 @@ export default function AdminPage() {
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
-    const remainingSlots = 5 - imagePreviews.length;
+    const remainingSlots = 10 - imagePreviews.length;
     if (remainingSlots <= 0) {
-      toast.error("Maximum 5 photos allowed");
+      toast.error("Maximum 10 photos allowed");
       e.target.value = "";
       return;
     }
@@ -398,8 +402,8 @@ export default function AdminPage() {
       toast.error("Please add at least 1 service photo");
       return;
     }
-    if (selectedPhotoCount > 5) {
-      toast.error("Maximum 5 photos allowed");
+    if (selectedPhotoCount > 10) {
+      toast.error("Maximum 10 photos allowed");
       return;
     }
     setSaving(true);
@@ -407,7 +411,7 @@ export default function AdminPage() {
     try {
       const existingPreviewUrls = imagePreviews.filter((preview) => !preview.startsWith("data:"));
       const uploadedUrls = await uploadImagesToCloudinary(imageFiles);
-      const galleryUrls = [...existingPreviewUrls, ...uploadedUrls, ...urlImages].slice(0, 5);
+      const galleryUrls = [...existingPreviewUrls, ...uploadedUrls, ...urlImages].slice(0, 10);
       const cat = categories.find((c) => c.id === form.category_id);
 
       const payload: Partial<Service> = {
@@ -597,9 +601,9 @@ export default function AdminPage() {
   function handleHallImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
-    const remainingSlots = 5 - hallImgPreviews.length;
+    const remainingSlots = 15 - hallImgPreviews.length;
     if (remainingSlots <= 0) {
-      toast.error("Maximum 5 hall photos allowed");
+      toast.error("Maximum 15 hall photos allowed");
       e.target.value = "";
       return;
     }
@@ -634,9 +638,9 @@ export default function AdminPage() {
   function handleQuickServiceImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
-    const remainingSlots = 5 - quickSvcImagePreviews.length;
+    const remainingSlots = 10 - quickSvcImagePreviews.length;
     if (remainingSlots <= 0) {
-      toast.error("Maximum 5 photos allowed");
+      toast.error("Maximum 10 photos allowed");
       e.target.value = "";
       return;
     }
@@ -676,18 +680,25 @@ export default function AdminPage() {
       .split(/\r?\n|,/)
       .map((url) => url.trim())
       .filter(Boolean);
+    const selectedHallPhotoCount = hallImgPreviews.length + hallUrlImages.length;
+    if (selectedHallPhotoCount < 5) {
+      toast.error("Please add at least 5 hall photos"); return;
+    }
+    if (selectedHallPhotoCount > 15) {
+      toast.error("Maximum 15 hall photos allowed"); return;
+    }
     
     setSaving(true);
     try {
       const existingPreviewUrls = hallImgPreviews.filter((preview) => !preview.startsWith("data:"));
       const uploadedUrls = await uploadImagesToCloudinary(hallImgFiles);
-      const hallGalleryUrls = [...existingPreviewUrls, ...uploadedUrls, ...hallUrlImages].slice(0, 5);
+      const hallGalleryUrls = [...existingPreviewUrls, ...uploadedUrls, ...hallUrlImages].slice(0, 15);
 
-      if (hallGalleryUrls.length < 1) {
-        toast.error("Please add at least 1 hall photo"); return;
+      if (hallGalleryUrls.length < 5) {
+        toast.error("Please add at least 5 hall photos"); return;
       }
-      if (hallGalleryUrls.length > 5) {
-        toast.error("Maximum 5 hall photos allowed"); return;
+      if (hallGalleryUrls.length > 15) {
+        toast.error("Maximum 15 hall photos allowed"); return;
       }
       const finalImg = hallGalleryUrls[0] || "";
       const payload: Partial<Hall> = {
@@ -757,12 +768,20 @@ export default function AdminPage() {
   }
 
   async function updateBookingStatus(id: string, status: BookingStatus) {
+    let rejectionReason = "";
+    if (status === "cancelled") {
+      rejectionReason = window.prompt("Enter the rejection reason shown to the customer:")?.trim() || "";
+      if (!rejectionReason) {
+        toast.error("Rejection reason is compulsory");
+        return;
+      }
+    }
     let synced = true;
     try {
       const res = await fetch(apiUrl(`/api/bookings/${id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, rejectionReason }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -788,6 +807,7 @@ export default function AdminPage() {
               ...b,
               status,
               booking_status: status,
+              rejectionReason,
             }
           : b
       )
@@ -907,7 +927,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-3 sm:px-8 py-4 sm:py-6 pb-24 md:pb-6">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-2xl font-bold text-gray-900 leading-tight">Admin Dashboard</h1>
+            <h1 className="text-2xl sm:text-2xl font-bold text-gray-900 leading-tight">VizhaOne Super Admin</h1>
             <p className="text-gray-500 text-sm leading-snug max-w-[220px] sm:max-w-none">Manage services, bookings, vendors and halls</p>
           </div>
           <button
@@ -939,7 +959,8 @@ export default function AdminPage() {
           {([
             { key: "dashboard",  icon: LayoutDashboard, label: "Dashboard"  },
             { key: "services",   icon: Package,         label: "Services"   },
-            { key: "bookings",   icon: ShoppingBag,     label: "Bookings"   },
+            { key: "hall_bookings", icon: Building2, label: "Hall Bookings" },
+            { key: "service_bookings", icon: ShoppingBag, label: "Service Bookings" },
             { key: "categories", icon: TrendingUp,      label: "Categories" },
             { key: "halls",      icon: Building2,       label: "Halls"      },
             { key: "profile",    icon: Phone,           label: "Profile"    },
@@ -1105,9 +1126,9 @@ export default function AdminPage() {
         )}
 
         {/* ─── Bookings Tab ─── */}
-        {tab === "bookings" && (
+        {(tab === "hall_bookings" || tab === "service_bookings") && (
           <div className="space-y-3">
-            {bookings.length === 0 ? (
+            {visibleBookings.length === 0 ? (
               <div className="text-center py-16 text-gray-500">
                 <ShoppingBag className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                 <p>No bookings yet</p>
@@ -1133,6 +1154,11 @@ export default function AdminPage() {
                               {eventSlot && <p className="text-xs text-gray-500">⏰ Slot: {eventSlot.charAt(0).toUpperCase() + eventSlot.slice(1)}</p>}
                               {booking.event_location && <p className="text-xs text-gray-500">📍 Location: {booking.event_location}</p>}
                             </div>
+                            {(booking as any).rejectionReason && (
+                              <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                                Rejection reason: {(booking as any).rejectionReason}
+                              </p>
+                            )}
                           </div>
                           <div className="grid grid-cols-[1fr_auto] sm:flex sm:items-center gap-2 w-full sm:w-auto">
                             <select
@@ -1505,7 +1531,7 @@ export default function AdminPage() {
                             </button>
                           </div>
                         ))}
-                        {hallImgPreviews.length < 5 && (
+                        {hallImgPreviews.length < 15 && (
                           <div className="aspect-square rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 gap-1">
                             <Upload className="h-6 w-6" />
                             <span className="text-xs font-semibold">Add more</span>
@@ -1515,7 +1541,7 @@ export default function AdminPage() {
                     ) : (
                       <div className="h-36 flex flex-col items-center justify-center text-gray-400 gap-2">
                         <ImageIcon className="h-8 w-8" />
-                        <p className="text-sm">Click to upload 1 to 5 hall photos</p>
+                        <p className="text-sm">Click to upload 5 to 15 hall photos</p>
                         <p className="text-xs">JPG, PNG, WebP up to 5MB each</p>
                       </div>
                     )}
@@ -1531,15 +1557,15 @@ export default function AdminPage() {
                       .split(/\r?\n|,/)
                       .map((url) => url.trim())
                       .filter(Boolean);
-                      if (hallImgPreviews.length + urls.length > 5) {
-                        toast.error("Maximum 5 hall photos allowed");
+                      if (hallImgPreviews.length + urls.length > 15) {
+                        toast.error("Maximum 15 hall photos allowed");
                         return;
                       }
                       setHallForm({ ...hallForm, image_url: e.target.value });
                     }}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
                   />
-                  <p className="text-xs text-amber-600 mt-1">Minimum 1 hall photo is compulsory. Maximum 5 photos can be saved.</p>
+                  <p className="text-xs text-amber-600 mt-1">Minimum 5 hall photos are compulsory. Maximum 15 photos can be saved.</p>
                 </div>
 
                 {/* Name + Location */}
@@ -1760,7 +1786,7 @@ export default function AdminPage() {
                                     </button>
                                   </div>
                                 ))}
-                                {quickSvcImagePreviews.length < 5 && (
+                                {quickSvcImagePreviews.length < 10 && (
                                   <div className="aspect-square rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
                                     <Upload className="h-4 w-4" />
                                     <span className="text-[10px] font-semibold">Add</span>
@@ -1770,7 +1796,7 @@ export default function AdminPage() {
                             ) : (
                               <div className="h-28 flex flex-col items-center justify-center text-gray-400 gap-1">
                                 <ImageIcon className="h-7 w-7" />
-                                <p className="text-xs font-semibold">Upload 1 to 5 photos</p>
+                                <p className="text-xs font-semibold">Upload 1 to 10 photos</p>
                                 <p className="text-[10px]">JPG, PNG, WebP up to 5MB each</p>
                               </div>
                             )}
@@ -1841,13 +1867,13 @@ export default function AdminPage() {
                               toast.error("Please add at least 1 service photo"); return;
                             }
                             if (quickSvcImagePreviews.length > 5) {
-                              toast.error("Maximum 5 photos allowed"); return;
+                              toast.error("Maximum 10 photos allowed"); return;
                             }
                             (async () => {
                               try {
                                 setSaving(true);
                                 const uploadedUrls = await uploadImagesToCloudinary(quickSvcImageFiles);
-                                const galleryUrls = [...uploadedUrls].slice(0, 5);
+                                const galleryUrls = [...uploadedUrls].slice(0, 10);
                                 const cat = categories.find((c) => c.id === quickSvcForm.category_id);
                                 
                                 const payload: Partial<Service> = {
@@ -2099,7 +2125,7 @@ export default function AdminPage() {
                             </button>
                           </div>
                         ))}
-                        {imagePreviews.length < 5 && (
+                        {imagePreviews.length < 10 && (
                           <div className="aspect-square rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 gap-1">
                             <Upload className="h-6 w-6" />
                             <span className="text-xs font-semibold">Add more</span>
@@ -2109,7 +2135,7 @@ export default function AdminPage() {
                     ) : (
                       <div className="h-40 flex flex-col items-center justify-center text-gray-400 gap-2">
                         <ImageIcon className="h-10 w-10" />
-                        <p className="text-sm">Click to upload 1 to 5 photos</p>
+                        <p className="text-sm">Click to upload 1 to 10 photos</p>
                         <p className="text-xs">JPG, PNG, WebP up to 5MB each</p>
                       </div>
                     )}
@@ -2125,15 +2151,15 @@ export default function AdminPage() {
                         .split(/\r?\n|,/)
                         .map((url) => url.trim())
                         .filter(Boolean);
-                      if (imagePreviews.length + urls.length > 5) {
-                        toast.error("Maximum 5 photos allowed");
+                      if (imagePreviews.length + urls.length > 10) {
+                        toast.error("Maximum 10 photos allowed");
                         return;
                       }
                       setForm({ ...form, image_urls: e.target.value });
                     }}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48] resize-none"
                   />
-                  <p className="text-xs text-amber-600 mt-1">Minimum 1 photo is compulsory. Maximum 5 photos can be saved.</p>
+                  <p className="text-xs text-amber-600 mt-1">Minimum 1 service photo is compulsory. Maximum 10 photos can be saved.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

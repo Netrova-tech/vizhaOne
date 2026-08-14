@@ -35,8 +35,14 @@ export default function PrivacyPolicyPage() {
 
           <h3>4. Information Security</h3>
           <p>We work hard to protect VizhaOne and our users from unauthorized access to or unauthorized alteration, disclosure or destruction of information we hold.</p>
+
+          <h3>5. Location, Notifications and Analytics</h3>
+          <p>Location is used only with device permission to show nearby vendors and calculate distance. Notification permission is used for booking and celebration reminders. Optional analytics helps us diagnose crashes and improve app performance; advertising tracking is not required to use VizhaOne.</p>
+
+          <h3>6. Your Controls and Account Deletion</h3>
+          <p>You can withdraw location or notification permission from Android Settings. You can permanently delete your account from Profile → Delete my account. Deletion removes your profile and linked personal records subject to legally required transaction retention.</p>
           
-          <h3>5. Changes</h3>
+          <h3>7. Changes</h3>
           <p>Our Privacy Policy may change from time to time. We will not reduce your rights under this Privacy Policy without your explicit consent. We will post any privacy policy changes on this page.</p>
         </div>
       </div>

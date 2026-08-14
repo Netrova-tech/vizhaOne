@@ -44,6 +44,8 @@ export interface Service {
   pincode?: string;
   location?: string;
   place_name?: string;
+  latitude?: number;
+  longitude?: number;
   availability_status: boolean;
 
   created_at?: string;

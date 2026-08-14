@@ -31,6 +31,7 @@ import ReelsPage from "@/app/reels/page";
 import VendorProfilePage from "@/app/vendor-profile/page";
 import CelebrationPlannerPage from "@/app/celebration-planner/page";
 import QuoteRequestPage from "@/app/quote-request/page";
+import CartPage from "@/app/cart/page";
 import { AppProviders } from "@/components/app/AppProviders";
 import { ScrollToTop } from "@/components/app/ScrollToTop";
 import { BlogPostRoute } from "@/routes/BlogPostRoute";
@@ -83,6 +84,7 @@ export default function App() {
         <Route path="/planner/budget" element={<CelebrationPlannerPage />} />
         <Route path="/planner/guests" element={<CelebrationPlannerPage />} />
         <Route path="/quote/:id" element={<QuoteRequestPage />} />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AppProviders>

@@ -10,6 +10,7 @@ interface ExternalImgProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   className?: string;
   priority?: boolean;
   fallbackClassName?: string;
+  fallbackSrc?: string;
 }
 
 /** Native img — reliable with static export; optional gradient fallback on error */
@@ -20,6 +21,7 @@ export function ExternalImg({
   className,
   priority,
   fallbackClassName,
+  fallbackSrc,
   onError,
   ...props
 }: ExternalImgProps) {
@@ -49,7 +51,8 @@ export function ExternalImg({
         loading={loading}
         decoding="async"
         onError={(e) => {
-          setFailed(true);
+          if (fallbackSrc && e.currentTarget.src !== new URL(fallbackSrc, window.location.href).href) e.currentTarget.src = fallbackSrc;
+          else setFailed(true);
           onError?.(e);
         }}
         {...props}
@@ -66,7 +69,8 @@ export function ExternalImg({
       loading={loading}
       decoding="async"
       onError={(e) => {
-        setFailed(true);
+        if (fallbackSrc && e.currentTarget.src !== new URL(fallbackSrc, window.location.href).href) e.currentTarget.src = fallbackSrc;
+        else setFailed(true);
         onError?.(e);
       }}
       {...props}

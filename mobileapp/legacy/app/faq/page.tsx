@@ -8,7 +8,7 @@ import { useState } from "react";
 const FAQS = [
   {
     q: "How does VizhaOne work?",
-    a: "VizhaOne is a marketplace that connects you with verified event vendors in Tamil Nadu. You can browse marriage halls, caterers, decorators, and more, compare their prices, and book them directly through our platform."
+    a: "VizhaOne is a marketplace that connects you with verified event professionals near you. Browse venues, caterers, decorators and more, compare options, and send booking requests through one platform."
   },
   {
     q: "Are the vendors verified?",
