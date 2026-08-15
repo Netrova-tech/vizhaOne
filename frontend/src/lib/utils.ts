@@ -29,32 +29,44 @@ export function apiUrl(path: string): string {
   return cleanPath;
 }
 
-export function formatPrice(price: number): string {
+type PriceValue = number | string | null | undefined;
+
+function toPriceNumber(price: PriceValue): number | null {
+  if (price === null || price === undefined || price === "") return null;
+  const value = typeof price === "number" ? price : Number(price);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export function formatPrice(price: number | string): string {
+  const value = toPriceNumber(price) || 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(value);
 }
 
-export function hasVisiblePrice(price?: number | null): price is number {
-  return typeof price === "number" && Number.isFinite(price) && price > 0;
+export function hasVisiblePrice(price: PriceValue): boolean {
+  return toPriceNumber(price) !== null;
 }
 
-export function formatPriceOrQuote(price?: number | null): string {
-  return hasVisiblePrice(price) ? formatPrice(price) : "Contact for quote";
+export function formatPriceOrQuote(price: PriceValue): string {
+  const value = toPriceNumber(price);
+  return value !== null ? formatPrice(value) : "Contact for quote";
 }
 
-export function formatPriceRange(min?: number, max?: number): string {
-  if (!min && !max) return "Contact for quote";
-  if (!max || min === max) return formatPrice(min || max || 0);
-  return `${formatPrice(min || 0)} - ${formatPrice(max)}`;
+export function formatPriceRange(min: PriceValue, max: PriceValue): string {
+  const minValue = toPriceNumber(min);
+  const maxValue = toPriceNumber(max);
+  if (minValue === null && maxValue === null) return "Contact for quote";
+  if (maxValue === null || minValue === maxValue) return formatPrice(minValue || maxValue || 0);
+  return `${formatPrice(minValue || 0)} - ${formatPrice(maxValue)}`;
 }
 
 export function formatServicePrice(service: {
-  price?: number | null;
-  price_min?: number | null;
-  price_max?: number | null;
+  price?: PriceValue;
+  price_min?: PriceValue;
+  price_max?: PriceValue;
 }): string {
   if (hasVisiblePrice(service.price_min) || hasVisiblePrice(service.price_max)) {
     return formatPriceRange(service.price_min || undefined, service.price_max || undefined);
