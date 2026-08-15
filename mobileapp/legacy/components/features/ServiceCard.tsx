@@ -10,6 +10,7 @@ import { memo, useState } from "react";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/lib/iconMap";
 import { formatServicePrice, hasVisiblePrice } from "@/lib/utils";
+import { shareContent } from "@/lib/nativeShare";
 
 interface ServiceCardProps {
   service: Service;
@@ -54,19 +55,13 @@ export const ServiceCard = memo(function ServiceCard({
     toast(next ? "❤️ Saved to favorites" : "Removed from saved");
   }
 
-  function handleShare(e: React.MouseEvent) {
+  async function handleShare(e: React.MouseEvent) {
     e.preventDefault();
-    const url = `${window.location.origin}/services/${service.id}`;
-    if (navigator.share) {
-      navigator.share({
+    try {const result=await shareContent({
         title: service.title,
         text: `Check out ${service.title} on VizhaOne!`,
-        url: url,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
-    }
+        url: `${process.env.NEXT_PUBLIC_WEB_URL||"https://www.vizhaone.com"}/services/${service.id}`,
+      });if(result==="copied")toast.success("Link copied to clipboard!")}catch{void 0}
   }
 
   const whatsappMsg = `Vanakkam! Naan "${service.title}" service book pananum. Please confirm availability.`;

@@ -7,8 +7,9 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { MobilePageHeader } from "@/components/layout/MobilePageHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { fileData, publishSocial, socialItems, updateSessionAvatar, type SocialItem, type SocialKind } from "@/lib/social";
-import { clearMobileSession, deleteAccount, startSession, updateAccount } from "@/lib/mobileAuth";
+import { fileData, publishSocial, socialItems, type SocialItem, type SocialKind } from "@/lib/social";
+import { clearMobileSession, deleteAccount, startSession, token, updateAccount } from "@/lib/mobileAuth";
+import { apiUrl } from "@/lib/utils";
 
 const menu = [
   { label: "Referral rewards", hint: "Invite friends and earn", href: "/referrals", icon: Gift },
@@ -35,6 +36,7 @@ export default function MobileProfilePage() {
   const [posting, setPosting] = useState(false);
   const [deleting,setDeleting]=useState(false);
   const [deleteOpen,setDeleteOpen]=useState(false);
+  const [uploadingAvatar,setUploadingAvatar]=useState(false);
   const [analyticsConsent,setAnalyticsConsent]=useState(()=>typeof window!=="undefined"&&localStorage.getItem("vizha_analytics_consent")==="granted");
 
   useEffect(() => {
@@ -47,9 +49,14 @@ export default function MobileProfilePage() {
 
   async function chooseAvatar(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
-    try { updateSessionAvatar(await fileData(file, 1_500_000)); toast.success("Profile picture updated"); }
+    if(!file.type.startsWith("image/"))return toast.error("Choose an image file");
+    if(file.size>5_000_000)return toast.error("Profile image must be below 5 MB");
+    setUploadingAvatar(true);
+    try {const body=new FormData();body.append("images",file);const upload=await fetch(apiUrl("/api/uploads/cloudinary"),{method:"POST",headers:{Authorization:`Bearer ${token()}`},body});const payload=await upload.json().catch(()=>null);if(!upload.ok||!payload?.images?.[0]?.url)throw new Error(payload?.error||"Image upload failed");const result=await updateAccount({...profile,name:profile.name||user?.name||"",mobile:profile.mobile||user?.mobile||"",location:profile.location||user?.location||"",avatar_url:payload.images[0].url});startSession(result.user);toast.success("Profile picture updated");}
     catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
+    finally{setUploadingAvatar(false);e.target.value=""}
   }
+  async function removeAvatar(){if(!user)return;setUploadingAvatar(true);try{const result=await updateAccount({...profile,name:profile.name||user.name||"",mobile:profile.mobile||user.mobile||"",location:profile.location||user.location||"",avatar_url:""});startSession(result.user);toast.success("Profile picture removed")}catch(error){toast.error(error instanceof Error?error.message:"Unable to remove picture")}finally{setUploadingAvatar(false)}}
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
     if (!profile.name.trim()) return toast.error("Name is required");
@@ -79,7 +86,7 @@ export default function MobileProfilePage() {
         <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/10" />
         <button onClick={() => setEditing(true)} className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-2 text-[10px] font-black backdrop-blur"><Pencil className="h-3.5 w-3.5" /> Edit profile</button>
         <div className="relative flex items-center gap-4 pt-8">
-          <label className="relative grid h-24 w-24 flex-none cursor-pointer place-items-center overflow-hidden rounded-full border-4 border-white/70 bg-white/15 shadow-lg">{user?.avatar_url ? <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" /> : <UserRound className="h-11 w-11" />}<input type="file" accept="image/*" onChange={chooseAvatar} className="hidden" /><span className="absolute inset-x-0 bottom-0 bg-black/50 py-1.5 text-center text-[8px] font-bold">CHANGE</span></label>
+          <div className="flex flex-none flex-col items-center gap-2"><label className={`relative grid h-24 w-24 cursor-pointer place-items-center overflow-hidden rounded-full border-4 border-white/70 bg-white/15 shadow-lg ${uploadingAvatar?"pointer-events-none opacity-60":""}`}>{user?.avatar_url ? <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" /> : <UserRound className="h-11 w-11" />}<input type="file" accept="image/*" onChange={chooseAvatar} className="hidden" /><span className="absolute inset-x-0 bottom-0 bg-black/60 py-1.5 text-center text-[8px] font-black">{uploadingAvatar?"UPLOADING...":"CHANGE"}</span></label>{user?.avatar_url&&<button type="button" disabled={uploadingAvatar} onClick={()=>void removeAvatar()} className="rounded-full bg-white/15 px-3 py-1 text-[9px] font-black text-white backdrop-blur disabled:opacity-50">Remove photo</button>}</div>
           <div className="min-w-0"><p className="truncate text-xl font-black">{user?.name || "VizhaOne User"}</p><p className="mt-1 truncate text-xs text-rose-100">{user?.email || "Verified account"}</p><p className="mt-2 flex items-center gap-1 truncate text-[11px] text-white/85"><MapPin className="h-3.5 w-3.5" />{user?.location || "Tamil Nadu"}</p><span className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-[9px] font-black uppercase tracking-wider text-rose-700">{provider ? "Service provider" : "Customer"}</span></div>
         </div>
       </section>

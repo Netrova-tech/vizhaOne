@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import { formatPrice, formatPriceOrQuote, hasVisiblePrice } from "@/lib/utils";
+import { shareContent } from "@/lib/nativeShare";
 
 interface HallCardProps {
   hall: Hall;
@@ -37,19 +38,13 @@ export function HallCard({ hall, onSelect, isSelected, onEdit, onDelete }: HallC
     toast(liked ? "Removed from saved" : "❤️ Saved to favorites");
   }
 
-  function handleShare(e: React.MouseEvent) {
+  async function handleShare(e: React.MouseEvent) {
     e.preventDefault();
-    const url = `${window.location.origin}/halls/${hall.id}`;
-    if (navigator.share) {
-      navigator.share({
+    try {const result=await shareContent({
         title: hall.name,
         text: `Check out ${hall.name} on VizhaOne!`,
-        url: url,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(url);
-      toast.success("Link copied to clipboard!");
-    }
+        url: `${process.env.NEXT_PUBLIC_WEB_URL||"https://www.vizhaone.com"}/halls/${hall.id}`,
+      });if(result==="copied")toast.success("Link copied to clipboard!")}catch{void 0}
   }
 
   return (

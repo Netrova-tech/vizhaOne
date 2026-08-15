@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Copy, Hash, Heart, Laugh, Landmark, Languages, Share2, Sparkles, WandSparkles } from "lucide-react";
 import { toast } from "sonner";
+import { shareContent } from "@/lib/nativeShare";
 import { Navbar } from "@/components/layout/Navbar";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -29,7 +30,7 @@ export default function HashtagGeneratorPage() {
   const [first, setFirst] = useState(""); const [second, setSecond] = useState(""); const [style, setStyle] = useState<Style>("romantic");
   const tags = useMemo(() => generate(first, second, style), [first, second, style]);
   async function copy(tag: string) { await navigator.clipboard.writeText(tag); localStorage.setItem("vizha_selected_hashtag", tag); toast.success("Hashtag copied and saved for your invitation"); }
-  async function share(tag: string) { if (navigator.share) await navigator.share({ title: "Our VizhaOne hashtag", text: tag }); else copy(tag); }
+  async function share(tag: string) { try{const result=await shareContent({ title: "Our VizhaOne hashtag", text: tag });if(result==="copied")toast.success("Hashtag copied") }catch{void 0} }
   return <div className="min-h-screen bg-[#fffafb] pb-20 md:pb-0"><Navbar />
     <main>
       <section className="relative overflow-hidden bg-gradient-to-br from-[#4c0519] via-[#9f1239] to-[#e11d48] px-5 py-16 text-white sm:py-20">

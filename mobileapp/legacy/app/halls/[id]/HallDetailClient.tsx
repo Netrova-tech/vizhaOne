@@ -20,6 +20,7 @@ import type { SlotType, SlotStatus, Service } from "@/types";
 import { toast } from "sonner";
 import { createBookingWithSync, createInquiry, getBookingsWithFallback, type Booking } from "@/lib/api";
 import { CategoryIcon } from "@/lib/iconMap";
+import { shareContent } from "@/lib/nativeShare";
 
 type Tab = "overview" | "availability" | "services" | "gallery";
 const RESERVED_BOOKING_STATUSES = new Set(["approved", "in_progress", "completed"]);
@@ -65,18 +66,16 @@ export default function HallDetailClient({ id }: { id: string }) {
     });
   }
 
-  function handleShare() {
+  async function handleShare() {
     if (!hall) return;
-    if (navigator.share) {
-      navigator.share({
+    try {
+      const result = await shareContent({
         title: hall.name,
         text: `Check out ${hall.name} on VizhaOne!`,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
-    }
+        url: `${process.env.NEXT_PUBLIC_WEB_URL || "https://www.vizhaone.com"}/halls/${hall.id}`,
+      });
+      if (result === "copied") toast.success("Link copied to clipboard!");
+    } catch (error) { if ((error as Error)?.message !== "Share canceled") toast.error("Unable to share right now"); }
   }
 
   const [showBookModal, setShowBookModal] = useState(false);
