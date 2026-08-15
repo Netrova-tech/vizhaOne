@@ -131,16 +131,21 @@ function ServicesContent() {
     startTransition(() => setSelectedCategory(id));
   }, [startTransition]);
 
+  const categoryNames = useMemo(
+    () => new Map(categories.map((category) => [category.id, category.category_name.toLowerCase()])),
+    [categories],
+  );
+
   const filtered = useMemo(() => {
     const base = services.length ? services : (DEMO_SERVICES as Service[]);
     const results = base.filter((s) => {
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesSearch =
-          s.title.toLowerCase().includes(q) ||
-          (s.location && s.location.toLowerCase().includes(q)) ||
-          (s.vendor_name && s.vendor_name.toLowerCase().includes(q)) ||
-          (s.place_name && s.place_name.toLowerCase().includes(q));
+        const terms = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean);
+        const haystack = [s.title, s.description, s.location, s.place_name, s.vendor_name, s.category_id ? categoryNames.get(s.category_id) : ""]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        const matchesSearch = terms.every((term) => haystack.includes(term));
         if (!matchesSearch) return false;
       }
       if (selectedCategory && s.category_id !== selectedCategory) return false;
@@ -159,7 +164,7 @@ function ServicesContent() {
       });
     }
     return results;
-  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort, distance, serviceDistance, userCoordinates]);
+  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort, distance, serviceDistance, userCoordinates, categoryNames]);
 
   // Reset to page 1 on filter changes
   useEffect(() => {
@@ -218,7 +223,7 @@ function ServicesContent() {
         compact
       />
 
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 pb-40">
+      <div className="max-w-7xl mx-auto bg-[linear-gradient(180deg,#fffafb_0%,#ffffff_45%,#fff7f9_100%)] px-5 py-8 pb-40 sm:px-8">
         {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
           <button onClick={() => pickCategory("")}
@@ -228,7 +233,7 @@ function ServicesContent() {
           {categories.map((cat) => (
             <button key={cat.id} onClick={() => pickCategory(selectedCategory === cat.id ? "" : cat.id)}
               className={`flex-shrink-0 flex items-center px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
-                selectedCategory === cat.id ? "bg-[#e11d48] text-white border-[#e11d48]" : "bg-white text-gray-600 border-gray-200 hover:border-green-300"
+                selectedCategory === cat.id ? "bg-[#e11d48] text-white border-[#e11d48] shadow-md" : "bg-white text-gray-900 border-rose-100 shadow-sm hover:border-rose-300"
               }`}>
               {cat.category_name}
             </button>
@@ -242,10 +247,10 @@ function ServicesContent() {
           </div>
           <input
             type="text"
-            placeholder="Search by service name, vendor or location..."
+            placeholder="Search makeup, bridal, vendor or city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-24 py-3.5 bg-gradient-to-r from-rose-50/50 to-white border-2 border-rose-100 rounded-2xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#e11d48] focus:from-white focus:to-white transition-all shadow-sm"
+            className="w-full rounded-2xl border-2 border-rose-200 bg-white py-3.5 pl-10 pr-24 text-sm font-bold text-gray-950 shadow-[0_8px_24px_rgba(136,19,55,.10)] transition-all placeholder:font-medium placeholder:text-gray-500 focus:border-[#e11d48] focus:outline-none"
           />
           {searchQuery ? (
             <button
@@ -327,7 +332,7 @@ function ServicesContent() {
                 return (
                   <div
                     key={service.id}
-                    className={`relative bg-white rounded-2xl overflow-hidden shadow-sm border-2 transition-shadow duration-200 hover:shadow-lg ${
+                    className={`relative overflow-hidden rounded-3xl bg-white shadow-[0_12px_34px_rgba(65,20,36,.12)] border-2 transition-shadow duration-200 hover:shadow-xl ${
                       selectMode && isChecked
                         ? "border-[#e11d48] shadow-[#fff1f2]"
                         : "border-transparent hover:border-gray-100"
@@ -404,27 +409,27 @@ function ServicesContent() {
                     </div>
 
                     {/* Content */}
-                    <div className="p-4">
+                    <div className="p-4 text-gray-950">
                       <button
                         type="button"
                         onClick={() => navigate(`/services/${service.id}`)}
-                        className="block w-full text-left font-bold text-gray-900 text-sm mb-0.5 line-clamp-1 hover:text-[#e11d48] transition-colors"
+                        className="mb-1 block w-full text-left text-base font-black text-gray-950 line-clamp-2 hover:text-[#e11d48] transition-colors"
                       >
                         {service.title}
                       </button>
-                      <p className="text-xs text-gray-500 mb-1 line-clamp-1 flex items-center gap-1">
+                      <p className="mb-1 flex items-center gap-1 text-xs font-bold text-gray-600 line-clamp-1">
                         {service.vendor_name}{service.location ? ` • ${service.location}` : ""}
                       </p>
                       {service.description && (
-                        <p className="text-xs text-gray-400 line-clamp-2 mb-2">{service.description}</p>
+                        <p className="mb-3 text-xs font-medium leading-5 text-gray-600 line-clamp-2">{service.description}</p>
                       )}
 
                       <div className="mb-3 rounded-2xl border border-rose-100 bg-[#fff7f9] px-3 py-2">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Price</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Starting price</p>
                         <p className={`text-sm font-extrabold ${
                           hasVisiblePrice(service.price) || hasVisiblePrice(service.price_min) || hasVisiblePrice(service.price_max)
-                            ? "text-[#be123c]"
-                            : "text-gray-500"
+                            ? "text-[#a80f3d]"
+                            : "text-gray-700"
                         }`}>
                           {formatServicePrice(service)}
                         </p>

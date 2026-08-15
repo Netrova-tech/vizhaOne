@@ -2,13 +2,14 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, BarChart2, LayoutDashboard, LogOut, MessageSquare, PlaySquare, UserRound } from "lucide-react";
+import { Home, LayoutGrid, BarChart2, Building2, LayoutDashboard, LogOut, MessageSquare, PlaySquare, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { href: "/",         label: "Home",     icon: Home        },
   { href: "/services", label: "Explore", icon: LayoutGrid  },
+  { href: "/halls", label: "Halls", icon: Building2  },
   { href: "/reels", label: "Reels", icon: PlaySquare  },
   { href: "/profile", label: "Profile", icon: UserRound  },
 ];
@@ -39,14 +40,14 @@ export function MobileBottomNav() {
           return (
             <Link key={item.href} to={item.href}
               className={cn(
-                "flex min-w-0 flex-col items-center gap-0.5 px-1 py-2 rounded-xl transition-all duration-200",
+                "flex min-w-0 flex-col items-center gap-0.5 px-0.5 py-2 rounded-xl transition-all duration-200",
                 isActive
                   ? "text-rose-700 bg-rose-50"
                   : "text-gray-400 hover:text-rose-600"
               )}
             >
               <item.icon className={cn("h-5 w-5 transition-transform", isActive && "scale-110")} />
-              <span className="text-xs font-semibold">{item.label}</span>
+              <span className="text-[10px] font-extrabold">{item.label}</span>
               {isActive && <div className="h-1 w-4 rounded-full bg-gradient-to-r from-rose-500 to-rose-600" />}
             </Link>
           );

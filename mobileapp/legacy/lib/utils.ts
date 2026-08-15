@@ -70,11 +70,10 @@ export function formatServicePrice(service: {
   price_min?: PriceValue;
   price_max?: PriceValue;
 }): string {
-  if (hasVisiblePrice(service.price_min) || hasVisiblePrice(service.price_max)) {
-    return formatPriceRange(service.price_min || undefined, service.price_max || undefined);
-  }
-
-  return formatPriceOrQuote(service.price);
+  const startingPrice = toPriceNumber(service.price_min) ?? toPriceNumber(service.price);
+  if (startingPrice !== null) return `Starts at ${formatPrice(startingPrice)}`;
+  const maximumPrice = toPriceNumber(service.price_max);
+  return maximumPrice !== null ? `Up to ${formatPrice(maximumPrice)}` : "Contact for quote";
 }
 
 export function formatDate(dateStr: string): string {
