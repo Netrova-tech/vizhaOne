@@ -104,10 +104,10 @@ export default function HallsPage() {
             </div>
             <input
               type="text"
-              placeholder={lang === "ta" ? "மண்டபம் அல்லது இடம் தேடுங்கள்..." : "Search by hall name or location..."}
+              placeholder={lang === "ta" ? "மண்டபம் அல்லது இடத்தைத் தேடுங்கள்" : "Search halls or locations"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-12 py-3.5 bg-gradient-to-r from-rose-50/50 to-white border-2 border-rose-100 rounded-2xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#e11d48] focus:from-white focus:to-white transition-all shadow-sm"
+              className="relative z-10 block min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap pl-11 pr-4 py-3.5 bg-white border-2 border-rose-200 rounded-2xl text-base font-semibold text-gray-900 placeholder:font-medium placeholder:text-gray-500 focus:outline-none focus:border-[#e11d48] transition-all shadow-sm"
             />
             {searchQuery && (
               <button

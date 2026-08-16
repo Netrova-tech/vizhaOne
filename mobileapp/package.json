@@ -12,6 +12,7 @@
     "cap:add:android": "cap add android"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^7.5.0",
     "@capacitor/core": "^7.4.3",
     "@capacitor/geolocation": "^7.1.5",
     "@capacitor/local-notifications": "^7.0.0",
@@ -28,6 +29,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.3.0",
+    "firebase": "^11.2.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
     "next": "16.3.0",

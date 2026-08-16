@@ -523,7 +523,7 @@ export default function HallDetailClient({ id }: { id: string }) {
                             : new Date(selectedDate + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                         </p>
                         <p className="text-sm text-[#be123c] font-semibold">
-                          {selectedSlot === "morning" ? "🌅 Morning Slot" : "🌆 Evening Slot"}
+                          {selectedSlot === "morning" ? "Morning Slot" : selectedSlot === "evening" ? "Evening Slot" : "Full Day"}
                         </p>
                       </div>
                       <button onClick={() => setShowBookModal(true)}
@@ -718,7 +718,7 @@ export default function HallDetailClient({ id }: { id: string }) {
                         handleStartDateChange(e.target.value);
                       }}
                       required
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48]"
+                      className="block min-w-0 w-full appearance-none px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-[#e11d48]"
                     />
                   </div>
                   <div>
@@ -729,7 +729,7 @@ export default function HallDetailClient({ id }: { id: string }) {
                       min={selectedDate || tomorrowStr}
                       onChange={(e) => handleEndDateChange(e.target.value)}
                       required
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48]"
+                      className="block min-w-0 w-full appearance-none px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-[#e11d48]"
                     />
                   </div>
                   <div>

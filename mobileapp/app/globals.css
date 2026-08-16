@@ -212,6 +212,44 @@ input, select, textarea { font-size: 16px !important; }
 img, video, canvas, svg { max-width: 100%; }
 table { max-width: 100%; }
 
+/* Keep Google Translate's legacy toolbar and selection tooltip out of the app UI. */
+html.translated-ltr, html.translated-rtl, body {
+  top: 0 !important;
+  margin-top: 0 !important;
+}
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-te-spinner-pos,
+.goog-te-menu-frame,
+.goog-te-gadget-icon {
+  display: none !important;
+  visibility: hidden !important;
+}
+.goog-text-highlight {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Android should not expose internal SPA URLs when an app control is held. */
+button, a, [role="button"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+input, textarea, [contenteditable="true"] {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+input[type="date"] {
+  min-width: 100%;
+  max-width: 100%;
+}
+
 @media (max-width: 767px) {
   html {
     height: 100% !important;

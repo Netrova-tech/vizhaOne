@@ -17,6 +17,9 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { useAuth } from "@/context/AuthContext";
 import { fetchReferralWallet, type ReferralWallet } from "@/lib/celebrationApi";
+import { shareContent } from "@/lib/nativeShare";
+
+const publicWebUrl = (process.env.NEXT_PUBLIC_WEB_URL || "https://www.vizhaone.com").replace(/\/$/, "");
 
 export default function ReferralsPage() {
   const { user } = useAuth();
@@ -63,18 +66,16 @@ export default function ReferralsPage() {
   }
   async function copyLink() {
     if (!wallet) return;
-    const link = `${window.location.origin}/referrals?code=${wallet.code}`;
+    const link = `${publicWebUrl}/referrals?code=${wallet.code}`;
     await navigator.clipboard.writeText(link);
     toast.success("Referral link copied");
   }
-  function whatsapp() {
+  async function whatsapp() {
     if (!wallet) return;
-    const text = `Plan your celebration with VizhaOne! Use my referral code ${wallet.code} on your first paid booking: ${window.location.origin}/referrals?code=${wallet.code}`;
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(text)}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    const link = `${publicWebUrl}/referrals?code=${wallet.code}`;
+    const text = `Plan your celebration with VizhaOne! Use my referral code ${wallet.code} on your first paid booking.`;
+    try { await shareContent({ title: "VizhaOne referral", text, url: link }); }
+    catch (error) { if ((error as Error)?.message !== "Share canceled") toast.error("Unable to share referral link"); }
   }
   useEffect(() => {
     const code = new URLSearchParams(location.search).get("code");

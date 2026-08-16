@@ -34,6 +34,7 @@ import QuoteRequestPage from "@/app/quote-request/page";
 import CartPage from "@/app/cart/page";
 import { AppProviders } from "@/components/app/AppProviders";
 import { ScrollToTop } from "@/components/app/ScrollToTop";
+import { RouteBackButton } from "@/components/app/RouteBackButton";
 import { BlogPostRoute } from "@/routes/BlogPostRoute";
 import { HallDetailRoute } from "@/routes/HallDetailRoute";
 import { NotFoundPage } from "@/routes/NotFoundPage";
@@ -44,6 +45,7 @@ export default function App() {
   return (
     <AppProviders>
       <ScrollToTop />
+      <RouteBackButton />
       <Routes>
         <Route path="/" element={<MobileHomePage />} />
         <Route path="/about" element={<AboutPage />} />

@@ -33,10 +33,20 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // Google Translate is triggered via __vizha_translate in the Navbar buttons
   }
 
+  function repairLegacyEncoding(value: string) {
+    if (!/[àðâ]/.test(value)) return value;
+    try {
+      const bytes = Uint8Array.from(Array.from(value), (char) => char.charCodeAt(0) & 0xff);
+      return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      return value;
+    }
+  }
+
   function t(key: TranslationKey): string {
     // For ml/te we don't have built-in translations — Google Translate handles the full page
     const dict = translations[lang as keyof typeof translations] ?? translations.en;
-    return (dict as Record<string, string>)[key] ?? translations.en[key] ?? key;
+    return repairLegacyEncoding((dict as Record<string, string>)[key] ?? translations.en[key] ?? key);
   }
 
   return (

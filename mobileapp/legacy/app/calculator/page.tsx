@@ -645,7 +645,7 @@ export default function CalculatorPage() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Event Date</label>
                       <input
@@ -704,7 +704,7 @@ export default function CalculatorPage() {
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Event End Date</label>
                       <input

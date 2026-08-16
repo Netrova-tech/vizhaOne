@@ -9,6 +9,7 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
+  RotateCcw,
   X,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -311,12 +312,20 @@ export function VizhaOneAssistant() {
     setInput("");
   }
 
+  function restartChat() {
+    setMessages(initialMessages);
+    setActions([{ label: "Plan Event", to: "/calculator" }, { label: "View Halls", to: "/halls" }]);
+    setBookingStep("idle");
+    setDraft({});
+    setInput("");
+  }
+
   if (hiddenOnAuth) return null;
 
   return (
     <div className="fixed bottom-[calc(82px+env(safe-area-inset-bottom,0px))] right-3 z-[70] sm:bottom-6 sm:right-6">
       {open && (
-        <div className="fixed inset-x-3 bottom-[calc(142px+env(safe-area-inset-bottom,0px))] max-h-[68dvh] overflow-hidden rounded-[26px] border border-rose-100 bg-white shadow-2xl shadow-rose-950/20 sm:static sm:mb-3 sm:w-[calc(100vw-2rem)] sm:max-w-md sm:rounded-2xl">
+        <div className="fixed inset-x-3 bottom-[calc(142px+env(safe-area-inset-bottom,0px))] flex h-[min(68dvh,620px)] flex-col overflow-hidden rounded-[26px] border border-rose-100 bg-white shadow-2xl shadow-rose-950/20 sm:static sm:mb-3 sm:w-[calc(100vw-2rem)] sm:max-w-md sm:rounded-2xl">
           <div className="bg-[#991b1b] px-4 py-3 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -330,13 +339,14 @@ export function VizhaOneAssistant() {
                   </p>
                 </div>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20" aria-label="Close VizhaOne AI">
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex gap-2">
+                <button type="button" onClick={restartChat} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20" aria-label="Clear chat and start again" title="Start again"><RotateCcw className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20" aria-label="Close VizhaOne AI"><X className="h-4 w-4" /></button>
+              </div>
             </div>
           </div>
 
-          <div ref={scrollRef} className="max-h-96 space-y-3 overflow-y-auto bg-rose-50/40 px-4 py-4">
+          <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-rose-50/40 px-4 py-4">
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[86%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${message.role === "user" ? "bg-[#e11d48] text-white" : "bg-white text-gray-700 shadow-sm ring-1 ring-rose-100"}`}>
@@ -346,7 +356,7 @@ export function VizhaOneAssistant() {
             ))}
           </div>
 
-          <div className="border-t border-rose-100 bg-white px-4 py-3">
+          <div className="shrink-0 border-t border-rose-100 bg-white px-4 py-3">
             <div className="mb-3 flex flex-wrap gap-2">
               {quickQuestions.map((question) => (
                 <button key={question} type="button" onClick={() => question === "Start booking" ? startBookingFlow(question) : ask(question)} className="rounded-full border border-rose-100 px-3 py-1.5 text-[11px] font-semibold text-[#be123c] transition hover:bg-rose-50">
@@ -367,7 +377,7 @@ export function VizhaOneAssistant() {
             )}
 
             <form onSubmit={(event) => { event.preventDefault(); ask(input); }} className="flex items-center gap-2">
-              <input value={input} onChange={(event) => setInput(event.target.value)} placeholder={bookingStep !== "idle" && bookingStep !== "done" ? "Reply with booking detail..." : "Ask about booking, halls, services..."} className="h-11 min-w-0 flex-1 rounded-xl border border-rose-100 bg-gray-50 px-3 text-sm outline-none transition focus:border-[#e11d48] focus:bg-white" />
+              <input value={input} onChange={(event) => setInput(event.target.value)} enterKeyHint="send" autoComplete="off" placeholder={bookingStep !== "idle" && bookingStep !== "done" ? "Reply with booking detail..." : "Ask about booking, halls, services..."} className="h-11 min-w-0 flex-1 rounded-xl border border-rose-100 bg-gray-50 px-3 text-sm outline-none transition focus:border-[#e11d48] focus:bg-white" />
               <button type="submit" className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e11d48] text-white transition hover:bg-[#be123c]" aria-label="Send message">
                 <Send className="h-4 w-4" />
               </button>

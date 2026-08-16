@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VizhaLogo } from "@/components/ui/VizhaLogo";
+import { useCart } from "@/hooks/useCart";
 
 export const NAVBAR_HEIGHT = 68;
 
@@ -29,6 +30,7 @@ const navLinks = [
 export function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
   const { lang, setLang, t } = useLang();
+  const { count } = useCart();
   const { pathname } = useLocation();
   const navigate  = useNavigate();
   const dropRef   = useRef<HTMLDivElement>(null);
@@ -61,7 +63,7 @@ export function Navbar() {
     navigate("/");
   }
 
-  const langLabel = lang === "en" ? "EN" : lang === "ta" ? "த" : lang === "hi" ? "हि" : lang === "ml" ? "മ" : "తె";
+  const langLabel = lang.toUpperCase();
 
   return (
     <>
@@ -115,20 +117,17 @@ export function Navbar() {
                       className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-rose-100 overflow-hidden z-50 min-w-[140px]"
                     >
                       {[
-                        { code: "en", label: "🇬🇧 English",  gt: "en" },
-                        { code: "ta", label: "🇮🇳 தமிழ்",    gt: "ta" },
-                        { code: "hi", label: "🇮🇳 हिन्दी",   gt: "hi" },
-                        { code: "ml", label: "🇮🇳 മലയാളം",  gt: "ml" },
-                        { code: "te", label: "🇮🇳 తెలుగు",   gt: "te" },
+                        { code: "en", label: "English" },
+                        { code: "ta", label: "தமிழ்" },
+                        { code: "hi", label: "हिन्दी" },
+                        { code: "ml", label: "മലയാളം" },
+                        { code: "te", label: "తెలుగు" },
                       ].map((l) => (
                         <button
                           key={l.code}
                           onClick={() => {
                             setLang(l.code as Language);
                             setDesktopLangOpen(false);
-                            if (typeof window !== "undefined" && (window as unknown as Record<string, unknown>).__vizha_translate) {
-                              (window as unknown as Record<string, (lang: string) => void>).__vizha_translate(l.gt);
-                            }
                           }}
                           className={`w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-rose-50 hover:text-rose-700 transition-colors ${lang === l.code ? "bg-rose-50 text-rose-700" : "text-gray-700"}`}
                         >
@@ -260,6 +259,11 @@ export function Navbar() {
 
             {/* Mobile utilities */}
             <div className="md:hidden flex items-center gap-2 justify-self-end">
+
+              <Link to="/cart" aria-label={`Cart with ${count} items`} className="relative grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-sm active:scale-95">
+                <ShoppingBag className="h-4.5 w-4.5" />
+                {count > 0 && <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count > 99 ? "99+" : count}</span>}
+              </Link>
 
               {/* Profile icon */}
               {user && isAdmin && (

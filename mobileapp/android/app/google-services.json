@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "291050717643",
+    "project_id": "vizhaone",
+    "storage_bucket": "vizhaone.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:291050717643:android:ad8d6c8560f9e9e413764e",
+        "android_client_info": {
+          "package_name": "com.vizhaone.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "291050717643-na4oct2l0nk0g974ufbm1vfosqebqjj5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vizhaone.app",
+            "certificate_hash": "289b1012a45be7cbeb562778cfa8a493cff53f7a"
+          }
+        },
+        {
+          "client_id": "291050717643-tccp8siadus4ki7328kcj164rtpd5ioc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcs35rXqtfm4CuOZO-NOLiTsdqLHbX-v4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "291050717643-tccp8siadus4ki7328kcj164rtpd5ioc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

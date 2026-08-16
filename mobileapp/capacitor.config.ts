@@ -5,9 +5,13 @@ const config: CapacitorConfig = {
   appName: "VizhaOne",
   webDir: "out",
   backgroundColor: "#fff7f8",
-  android: { allowMixedContent: true },
+  android: { allowMixedContent: false },
   plugins: {
     CapacitorHttp: { enabled: true },
+    FirebaseAuthentication: {
+      skipNativeAuth: false,
+      providers: ["google.com"],
+    },
   },
 };
 

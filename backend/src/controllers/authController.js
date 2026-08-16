@@ -8,6 +8,7 @@ const {
   verifyOtp,
   registerMobileAccount,
   loginMobileAccount,
+  loginGoogleAccount,
   getMobileAccount,
   updateMobileAccount,
   deleteMobileAccount,
@@ -17,6 +18,7 @@ const { superAdminEmail } = require("../config/env");
 const authFailure=(res,error)=>res.status(error.status||500).json({error:error.message||"Authentication failed"});
 async function registerController(req,res){try{return res.status(201).json(await registerMobileAccount(req.body||{}));}catch(error){return authFailure(res,error);}}
 async function loginController(req,res){try{return res.json(await loginMobileAccount(req.body||{}));}catch(error){return authFailure(res,error);}}
+async function googleLoginController(req,res){try{return res.json(await loginGoogleAccount(req.body||{}));}catch(error){return authFailure(res,error);}}
 async function mobileMeController(req,res){try{const user=await getMobileAccount(req);return user?res.json({user}):res.status(401).json({error:"Session expired"});}catch(error){return authFailure(res,error);}}
 async function mobileProfileController(req,res){try{const user=await updateMobileAccount(req,req.body||{});return user?res.json({success:true,user}):res.status(401).json({error:"Session expired"});}catch(error){return authFailure(res,error);}}
 async function deleteMobileAccountController(req,res){try{const deleted=await deleteMobileAccount(req);return deleted?res.json({success:true}):res.status(401).json({error:"Session expired"});}catch(error){return authFailure(res,error);}}
@@ -133,6 +135,7 @@ module.exports = {
   verifyOtpController,
   registerController,
   loginController,
+  googleLoginController,
   mobileMeController,
   mobileProfileController,
   deleteMobileAccountController,

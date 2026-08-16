@@ -49,9 +49,9 @@ export function MobileAppHeader() {
   const { lang, setLang } = useLang();
   const isProvider = user?.role === "service_provider";
   const languages: { code: Language; label: string; short: string }[] = [
-    {code:"en",label:"English",short:"EN"},{code:"ta",label:"Tamil",short:"TA"},{code:"hi",label:"Hindi",short:"HI"},{code:"ml",label:"Malayalam",short:"ML"},{code:"te",label:"Telugu",short:"TE"},
+    {code:"en",label:"English",short:"EN"},{code:"ta",label:"தமிழ்",short:"TA"},{code:"hi",label:"हिन्दी",short:"HI"},{code:"ml",label:"മലയാളം",short:"ML"},{code:"te",label:"తెలుగు",short:"TE"},
   ];
-  function changeLanguage(code:Language){setLang(code);setLanguageOpen(false);window.__vizha_translate?.(code);window.setTimeout(()=>window.__vizha_translate?.(code),600)}
+  function changeLanguage(code:Language){setLang(code);setLanguageOpen(false)}
   function go(href: string) { setOpen(false); window.setTimeout(() => navigate(href), 0); }
   return (
     <>

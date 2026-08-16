@@ -9,6 +9,7 @@ const {
   verifyOtpController,
   registerController,
   loginController,
+  googleLoginController,
   mobileMeController,
   mobileProfileController,
   deleteMobileAccountController,
@@ -26,6 +27,7 @@ function createAuthRouter({ store }) {
   router.post("/verify-otp", (req, res) => verifyOtpController(req, res, store));
   router.post("/register", registerController);
   router.post("/login", loginController);
+  router.post("/google", googleLoginController);
   router.get("/mobile-me", mobileMeController);
   router.put("/profile", mobileProfileController);
   router.delete("/account", deleteMobileAccountController);
