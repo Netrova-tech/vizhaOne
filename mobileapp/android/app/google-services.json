@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "291050717643-8h7om4533ia2n2k41h2k8hir86bq0vou.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vizhaone.app",
+            "certificate_hash": "b73e066d0f98c6f6b48ebc6bbfc7fe0431994b79"
+          }
+        },
+        {
           "client_id": "291050717643-na4oct2l0nk0g974ufbm1vfosqebqjj5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

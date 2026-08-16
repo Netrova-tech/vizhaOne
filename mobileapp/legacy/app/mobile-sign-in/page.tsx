@@ -45,7 +45,10 @@ export default function MobileSignInPage() {
       // The legacy Google account selector is more reliable on Android devices
       // where Credential Manager reports "No credentials available".
       const credential = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
-      const idToken = credential.credential?.idToken;
+      // `credential.idToken` is the Google OAuth token. Our backend verifies a
+      // Firebase Auth token, so always request the Firebase session token after
+      // the native provider sign-in has completed.
+      const { token: idToken } = await FirebaseAuthentication.getIdToken({ forceRefresh: true });
       if (!idToken) throw new Error("Google did not return a secure sign-in token");
       const result = await loginGoogle(idToken);
       if (result.user) return enter(result.user, result.token);
