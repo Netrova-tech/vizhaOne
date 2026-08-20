@@ -22,11 +22,27 @@
           }
         },
         {
+          "client_id": "291050717643-h7kusugd3g6kf7j2i8rit5cvqj7nbj19.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vizhaone.app",
+            "certificate_hash": "ee8e9e17e7695d21d83b4cf25c4a2cfbbc7d08ae"
+          }
+        },
+        {
           "client_id": "291050717643-na4oct2l0nk0g974ufbm1vfosqebqjj5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.vizhaone.app",
             "certificate_hash": "289b1012a45be7cbeb562778cfa8a493cff53f7a"
+          }
+        },
+        {
+          "client_id": "291050717643-nd1u7p714ns68h2bpmshe5pujpoldiil.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vizhaone.app",
+            "certificate_hash": "7a11bef1e336b7c6ed68cc363d86cca58769747b"
           }
         },
         {

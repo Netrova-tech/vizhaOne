@@ -12,6 +12,17 @@ const config: CapacitorConfig = {
       skipNativeAuth: false,
       providers: ["google.com"],
     },
+    SplashScreen: {
+      launchShowDuration: 3000,
+      launchAutoHide: false,
+      launchFadeOutDuration: 250,
+      backgroundColor: "#fff8f4",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
   },
 };
 

@@ -30,6 +30,13 @@ function AuthenticationGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function LegacyRoot() {
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("vizha_app_ready"));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <HashRouter>
       <AuthenticationGate><App /></AuthenticationGate>

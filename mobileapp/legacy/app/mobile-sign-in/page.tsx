@@ -44,6 +44,10 @@ export default function MobileSignInPage() {
     try {
       // The legacy Google account selector is more reliable on Android devices
       // where Credential Manager reports "No credentials available".
+      // Clear only Firebase's cached provider session so every explicit button
+      // tap opens Google's account chooser. VizhaOne's own saved login remains
+      // untouched and existing accounts still enter the app immediately.
+      await FirebaseAuthentication.signOut().catch(() => undefined);
       const credential = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
       // `credential.idToken` is the Google OAuth token. Our backend verifies a
       // Firebase Auth token, so always request the Firebase session token after
