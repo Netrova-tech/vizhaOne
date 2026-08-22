@@ -66,6 +66,31 @@ async function uploadCloudinaryImagesController(req, res) {
   }
 }
 
+async function uploadCloudinaryMediaController(req, res) {
+  if (!cloudinaryCloudName || !cloudinaryApiKey || !cloudinaryApiSecret) return res.status(500).json({ error: "Cloudinary is not configured" });
+  const file = req.file;
+  if (!file) return res.status(400).json({ error: "Choose an image or video" });
+  if (!file.mimetype.startsWith("image/") && !file.mimetype.startsWith("video/")) return res.status(400).json({ error: "Only image and video files are supported" });
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const params = { folder: `${cloudinaryFolder}/reels`, timestamp };
+    const signature = signCloudinaryParams(params);
+    const body = new FormData();
+    body.append("file", new Blob([file.buffer], { type: file.mimetype }), file.originalname);
+    body.append("api_key", cloudinaryApiKey);
+    body.append("folder", params.folder);
+    body.append("timestamp", String(timestamp));
+    body.append("signature", signature);
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/auto/upload`, { method: "POST", body });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error?.message || "Media upload failed");
+    return res.json({ media: { publicId: result.public_id, url: result.secure_url, type: result.resource_type } });
+  } catch (error) {
+    return res.status(502).json({ error: error instanceof Error ? error.message : "Media upload failed" });
+  }
+}
+
 module.exports = {
   uploadCloudinaryImagesController,
+  uploadCloudinaryMediaController,
 };

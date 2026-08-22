@@ -42,13 +42,10 @@ export default function MobileSignInPage() {
   async function googleSignIn() {
     setGoogleBusy(true);
     try {
-      // The legacy Google account selector is more reliable on Android devices
-      // where Credential Manager reports "No credentials available".
-      // Clear only Firebase's cached provider session so every explicit button
-      // tap opens Google's account chooser. VizhaOne's own saved login remains
-      // untouched and existing accounts still enter the app immediately.
-      await FirebaseAuthentication.signOut().catch(() => undefined);
-      const credential = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
+      // Do not clear Credential Manager immediately before requesting an
+      // account. On some Android devices that creates a race and the chooser
+      // reports "No credentials available" even when Google accounts exist.
+      const credential = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: true });
       // `credential.idToken` is the Google OAuth token. Our backend verifies a
       // Firebase Auth token, so always request the Firebase session token after
       // the native provider sign-in has completed.
@@ -60,7 +57,12 @@ export default function MobileSignInPage() {
       setGoogleName(result.profile?.name || credential.user?.displayName || "");
       toast.success("Google account verified. Complete your profile.");
     } catch (error) {
-      const message=error instanceof Error?error.message:"Google sign-in failed";
+      const rawMessage=error instanceof Error?error.message:"Google sign-in failed";
+      const message=/^(10:|.*DEVELOPER_ERROR)/i.test(rawMessage)
+        ? "Google Sign-In configuration error. Install the latest Play Store version and try again."
+        : /no credentials available/i.test(rawMessage)
+          ? "No Google account is available. Add a Google account in Android Settings, update Google Play services, and try again."
+          : rawMessage;
       if(!/cancel/i.test(message)) toast.error(message);
     } finally { setGoogleBusy(false); }
   }

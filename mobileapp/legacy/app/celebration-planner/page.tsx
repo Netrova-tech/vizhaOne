@@ -59,6 +59,8 @@ export default function CelebrationPlannerPage() {
     plan?.guests
       .filter((x) => x.rsvp === "joining")
       .reduce((n, x) => n + x.people, 0) || 0;
+  const actualTotal = Object.values(plan.actualCosts || {}).reduce((total, value) => total + Number(value || 0), 0);
+  const budgetDifference = plan.budget - actualTotal;
   function update(next: CelebrationPlan, msg?: string) {
     setPlan(next);
     savePlan(next);
@@ -352,11 +354,29 @@ export default function CelebrationPlannerPage() {
                   <small className="mt-1 block text-[9px] text-gray-400">
                     {percent}% allocation
                   </small>
+                  <label className="mt-3 block text-[9px] font-black uppercase tracking-wider text-gray-500">
+                    Your estimate / vendor quote
+                    <div className="mt-1 flex items-center rounded-xl border border-gray-200 bg-gray-50 px-3">
+                      <span className="text-sm font-black text-gray-500">₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={plan.actualCosts?.[name] || ""}
+                        placeholder={String(Math.round((plan.budget * percent) / 100))}
+                        onChange={(event) => update({ ...plan, actualCosts: { ...(plan.actualCosts || {}), [name]: Math.max(0, Number(event.target.value)) } })}
+                        className="h-11 min-w-0 flex-1 bg-transparent px-2 text-sm font-black outline-none"
+                      />
+                    </div>
+                  </label>
                 </article>
               ))}
             </section>
+            <section className={`mt-5 rounded-3xl border p-5 ${actualTotal===0?"border-gray-200 bg-white":budgetDifference>=0?"border-emerald-200 bg-emerald-50":"border-red-200 bg-red-50"}`}>
+              <div className="flex items-center justify-between text-xs font-black"><span>Total estimated cost</span><strong className="text-lg">₹{actualTotal.toLocaleString("en-IN")}</strong></div>
+              {actualTotal===0?<p className="mt-2 text-xs leading-5 text-gray-500">Enter quotes above to see your live budget status.</p>:budgetDifference>=0?<p className="mt-2 text-sm font-black text-emerald-700">You have ₹{budgetDifference.toLocaleString("en-IN")} remaining.</p>:<p className="mt-2 text-sm font-black text-red-700">You are ₹{Math.abs(budgetDifference).toLocaleString("en-IN")} over budget.</p>}
+            </section>
             <Link
-              to="/services"
+              to={`/services?maxPrice=${Math.max(0, plan.budget)}`}
               className="mt-5 flex items-center justify-between rounded-2xl bg-gray-950 p-4 text-sm font-black text-white"
             >
               Find vendors for this budget

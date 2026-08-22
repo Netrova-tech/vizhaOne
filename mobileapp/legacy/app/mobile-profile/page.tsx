@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { MobilePageHeader } from "@/components/layout/MobilePageHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { fileData, publishSocial, socialItems, type SocialItem, type SocialKind } from "@/lib/social";
+import { publishSocial, socialItems, type SocialItem, type SocialKind } from "@/lib/social";
 import { clearMobileSession, deleteAccount, startSession, token, updateAccount } from "@/lib/mobileAuth";
 import { apiUrl } from "@/lib/utils";
 
@@ -34,6 +34,7 @@ export default function MobileProfilePage() {
   const [service, setService] = useState("");
   const [price, setPrice] = useState("");
   const [posting, setPosting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [deleting,setDeleting]=useState(false);
   const [deleteOpen,setDeleteOpen]=useState(false);
   const [uploadingAvatar,setUploadingAvatar]=useState(false);
@@ -65,8 +66,12 @@ export default function MobileProfilePage() {
   }
   async function chooseMedia(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
-    try { setMedia(await fileData(file)); setMediaType(file.type.startsWith("video") ? "video" : "image"); toast.success("Media ready"); }
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) return toast.error("Choose an image or video");
+    if (file.size > 25 * 1024 * 1024) return toast.error("Media must be below 25 MB");
+    setUploadingMedia(true);
+    try { const body=new FormData(); body.append("media",file); const response=await fetch(apiUrl("/api/uploads/media"),{method:"POST",headers:{Authorization:`Bearer ${token()}`},body}); const payload=await response.json().catch(()=>null); if(!response.ok||!payload?.media?.url)throw new Error(payload?.error||"Media upload failed"); setMedia(payload.media.url); setMediaType(file.type.startsWith("video") ? "video" : "image"); toast.success("Media uploaded"); }
     catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
+    finally { setUploadingMedia(false); e.target.value=""; }
   }
   function publish(e: FormEvent) {
     e.preventDefault();

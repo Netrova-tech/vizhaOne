@@ -7,5 +7,12 @@ export default defineConfig([
   ...nextTypeScript,
   // `legacy` is the already linted Vite application shared with this shell.
   // Next's server-rendering-only rules do not apply to the Capacitor client bundle.
-  globalIgnores([".next/**", "out/**", "android/**", "legacy/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    ".gradle-local/**",
+    "out/**",
+    "android/**",
+    "legacy/**",
+    "next-env.d.ts",
+  ]),
 ]);

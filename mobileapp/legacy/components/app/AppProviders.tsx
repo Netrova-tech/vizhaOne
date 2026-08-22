@@ -4,28 +4,55 @@ import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { VizhaOneAssistant } from "@/components/app/VizhaOneAssistant";
 
-function TranslationCleanup() {
+declare global {
+  interface Window {
+    google?: { translate?: { TranslateElement: new (options: object, elementId: string) => void } };
+    googleTranslateElementInit?: () => void;
+    __vizha_translate?: (language: string) => void;
+  }
+}
+
+function GoogleTranslationBridge() {
   useEffect(() => {
-    // Google Translate's legacy widget injects an uncontrollable browser toolbar.
-    // VizhaOne now uses its own language dictionary, so remove old widget state/UI.
-    const expired = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
-    document.cookie = expired;
-    if (location.hostname) document.cookie = `${expired}; domain=${location.hostname}`;
-    const removeLegacyUi = () => {
-      document.querySelectorAll(
-        '#google-translate-script, .goog-te-banner-frame, .goog-te-menu-frame, .goog-te-balloon-frame, #goog-gt-tt, iframe[src*="translate.google"]'
-      ).forEach((node) => node.remove());
-      document.documentElement.classList.remove("translated-ltr", "translated-rtl");
+    const suppressGoogleChrome = () => {
+      document.documentElement.style.setProperty("top", "0px", "important");
       document.body.style.setProperty("top", "0px", "important");
+      document.body.style.setProperty("margin-top", "0px", "important");
+      document.querySelectorAll<HTMLElement>(
+        ".goog-te-banner-frame, iframe.skiptranslate, .VIpgJd-ZVi9od-ORHb-OEVmcd, .VIpgJd-ZVi9od-aZ2wEe-wOHMyf, .VIpgJd-ZVi9od-aZ2wEe-OiiCO, #goog-gt-vt, #goog-gt-tt"
+      ).forEach((element) => {
+        element.style.setProperty("display", "none", "important");
+        element.style.setProperty("visibility", "hidden", "important");
+      });
     };
-    removeLegacyUi();
-    const observer = new MutationObserver(removeLegacyUi);
+    const applyLanguage = (language: string) => {
+      const combo = document.querySelector<HTMLSelectElement>("#google_translate_element .goog-te-combo");
+      if (!combo) return;
+      combo.value = language;
+      combo.dispatchEvent(new Event("change", { bubbles: true }));
+      window.setTimeout(suppressGoogleChrome, 50);
+      window.setTimeout(suppressGoogleChrome, 400);
+    };
+    window.__vizha_translate = applyLanguage;
+    window.googleTranslateElementInit = () => {
+      if (!window.google?.translate || document.querySelector("#google_translate_element select")) return;
+      new window.google.translate.TranslateElement({ pageLanguage: "en", includedLanguages: "en,ta,hi,ml,te", autoDisplay: false }, "google_translate_element");
+      window.setTimeout(() => applyLanguage(localStorage.getItem("vizha_lang") || "en"), 250);
+    };
+    if (window.google?.translate) window.googleTranslateElementInit();
+    else if (!document.getElementById("google-translate-script")) {
+      const script = document.createElement("script");
+      script.id = "google-translate-script";
+      script.async = true;
+      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      document.head.appendChild(script);
+    }
+    suppressGoogleChrome();
+    const observer = new MutationObserver(suppressGoogleChrome);
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    return () => observer.disconnect();
-
+    return () => { observer.disconnect(); delete window.__vizha_translate; };
   }, []);
-
-  return null;
+  return <div id="google_translate_element" aria-hidden="true" />;
 }
 
 function DiagnosticsBridge(){
@@ -49,7 +76,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <TranslationCleanup />
+        <GoogleTranslationBridge />
         <DiagnosticsBridge />
         {children}
         <VizhaOneAssistant />

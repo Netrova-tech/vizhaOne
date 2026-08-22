@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Package, ShoppingBag, TrendingUp, Plus, Edit, Trash2,
   X, Upload, Loader2,
-  Image as ImageIcon, Save, BarChart2, MessageSquare, Building2, Users, Phone, Calendar, Download
+  Image as ImageIcon, Save, BarChart2, MessageSquare, Building2, Users, Phone, Calendar, Download, ShieldCheck
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -220,6 +220,7 @@ export default function AdminPage() {
   const [form, setForm] = useState({
     title: "", description: "", price_min: "", price_max: "", category_id: "",
     vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true,
+    verified: false,
     image_urls: "",
   });
 
@@ -279,7 +280,7 @@ export default function AdminPage() {
   }, []);
 
   function openAddForm() {
-    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, image_urls: "" });
+    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, verified: false, image_urls: "" });
     setImageFiles([]);
     setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -301,6 +302,7 @@ export default function AdminPage() {
       location: service.location || "",
       place_name: service.place_name || "",
       availability_status: service.availability_status,
+      verified: Boolean(service.verified),
       image_urls: "",
     });
     setImagePreviews(gallery);
@@ -427,6 +429,7 @@ export default function AdminPage() {
         location: form.location,
         place_name: form.place_name,
         availability_status: form.availability_status,
+        verified: form.verified,
         image_url: galleryUrls[0] || "",
         gallery_urls: galleryUrls,
       };
@@ -468,6 +471,20 @@ export default function AdminPage() {
       toast.success("Service deleted");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Service delete failed");
+    }
+  }
+
+  async function toggleServiceVerification(service: Service) {
+    const verified = !service.verified;
+    try {
+      const updated = await apiJson<Service>(`/api/catalog/services/${service.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ verified }),
+      });
+      setServices((prev) => prev.map((item) => item.id === service.id ? { ...item, ...updated } : item));
+      toast.success(verified ? "VizhaOne Verified badge enabled" : "Verified badge removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Verification update failed");
     }
   }
 
@@ -1081,10 +1098,15 @@ export default function AdminPage() {
                     <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold ${service.availability_status ? "bg-[#e11d48] text-white" : "bg-red-500 text-white"}`}>
                       {service.availability_status ? "Available" : "Unavailable"}
                     </div>
+                    {service.verified && <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white"><ShieldCheck className="h-3 w-3" />VizhaOne Verified</div>}
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">{service.title}</h3>
                     <p className="text-xs text-gray-500 line-clamp-1 mb-2">{service.vendor_name} • {service.location}</p>
+                    <button type="button" onClick={() => toggleServiceVerification(service)} className={`mb-3 flex w-full items-center justify-between rounded-xl border px-3 py-2 text-xs font-bold ${service.verified ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-gray-200 bg-gray-50 text-gray-500"}`}>
+                      <span>{service.verified ? "Verified" : "Unverified"}</span>
+                      <span className={`relative inline-flex h-5 w-10 rounded-full ${service.verified ? "bg-emerald-600" : "bg-gray-300"}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${service.verified ? "translate-x-5" : "translate-x-0.5"}`} /></span>
+                    </button>
                     <div className="flex items-center justify-between">
                       <span className="text-base font-bold text-[#be123c]">Price on request</span>
                       <div className="flex gap-2">
@@ -2320,6 +2342,18 @@ export default function AdminPage() {
                   <span className={`text-sm ${form.availability_status ? "text-[#e11d48] font-semibold" : "text-gray-400"}`}>
                     {form.availability_status ? "Available" : "Not Available"}
                   </span>
+                </div>
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-emerald-950">VizhaOne Verified</p>
+                      <p className="mt-1 text-xs leading-5 text-emerald-800">Enable only after business, phone, location and portfolio review.</p>
+                    </div>
+                    <button type="button" aria-pressed={form.verified} onClick={() => setForm({ ...form, verified: !form.verified })} className={`relative inline-flex h-7 w-14 shrink-0 rounded-full transition-colors ${form.verified ? "bg-emerald-600" : "bg-gray-300"}`}>
+                      <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${form.verified ? "translate-x-8" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                  <p className={`mt-2 text-xs font-bold ${form.verified ? "text-emerald-700" : "text-gray-500"}`}>{form.verified ? "Verified badge will be visible to customers" : "Unverified - no customer badge"}</p>
                 </div>
               </div>
 

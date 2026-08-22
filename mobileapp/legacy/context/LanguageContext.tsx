@@ -30,7 +30,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   function setLang(l: Language) {
     setLangState(l);
     localStorage.setItem("vizha_lang", l);
-    // Google Translate is triggered via __vizha_translate in the Navbar buttons
+    window.__vizha_translate?.(l);
   }
 
   function repairLegacyEncoding(value: string) {

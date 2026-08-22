@@ -47,6 +47,7 @@ export interface Service {
   latitude?: number;
   longitude?: number;
   availability_status: boolean;
+  verified?: boolean;
 
   created_at?: string;
   categories?: Category;

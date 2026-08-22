@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, Heart, MapPin, Sparkles, Share2, UsersRound, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, Heart, MapPin, ShieldCheck, Sparkles, Share2, UsersRound, X } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { toast } from "sonner";
@@ -123,6 +123,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
                 </div>
 
                 <p className="text-sm font-semibold text-gray-500 mb-4">{service.vendor_name}</p>
+                {service.verified && <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700"><ShieldCheck className="h-4 w-4"/>VizhaOne Verified Partner</div>}
 
                 {service.location && (
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold mb-6">
@@ -149,9 +150,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
                 <Sparkles className="h-5 w-5 text-amber-300" />
                 VizhaOne Guarantee
               </h3>
-              <p className="text-white/80 text-xs leading-relaxed">
-                All vendors on our platform are verified, professional, and adhere to strict quality standards to ensure your event runs smoothly.
-              </p>
+              <p className="text-white/80 text-xs leading-relaxed">{service.verified ? "This partner's business, phone, location and portfolio were reviewed by VizhaOne." : "Send your booking request through VizhaOne so our team can help confirm availability and service details."}</p>
             </div>
           </div>
         </div>

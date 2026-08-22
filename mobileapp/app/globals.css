@@ -36,6 +36,28 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Keep Google Translate functional behind VizhaOne's own language menu. */
+#google_translate_element,
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-te-spinner-pos,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+}
+html.translated-ltr body,
+html.translated-rtl body,
+body {
+  top: 0 !important;
+}
+.goog-text-highlight {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 .luxury-page {
   background: linear-gradient(180deg, #fffbfc 0%, #ffffff 40%, #fff1f2 100%);
 }
@@ -220,6 +242,11 @@ html.translated-ltr, html.translated-rtl, body {
 .goog-te-banner-frame,
 .goog-te-banner-frame.skiptranslate,
 iframe.goog-te-banner-frame,
+iframe.skiptranslate,
+.VIpgJd-ZVi9od-ORHb-OEVmcd,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-aZ2wEe-OiiCO,
+#goog-gt-vt,
 #goog-gt-tt,
 .goog-te-balloon-frame,
 .goog-te-spinner-pos,

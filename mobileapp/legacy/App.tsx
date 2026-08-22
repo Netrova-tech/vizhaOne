@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import MobileHomePage from "@/app/mobile-home/page";
 import AboutPage from "@/app/about/page";
 import AdminPage from "@/app/admin/page";
@@ -10,7 +10,6 @@ import BlogPage from "@/app/blog/page";
 import CalculatorPage from "@/app/calculator/page";
 import CategoriesPage from "@/app/categories/page";
 import FaqPage from "@/app/faq/page";
-import HallsPage from "@/app/halls/page";
 import PrivacyPage from "@/app/privacy/page";
 import PartnerPlansPage from "@/app/partner-plans/page";
 import ServicesPage from "@/app/services/page";
@@ -35,6 +34,7 @@ import CartPage from "@/app/cart/page";
 import { AppProviders } from "@/components/app/AppProviders";
 import { ScrollToTop } from "@/components/app/ScrollToTop";
 import { RouteBackButton } from "@/components/app/RouteBackButton";
+import { NativeBackHandler } from "@/components/app/NativeBackHandler";
 import { BlogPostRoute } from "@/routes/BlogPostRoute";
 import { HallDetailRoute } from "@/routes/HallDetailRoute";
 import { NotFoundPage } from "@/routes/NotFoundPage";
@@ -45,6 +45,7 @@ export default function App() {
   return (
     <AppProviders>
       <ScrollToTop />
+      <NativeBackHandler />
       <RouteBackButton />
       <Routes>
         <Route path="/" element={<MobileHomePage />} />
@@ -59,7 +60,7 @@ export default function App() {
         <Route path="/calculator" element={<CalculatorPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/faq" element={<FaqPage />} />
-        <Route path="/halls" element={<HallsPage />} />
+        <Route path="/halls" element={<Navigate to="/services?category=halls" replace />} />
         <Route path="/halls/:id" element={<HallDetailRoute />} />
         <Route path="/packages/:id" element={<PackageDetailRoute />} />
         <Route path="/partner-plans" element={<PartnerPlansPage />} />

@@ -26,8 +26,10 @@ CREATE TABLE IF NOT EXISTS services (
   description text, price numeric(12,2), price_min numeric(12,2), price_max numeric(12,2),
   image_url text, gallery_urls text[] NOT NULL DEFAULT '{}', vendor_name text, vendor_mobile text,
   pincode text, location text, place_name text, latitude double precision, longitude double precision,
-  availability_status boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+  availability_status boolean NOT NULL DEFAULT true, verified boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE services ADD COLUMN IF NOT EXISTS verified boolean NOT NULL DEFAULT false;
 CREATE INDEX IF NOT EXISTS services_category_idx ON services(category_id);
 CREATE INDEX IF NOT EXISTS services_location_idx ON services(location);
 
