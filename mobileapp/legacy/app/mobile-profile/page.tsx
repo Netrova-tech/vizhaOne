@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { MobilePageHeader } from "@/components/layout/MobilePageHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { publishSocial, socialItems, type SocialItem, type SocialKind } from "@/lib/social";
+import { fetchSocial, publishSocial, socialItems, type SocialItem, type SocialKind } from "@/lib/social";
 import { clearMobileSession, deleteAccount, startSession, token, updateAccount } from "@/lib/mobileAuth";
 import { apiUrl } from "@/lib/utils";
 
@@ -43,6 +43,7 @@ export default function MobileProfilePage() {
   useEffect(() => {
     if (!user) return;
     setUploads(socialItems().filter((x) => x.ownerId === user.id));
+    void fetchSocial(user.id).then(setUploads).catch(() => undefined);
     setProfile({ name: user.name || "", mobile: user.mobile || "", location: user.location || "" });
   }, [user]);
 
@@ -73,14 +74,14 @@ export default function MobileProfilePage() {
     catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
     finally { setUploadingMedia(false); e.target.value=""; }
   }
-  function publish(e: FormEvent) {
+  async function publish(e: FormEvent) {
     e.preventDefault();
     if (!user || !media || !caption.trim() || !service.trim()) return toast.error("Media, caption and service required");
     setPosting(true);
     try {
-      publishSocial({ id: `social-${Date.now()}`, ownerId: user.id, ownerName: user.name || "VizhaOne Provider", avatar: user.avatar_url, kind, media, mediaType, caption: caption.trim(), service: service.trim(), price: price.trim(), createdAt: new Date().toISOString(), likes: [], savedBy: [] });
-      setMedia(""); setCaption(""); setService(""); setPrice(""); setUploads(socialItems().filter((x) => x.ownerId === user.id)); toast.success(`${kind === "reel" ? "Reel" : "Post"} published`);
-    } catch { toast.error("Device storage full. Try a smaller file."); } finally { setPosting(false); }
+      await publishSocial({ id: `social-${Date.now()}`, ownerId: user.id, ownerName: user.name || "VizhaOne Provider", avatar: user.avatar_url, kind, media, mediaType, caption: caption.trim(), service: service.trim(), price: price.trim(), createdAt: new Date().toISOString(), likes: [], savedBy: [] });
+      setMedia(""); setCaption(""); setService(""); setPrice(""); setUploads(await fetchSocial(user.id)); toast.success(`${kind === "reel" ? "Reel" : "Post"} published publicly`);
+    } catch(error) { toast.error(error instanceof Error?error.message:"Unable to publish"); } finally { setPosting(false); }
   }
   async function removeAccount(){setDeleting(true);try{await deleteAccount();clearMobileSession();localStorage.removeItem("vizha_favorites");localStorage.removeItem("vizha_cart");toast.success("Your account and personal data were deleted");window.location.hash="#/sign-in";window.location.reload()}catch(error){toast.error(error instanceof Error?error.message:"Account deletion failed")}finally{setDeleting(false)}}
 

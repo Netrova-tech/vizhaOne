@@ -9,6 +9,7 @@ const { createUploadRouter } = require("./routes/uploadRoutes");
 const { createAdminRouter } = require("./routes/adminRoutes");
 const { createInvitationRouter } = require("./routes/invitationRoutes");
 const { createReferralRouter } = require("./routes/referralRoutes");
+const { createSocialRouter } = require("./routes/socialRoutes");
 
 function createApp({ store }) {
   const app = express();
@@ -59,6 +60,7 @@ function createApp({ store }) {
   app.use("/api/uploads", createUploadRouter());
   app.use("/api/invitations", createInvitationRouter());
   app.use("/api/referrals", createReferralRouter());
+  app.use("/api/social", createSocialRouter());
 
   return app;
 }

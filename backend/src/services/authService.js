@@ -249,4 +249,5 @@ module.exports = {
   getMobileAccount,
   updateMobileAccount,
   deleteMobileAccount,
+  mobileSession,
 };

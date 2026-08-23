@@ -102,10 +102,18 @@ CREATE TABLE IF NOT EXISTS guests (
   status text DEFAULT 'invited', reminder_one_day boolean DEFAULT true, reminder_ten_hours boolean DEFAULT true, created_at timestamptz DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS reels (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), vendor_id uuid NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), vendor_id uuid REFERENCES vendors(id) ON DELETE CASCADE,
+  owner_id uuid REFERENCES users(id) ON DELETE CASCADE,
   media_url text NOT NULL, media_type text NOT NULL, caption text, service_id text REFERENCES services(id) ON DELETE SET NULL,
+  service_name text, kind text NOT NULL DEFAULT 'reel' CHECK(kind IN ('reel','post')),
   price numeric(12,2), published boolean DEFAULT true, created_at timestamptz DEFAULT now()
 );
+ALTER TABLE reels ALTER COLUMN vendor_id DROP NOT NULL;
+ALTER TABLE reels ADD COLUMN IF NOT EXISTS owner_id uuid REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE reels ADD COLUMN IF NOT EXISTS service_name text;
+ALTER TABLE reels ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'reel';
+CREATE INDEX IF NOT EXISTS reels_public_feed_idx ON reels(published,created_at DESC);
+CREATE INDEX IF NOT EXISTS reels_owner_idx ON reels(owner_id);
 CREATE TABLE IF NOT EXISTS saved_services (
   user_id uuid REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now(), PRIMARY KEY(user_id,service_id)

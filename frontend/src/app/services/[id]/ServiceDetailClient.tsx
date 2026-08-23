@@ -7,6 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { toast } from "sonner";
 import { useCatalog } from "@/hooks/useCatalog";
+import { HallGallery } from "@/components/features/HallGallery";
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
   const service = foundService
     ? { ...foundService, categories: categories.find((c) => c.id === foundService.category_id) }
     : null;
+  const serviceImages = service ? [...new Set([service.image_url,...(service.gallery_urls||[])].filter(Boolean) as string[])] : [];
 
   function handleShare() {
     if (!service) return;
@@ -67,8 +69,9 @@ export default function ServiceDetailClient({ id }: { id: string }) {
           {/* Main Info */}
           <div className="md:col-span-2 space-y-6">
             <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+              {serviceImages.length > 1 && <HallGallery images={serviceImages} hallName={service.title}/>}
               {/* Image */}
-              <div className="relative h-64 sm:h-96 w-full bg-rose-50 flex items-center justify-center">
+              <div className={`${serviceImages.length > 1?"hidden":""} relative h-64 sm:h-96 w-full bg-rose-50 flex items-center justify-center`}>
                 {service.image_url ? (
                   <img src={service.image_url} alt={service.title} className="h-full w-full object-cover" />
                 ) : (
