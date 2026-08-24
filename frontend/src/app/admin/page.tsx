@@ -216,7 +216,7 @@ export default function AdminPage() {
   const [form, setForm] = useState({
     title: "", description: "", price_min: "", price_max: "", category_id: "",
     vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true,
-    image_urls: "",
+    image_urls: "", pricing_type: "starting", price_unit: "per event", packages_json: "[]", extra_charges: "", travel_charges: "", advance_percentage: "", cancellation_terms: "", experience_years: "", response_time: "", video_urls: "",
   });
 
   useEffect(() => {
@@ -275,7 +275,7 @@ export default function AdminPage() {
   }, []);
 
   function openAddForm() {
-    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, image_urls: "" });
+    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, image_urls: "", pricing_type: "starting", price_unit: "per event", packages_json: "[]", extra_charges: "", travel_charges: "", advance_percentage: "", cancellation_terms: "", experience_years: "", response_time: "", video_urls: "" });
     setImageFiles([]);
     setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -298,6 +298,16 @@ export default function AdminPage() {
       place_name: service.place_name || "",
       availability_status: service.availability_status,
       image_urls: "",
+      pricing_type: service.pricing_type || "starting",
+      price_unit: service.price_unit || "per event",
+      packages_json: JSON.stringify(service.packages || [], null, 2),
+      extra_charges: service.extra_charges || "",
+      travel_charges: service.travel_charges || "",
+      advance_percentage: service.advance_percentage != null ? String(service.advance_percentage) : "",
+      cancellation_terms: service.cancellation_terms || "",
+      experience_years: service.experience_years != null ? String(service.experience_years) : "",
+      response_time: service.response_time || "",
+      video_urls: (service.video_urls || []).join("\n"),
     });
     setImagePreviews(gallery);
     setImageFiles([]);
@@ -409,6 +419,9 @@ export default function AdminPage() {
       const uploadedUrls = await uploadImagesToCloudinary(imageFiles);
       const galleryUrls = [...existingPreviewUrls, ...uploadedUrls, ...urlImages].slice(0, 5);
       const cat = categories.find((c) => c.id === form.category_id);
+      let parsedPackages = [];
+      try { parsedPackages = JSON.parse(form.packages_json || "[]"); if (!Array.isArray(parsedPackages)) throw new Error(); }
+      catch { toast.error("Packages JSON is invalid"); setSaving(false); return; }
 
       const payload: Partial<Service> = {
         title: form.title,
@@ -425,6 +438,16 @@ export default function AdminPage() {
         availability_status: form.availability_status,
         image_url: galleryUrls[0] || "",
         gallery_urls: galleryUrls,
+        pricing_type: form.pricing_type as Service["pricing_type"],
+        price_unit: form.price_unit,
+        packages: parsedPackages,
+        extra_charges: form.extra_charges,
+        travel_charges: form.travel_charges,
+        advance_percentage: form.advance_percentage ? Number(form.advance_percentage) : undefined,
+        cancellation_terms: form.cancellation_terms,
+        experience_years: form.experience_years ? Number(form.experience_years) : undefined,
+        response_time: form.response_time,
+        video_urls: form.video_urls.split(/\r?\n|,/).map((v)=>v.trim()).filter(Boolean),
       };
 
       if (editService) {
@@ -2164,6 +2187,22 @@ export default function AdminPage() {
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3} placeholder="Describe the service..."
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48] resize-none" />
+                </div>
+
+                <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-4 space-y-4">
+                  <h4 className="font-black text-gray-900">Transparent pricing & packages</h4>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="text-sm font-semibold text-gray-700">Pricing type<select value={form.pricing_type} onChange={(e)=>setForm({...form,pricing_type:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3"><option value="fixed">Fixed price — Book Now</option><option value="starting">Starting price — Request Quote</option><option value="quote">Custom quote</option></select></label>
+                    <label className="text-sm font-semibold text-gray-700">Price unit<input value={form.price_unit} onChange={(e)=>setForm({...form,price_unit:e.target.value})} placeholder="per event / per plate / per day" className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                    <label className="text-sm font-semibold text-gray-700">Advance %<input type="number" value={form.advance_percentage} onChange={(e)=>setForm({...form,advance_percentage:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                    <label className="text-sm font-semibold text-gray-700">Experience years<input type="number" value={form.experience_years} onChange={(e)=>setForm({...form,experience_years:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                    <label className="text-sm font-semibold text-gray-700">Extra charges<input value={form.extra_charges} onChange={(e)=>setForm({...form,extra_charges:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                    <label className="text-sm font-semibold text-gray-700">Travel charges<input value={form.travel_charges} onChange={(e)=>setForm({...form,travel_charges:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                    <label className="text-sm font-semibold text-gray-700">Response time<input value={form.response_time} onChange={(e)=>setForm({...form,response_time:e.target.value})} placeholder="Usually within 2 hours" className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                    <label className="text-sm font-semibold text-gray-700">Cancellation terms<input value={form.cancellation_terms} onChange={(e)=>setForm({...form,cancellation_terms:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3"/></label>
+                  </div>
+                  <label className="block text-sm font-semibold text-gray-700">Packages JSON<textarea rows={5} value={form.packages_json} onChange={(e)=>setForm({...form,packages_json:e.target.value})} placeholder={'[{"name":"Basic","price":25000,"inclusions":["4 hours","50 photos"]}]'} className="mt-1 w-full rounded-xl border bg-white px-4 py-3 font-mono text-xs"/></label>
+                  <label className="block text-sm font-semibold text-gray-700">Video / reel URLs (one per line)<textarea rows={3} value={form.video_urls} onChange={(e)=>setForm({...form,video_urls:e.target.value})} className="mt-1 w-full rounded-xl border bg-white px-4 py-3 text-xs"/></label>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

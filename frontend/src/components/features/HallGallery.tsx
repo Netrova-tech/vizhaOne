@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 
 interface HallGalleryProps {
   images: string[];
@@ -12,11 +12,13 @@ interface HallGalleryProps {
 
 export function HallGallery({ images, hallName }: HallGalleryProps) {
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   function openLightbox(i: number) { setLightbox(i); }
-  function closeLightbox() { setLightbox(null); }
-  function prev() { setLightbox((p) => p !== null ? (p - 1 + images.length) % images.length : null); }
-  function next() { setLightbox((p) => p !== null ? (p + 1) % images.length : null); }
+  function closeLightbox() { setLightbox(null); setZoom(1); }
+  function prev() { setZoom(1); setLightbox((p) => p !== null ? (p - 1 + images.length) % images.length : null); }
+  function next() { setZoom(1); setLightbox((p) => p !== null ? (p + 1) % images.length : null); }
 
   if (!images.length) return null;
 
@@ -74,6 +76,7 @@ export function HallGallery({ images, hallName }: HallGalleryProps) {
             >
               <X className="h-5 w-5" />
             </button>
+            <div className="absolute top-4 left-4 z-10 flex gap-2"><button onClick={(e)=>{e.stopPropagation();setZoom((z)=>Math.min(3,z+.5));}} className="rounded-full bg-white/15 p-3 text-white"><ZoomIn className="h-5 w-5"/></button><button onClick={(e)=>{e.stopPropagation();setZoom((z)=>Math.max(1,z-.5));}} className="rounded-full bg-white/15 p-3 text-white"><ZoomOut className="h-5 w-5"/></button></div>
 
             <button
               onClick={(e) => { e.stopPropagation(); prev(); }}
@@ -88,11 +91,14 @@ export function HallGallery({ images, hallName }: HallGalleryProps) {
               animate={{ opacity: 1, scale: 1 }}
               className="relative w-full max-w-4xl h-[70vh] mx-16"
               onClick={(e) => e.stopPropagation()}
+              onTouchStart={(e)=>setTouchStart(e.touches[0].clientX)}
+              onTouchEnd={(e)=>{if(touchStart===null)return;const delta=e.changedTouches[0].clientX-touchStart;if(Math.abs(delta)>45)(delta>0?prev():next());setTouchStart(null);}}
             >
               <img
                 src={images[lightbox]}
                 alt={`${hallName} - ${lightbox + 1}`}
-                className="absolute inset-0 h-full w-full object-contain"
+                className="absolute inset-0 h-full w-full object-contain transition-transform duration-200"
+                style={{transform:`scale(${zoom})`}}
               />
             </motion.div>
 

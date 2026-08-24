@@ -10,6 +10,7 @@ const { createAdminRouter } = require("./routes/adminRoutes");
 const { createInvitationRouter } = require("./routes/invitationRoutes");
 const { createReferralRouter } = require("./routes/referralRoutes");
 const { createSocialRouter } = require("./routes/socialRoutes");
+const { createQuoteRouter } = require("./routes/quoteRoutes");
 
 function createApp({ store }) {
   const app = express();
@@ -55,6 +56,7 @@ function createApp({ store }) {
   app.use("/api/auth", createAuthRouter({ store }));
   app.use("/api/catalog", createCatalogRouter({ store }));
   app.use("/api/bookings", createBookingRouter({ store }));
+  app.use("/api/quotes", createQuoteRouter());
   app.use("/api/admin", createAdminRouter({ store }));
   app.use("/api/track-signup", createSignupRouter({ store }));
   app.use("/api/uploads", createUploadRouter());

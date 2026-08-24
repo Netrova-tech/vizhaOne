@@ -42,9 +42,29 @@ export interface Service {
   location?: string;
   place_name?: string;
   availability_status: boolean;
+  verified?: boolean;
+  pricing_type?: "fixed" | "starting" | "quote";
+  price_unit?: string;
+  packages?: VendorPackage[];
+  extra_charges?: string;
+  travel_charges?: string;
+  advance_percentage?: number;
+  cancellation_terms?: string;
+  experience_years?: number;
+  rating?: number;
+  review_count?: number;
+  response_time?: string;
+  video_urls?: string[];
 
   created_at?: string;
   categories?: Category;
+}
+
+export interface VendorPackage {
+  name: string;
+  price: number;
+  inclusions: string[];
+  image_url?: string;
 }
 
 export interface EventPackage {

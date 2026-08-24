@@ -30,6 +30,18 @@ CREATE TABLE IF NOT EXISTS services (
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE services ADD COLUMN IF NOT EXISTS verified boolean NOT NULL DEFAULT false;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS pricing_type text NOT NULL DEFAULT 'quote';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS price_unit text NOT NULL DEFAULT 'per event';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS packages jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS extra_charges text;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS travel_charges text;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS advance_percentage numeric(5,2);
+ALTER TABLE services ADD COLUMN IF NOT EXISTS cancellation_terms text;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS experience_years integer;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS rating numeric(3,2);
+ALTER TABLE services ADD COLUMN IF NOT EXISTS review_count integer NOT NULL DEFAULT 0;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS response_time text;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS video_urls text[] NOT NULL DEFAULT '{}';
 CREATE INDEX IF NOT EXISTS services_category_idx ON services(category_id);
 CREATE INDEX IF NOT EXISTS services_location_idx ON services(location);
 
@@ -61,6 +73,17 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 CREATE INDEX IF NOT EXISTS bookings_user_idx ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS bookings_availability_idx ON bookings(hall_id,start_date,end_date,slot,status);
+
+CREATE TABLE IF NOT EXISTS quote_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), service_id text REFERENCES services(id) ON DELETE SET NULL,
+  request_type text NOT NULL DEFAULT 'quote' CHECK(request_type IN ('quote','booking')),
+  customer_name text NOT NULL, mobile text NOT NULL, event_date date NOT NULL, location text NOT NULL,
+  event_type text NOT NULL, guest_count integer, budget numeric(12,2), required_services text[] NOT NULL DEFAULT '{}',
+  notes text, status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','quoted','accepted','rejected','expired')),
+  quoted_amount numeric(12,2), admin_notes text,
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS quote_requests_service_idx ON quote_requests(service_id,created_at DESC);
 
 CREATE TABLE IF NOT EXISTS invitations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), owner_id uuid REFERENCES users(id) ON DELETE SET NULL,

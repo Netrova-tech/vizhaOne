@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, CheckSquare, Square,
-  ShoppingCart, MessageCircle, ArrowRight, Sparkles, Search
+  ShoppingCart, MessageCircle, ArrowRight, Sparkles, Search, Scale
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -21,6 +21,7 @@ import type { Service } from "@/types";
 import { toast } from "sonner";
 import { CategoryIcon } from "@/lib/iconMap";
 import { ServiceImageCarousel } from "@/components/features/ServiceImageCarousel";
+import { getCompareIds, toggleCompare } from "@/lib/compare";
 
 function ServicesContent() {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ function ServicesContent() {
   const [priceSort, setPriceSort] = useState<"default" | "low-high" | "high-low">("default");
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [compareIds, setCompareIds] = useState<string[]>(() => typeof window === "undefined" ? [] : getCompareIds());
   const [, startTransition] = useTransition();
 
   const { services, loading } = useServices();
@@ -406,6 +408,7 @@ function ServicesContent() {
                       </div>
 
                       <div className="flex gap-2">
+                        <button onClick={()=>{const r=toggleCompare(service);setCompareIds(r.ids);r.error?toast.error(r.error):toast.success(r.ids.includes(service.id)?'Added to compare':'Removed from compare');}} className={`flex items-center justify-center rounded-xl px-3 ${compareIds.includes(service.id)?'bg-amber-100 text-amber-800':'bg-gray-100 text-gray-700'}`} title="Add to compare"><Scale className="h-4 w-4"/></button>
                         <button
                           onClick={() => handleAddServiceToPlan(service)}
                           disabled={!service.availability_status}
@@ -429,6 +432,7 @@ function ServicesContent() {
 
           </>
         )}
+        {compareIds.length > 0 && <button onClick={()=>navigate('/compare')} className="fixed bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-gray-950 px-6 py-3 font-black text-white shadow-2xl"><Scale className="h-4 w-4"/> Compare Now ({compareIds.length}/3)</button>}
       </div>
 
       {/* Floating Book Bar — appears when services selected */}

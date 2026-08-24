@@ -28,6 +28,8 @@ import { HallDetailRoute } from "@/routes/HallDetailRoute";
 import { NotFoundPage } from "@/routes/NotFoundPage";
 import { PackageDetailRoute } from "@/routes/PackageDetailRoute";
 import { ServiceDetailRoute } from "@/routes/ServiceDetailRoute";
+import ComparePage from "@/app/compare/page";
+import VendorLandingPage from "@/app/vendors/landing/page";
 
 export default function App() {
   return (
@@ -53,6 +55,8 @@ export default function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:id" element={<ServiceDetailRoute />} />
+        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/vendors/:category/:city" element={<VendorLandingPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/tools/hashtag-generator" element={<HashtagGeneratorPage />} />
         <Route path="/invitations" element={<InvitationGeneratorPage />} />

@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowLeft, MessageCircle, Phone, MapPin, Sparkles, Share2 } from "lucide-react";
+import { ArrowLeft, MapPin, Sparkles, Share2, Scale, ShieldCheck, PlayCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { toast } from "sonner";
 import { useCatalog } from "@/hooks/useCatalog";
 import { HallGallery } from "@/components/features/HallGallery";
+import { QuoteRequestModal } from "@/components/features/QuoteRequestModal";
+import { toggleCompare } from "@/lib/compare";
+import { formatServicePrice } from "@/lib/utils";
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
+  const [requestMode, setRequestMode] = useState<"quote"|"booking"|null>(null);
   const { services, categories, loading } = useCatalog();
   const resolvedId = (id === "_" && typeof window !== "undefined")
     ? window.location.pathname.replace(/\/$/, "").split("/").filter(Boolean).pop() || id
@@ -54,7 +59,8 @@ export default function ServiceDetailClient({ id }: { id: string }) {
     );
   }
 
-  const whatsappMsg = `Vanakkam! Naan "${service.title}" vendor service pathi kekanum.\n\nPlease confirm availability.`;
+  const packages = Array.isArray(service.packages) ? service.packages : [];
+  const isFixedPrice = service.pricing_type === "fixed";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,6 +111,8 @@ export default function ServiceDetailClient({ id }: { id: string }) {
 
                 <p className="text-sm font-semibold text-gray-500 mb-4">{service.vendor_name}</p>
 
+                {service.verified && <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700"><ShieldCheck className="h-4 w-4"/> VizhaOne Verified Partner</div>}
+
                 {service.location && (
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold mb-6">
                     <MapPin className="h-4 w-4 text-[#e11d48]" />
@@ -116,24 +124,19 @@ export default function ServiceDetailClient({ id }: { id: string }) {
                 <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{service.description || "No description provided."}</p>
               </div>
             </div>
+
+            {packages.length > 0 && <section className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-2xl font-black">Packages</h2><div className="mt-5 grid gap-4 sm:grid-cols-3">{packages.map((pkg:any)=><article key={pkg.name} className="rounded-2xl border border-rose-100 p-4"><h3 className="font-black">{pkg.name}</h3><p className="mt-2 text-xl font-black text-[#be123c]">₹{Number(pkg.price||0).toLocaleString('en-IN')}</p><ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-gray-600">{(pkg.inclusions||[]).map((x:string)=><li key={x}>{x}</li>)}</ul></article>)}</div></section>}
+
+            {(service.video_urls?.length || 0) > 0 && <section className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="flex items-center gap-2 text-2xl font-black"><PlayCircle/> Videos & reels</h2><div className="mt-5 grid gap-4 sm:grid-cols-2">{service.video_urls!.map((url)=><video key={url} src={url} controls playsInline className="aspect-video w-full rounded-2xl bg-black object-cover"/>)}</div></section>}
           </div>
 
           {/* Contact Sidebar */}
           <div className="space-y-6">
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-6">
-              {service.vendor_mobile && (
-                <div className="space-y-2">
-                  <a href={`https://wa.me/91${service.vendor_mobile}?text=${encodeURIComponent(whatsappMsg)}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-[#e11d48] text-white rounded-2xl text-sm font-bold hover:bg-[#be123c] transition-colors shadow-md shadow-rose-100">
-                    <MessageCircle className="h-4 w-4" /> WhatsApp vendor
-                  </a>
-                  <a href={`tel:${service.vendor_mobile}`}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl text-sm font-semibold transition-colors">
-                    <Phone className="h-4 w-4" /> Call vendor
-                  </a>
-                </div>
-              )}
+              <div><p className="text-xs font-black uppercase tracking-widest text-gray-400">{service.pricing_type === 'quote' ? 'Pricing' : 'Starting price'}</p><p className="mt-2 text-2xl font-black text-[#be123c]">{formatServicePrice(service)}</p><p className="text-xs text-gray-500">{service.price_unit || 'per event'}</p></div>
+              <button onClick={()=>setRequestMode(isFixedPrice?'booking':'quote')} className="w-full rounded-2xl bg-[#e11d48] py-4 text-sm font-black text-white shadow-md">{isFixedPrice ? 'Book Now':'Request Quote'}</button>
+              <button onClick={()=>{const result=toggleCompare(service);result.error?toast.error(result.error):toast.success('Compare list updated');}} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 py-3 text-sm font-bold"><Scale className="h-4 w-4"/> Add to Compare</button>
+              <div className="space-y-2 border-t pt-4 text-xs text-gray-600">{service.extra_charges && <p><b>Extra charges:</b> {service.extra_charges}</p>}{service.travel_charges && <p><b>Travel:</b> {service.travel_charges}</p>}{service.advance_percentage != null && <p><b>Advance:</b> {service.advance_percentage}%</p>}{service.cancellation_terms && <p><b>Cancellation:</b> {service.cancellation_terms}</p>}</div>
             </div>
 
             <div className="bg-gradient-to-r from-[#e11d48] to-[#be123c] rounded-3xl p-6 text-white shadow-sm">
@@ -142,7 +145,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
                 VizhaOne Guarantee
               </h3>
               <p className="text-white/80 text-xs leading-relaxed">
-                All vendors on our platform are verified, professional, and adhere to strict quality standards to ensure your event runs smoothly.
+                Verified badges are awarded only after business, phone, location and portfolio checks by the VizhaOne team.
               </p>
             </div>
           </div>
@@ -151,6 +154,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
 
       <MobileBottomNav />
       <div className="h-24 md:hidden" />
+      {requestMode && <QuoteRequestModal service={service} mode={requestMode} onClose={()=>setRequestMode(null)}/>}
     </div>
   );
 }
