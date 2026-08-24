@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense, useTransition, useCallback, useEffect } from "react";
+import { useState, useMemo, Suspense, useTransition, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,6 +20,7 @@ import type { Service } from "@/types";
 
 import { toast } from "sonner";
 import { CategoryIcon } from "@/lib/iconMap";
+import { ServiceImageCarousel } from "@/components/features/ServiceImageCarousel";
 
 function ServicesContent() {
   const navigate = useNavigate();
@@ -30,24 +31,14 @@ function ServicesContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [maxPrice, setMaxPrice] = useState(1000000);
+  const [budgetFilterActive, setBudgetFilterActive] = useState(false);
   const [priceSort, setPriceSort] = useState<"default" | "low-high" | "high-low">("default");
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
 
   const { services, loading } = useServices();
   const { categories } = useCategories();
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const LOCATIONS = useMemo(() => {
     const locationsSet = new Set<string>();
@@ -124,7 +115,7 @@ function ServicesContent() {
       if (selectedCategory && s.category_id !== selectedCategory) return false;
       if (selectedLocation !== "All Locations" && !s.location?.toLowerCase().includes(selectedLocation.toLowerCase())) return false;
       const price = Number(s.price_min ?? s.price ?? 0);
-      if (price > maxPrice) return false;
+      if (budgetFilterActive && (price <= 0 || price > maxPrice)) return false;
       return true;
     });
     if (priceSort !== "default") {
@@ -135,16 +126,7 @@ function ServicesContent() {
       });
     }
     return results;
-  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort]);
-
-  // Reset to page 1 on filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedLocation, maxPrice, priceSort]);
-
-  const itemsPerPage = isMobile ? 5 : 6;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedServices = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, budgetFilterActive, priceSort]);
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -244,7 +226,7 @@ function ServicesContent() {
             <span className="mb-2 flex items-center justify-between text-xs font-black uppercase tracking-wider text-gray-600">
               Maximum price <strong className="text-[#e11d48]">₹{maxPrice.toLocaleString("en-IN")}</strong>
             </span>
-            <input type="range" min="0" max="1000000" step="10000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#e11d48]" />
+            <input type="range" min="0" max="1000000" step="10000" value={maxPrice} onChange={(e) => { setMaxPrice(Number(e.target.value)); setBudgetFilterActive(true); }} className="w-full accent-[#e11d48]" />
             <span className="mt-1 flex justify-between text-[10px] font-bold text-gray-400"><span>₹0</span><span>₹10 Lakhs</span></span>
           </label>
           <label className="block text-xs font-black uppercase tracking-wider text-gray-600">Sort by price
@@ -300,7 +282,7 @@ function ServicesContent() {
           <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-bold text-gray-700 mb-2">No services found</h3>
-            <button onClick={() => { setSearchQuery(""); setSelectedCategory(""); setSelectedLocation("All Locations"); setMaxPrice(1000000); setPriceSort("default"); }}
+            <button onClick={() => { setSearchQuery(""); setSelectedCategory(""); setSelectedLocation("All Locations"); setMaxPrice(1000000); setBudgetFilterActive(false); setPriceSort("default"); }}
               className="mt-4 px-6 py-2.5 bg-[#e11d48] text-white rounded-xl text-sm font-semibold hover:bg-[#be123c] cursor-pointer">
               Clear Filters
             </button>
@@ -308,9 +290,9 @@ function ServicesContent() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {paginatedServices.map((service) => {
+              {filtered.map((service) => {
                 const isChecked = selected.has(service.id);
-                const hasImgError = imgErrors.has(service.id);
+                const serviceImages = [service.image_url, ...(service.gallery_urls || [])];
                 return (
                   <div
                     key={service.id}
@@ -343,9 +325,8 @@ function ServicesContent() {
                       className="relative h-44 bg-gradient-to-br from-[#fff1f2] to-emerald-50 cursor-pointer"
                       onClick={() => selectMode ? toggleSelect(service.id) : navigate(`/services/${service.id}`)}
                     >
-                      {service.image_url && !hasImgError ? (
-                        <img src={service.image_url} alt={service.title} className="absolute inset-0 h-full w-full object-cover"
-                          onError={() => setImgErrors((prev) => new Set([...prev, service.id]))} />
+                      {serviceImages.some(Boolean) ? (
+                        <ServiceImageCarousel images={serviceImages} title={service.title} />
                       ) : (
                         <div className="h-full flex items-center justify-center text-[#e11d48]">
                           {service.categories?.icon ? (
@@ -446,25 +427,6 @@ function ServicesContent() {
               })}
             </div>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2.5 rounded-2xl border border-rose-100 bg-white text-sm font-bold text-gray-700 hover:bg-rose-50/40 disabled:opacity-40 transition-colors"
-                >
-                  Previous
-                </button>
-                <span className="text-sm font-bold text-gray-700">Page {currentPage} of {totalPages}</span>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2.5 rounded-2xl border border-rose-100 bg-white text-sm font-bold text-gray-700 hover:bg-rose-50/40 disabled:opacity-40 transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>

@@ -5,9 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Package, ShoppingBag, TrendingUp, Plus, Edit, Trash2,
   X, Upload, Loader2,
-  Image as ImageIcon, Save, BarChart2, MessageSquare, Building2, Users, Phone, Calendar, Download, ShieldCheck
+  Image as ImageIcon, Save, BarChart2, MessageSquare, Building2, Users, Phone, Calendar, Download, ShieldCheck, Eye
 } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -179,6 +178,8 @@ export default function AdminPage() {
   }, []);
   const [showAddService, setShowAddService] = useState(false);
   const [editService, setEditService] = useState<Service | null>(null);
+  const [detailService, setDetailService] = useState<Service | null>(null);
+  const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -794,6 +795,7 @@ export default function AdminPage() {
       }
     }
     let synced = true;
+    setUpdatingBookingId(id);
     try {
       const res = await fetch(apiUrl(`/api/bookings/${id}`), {
         method: "PATCH",
@@ -806,29 +808,22 @@ export default function AdminPage() {
         (error as Error & { status?: number }).status = res.status;
         throw error;
       }
+      const updated = await res.json() as Booking;
       updateLocalBookingStatus(id, status);
+      setBookings((prev) => prev.map((booking) => booking.id === id ? { ...booking, ...updated } : booking));
     } catch (err) {
       const statusCode = err && typeof err === "object" && "status" in err ? (err as { status?: number }).status : undefined;
       if (statusCode && statusCode < 500) {
         toast.error(err instanceof Error ? err.message : "Failed to update booking status");
+        setUpdatingBookingId(null);
         return;
       }
       synced = false;
       console.warn("Backend update failed, updating locally only:", err);
       updateLocalBookingStatus(id, status);
     }
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === id
-          ? {
-              ...b,
-              status,
-              booking_status: status,
-              rejectionReason,
-            }
-          : b
-      )
-    );
+    if (!synced) setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status, booking_status: status, rejectionReason } : b));
+    setUpdatingBookingId(null);
     toast.success(`Booking ${getStatusLabel(status)}${synced ? "" : " locally"}`);
   }
 
@@ -939,8 +934,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       <div className="max-w-7xl mx-auto px-3 sm:px-8 py-4 sm:py-6 pb-24 md:pb-6">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="min-w-0">
@@ -964,10 +957,6 @@ export default function AdminPage() {
           <Link to="/admin/inquiries"
             className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm font-semibold hover:bg-amber-100 transition-colors">
             <MessageSquare className="h-4 w-4" /> Inquiries CRM
-          </Link>
-          <Link to="/halls"
-            className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-semibold hover:bg-rose-100 transition-colors">
-            <Building2 className="h-4 w-4" /> View Halls
           </Link>
         </div>
 
@@ -1110,6 +1099,10 @@ export default function AdminPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-base font-bold text-[#be123c]">Price on request</span>
                       <div className="flex gap-2">
+                        <button onClick={() => setDetailService(service)}
+                          className="h-8 w-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center text-emerald-700 transition-colors" aria-label="View service details" title="View details">
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
                         <button onClick={() => openEditForm(service)}
                           className="h-8 w-8 rounded-xl bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-blue-600 transition-colors">
                           <Edit className="h-3.5 w-3.5" />
@@ -1186,12 +1179,14 @@ export default function AdminPage() {
                             <select
                               value={bookingStatus}
                               onChange={(e) => updateBookingStatus(booking.id, e.target.value as BookingStatus)}
+                              disabled={updatingBookingId === booking.id}
                               className="w-full sm:w-auto text-xs border border-gray-200 rounded-xl px-3 py-2 sm:py-1.5 focus:outline-none focus:border-[#e11d48] bg-white"
                             >
                               {BOOKING_STATUSES.map((s) => (
                                 <option key={s} value={s}>{getStatusLabel(s)}</option>
                               ))}
                             </select>
+                            {updatingBookingId === booking.id && <Loader2 className="h-4 w-4 animate-spin text-rose-600" />}
                             <button
                               type="button"
                               onClick={() => handleDeleteBooking(booking.id)}
@@ -1505,6 +1500,33 @@ export default function AdminPage() {
 
       {/* ─── Add/Edit Hall Modal ─── */}
       <MobileBottomNav />
+
+      <AnimatePresence>
+        {detailService && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm sm:items-center" onClick={(event) => event.target === event.currentTarget && setDetailService(null)}>
+            <motion.section initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }} className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+              <div className="relative h-52 overflow-hidden rounded-t-3xl bg-rose-50">
+                {detailService.image_url ? <img src={detailService.image_url} alt={detailService.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><Package className="h-14 w-14 text-rose-300" /></div>}
+                <button type="button" onClick={() => setDetailService(null)} className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white text-gray-900 shadow-lg"><X className="h-5 w-5" /></button>
+                {detailService.verified && <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-black text-white"><ShieldCheck className="h-4 w-4" /> VizhaOne Verified</span>}
+              </div>
+              <div className="space-y-4 p-5">
+                <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-600">Service details</p><h2 className="mt-1 text-2xl font-black text-gray-950">{detailService.title}</h2><p className="mt-2 text-sm leading-6 text-gray-500">{detailService.description || "No description added."}</p></div>
+                <div className="grid gap-3 rounded-2xl bg-gray-50 p-4 text-sm">
+                  <div><p className="text-[10px] font-black uppercase text-gray-400">Owner / Vendor</p><p className="mt-1 font-bold text-gray-900">{detailService.vendor_name || "Not provided"}</p></div>
+                  <div><p className="text-[10px] font-black uppercase text-gray-400">Contact number</p><p className="mt-1 font-bold text-gray-900">{detailService.vendor_mobile || "Not provided"}</p></div>
+                  <div><p className="text-[10px] font-black uppercase text-gray-400">Location</p><p className="mt-1 font-bold text-gray-900">{[detailService.place_name, detailService.location, detailService.pincode].filter(Boolean).join(", ") || "Not provided"}</p></div>
+                  <div><p className="text-[10px] font-black uppercase text-gray-400">Price</p><p className="mt-1 font-bold text-rose-700">{detailService.price_min ? `Starts at ₹${Number(detailService.price_min).toLocaleString("en-IN")}` : "Contact for quote"}</p></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => { setDetailService(null); openEditForm(detailService); }} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-700"><Edit className="h-4 w-4" /> Edit service</button>
+                  {detailService.vendor_mobile ? <a href={`tel:${detailService.vendor_mobile.replace(/[^\d+]/g, "")}`} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white"><Phone className="h-4 w-4" /> Call owner</a> : <button type="button" disabled className="rounded-2xl bg-gray-100 px-4 py-3 text-sm font-black text-gray-400">Phone unavailable</button>}
+                </div>
+              </div>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showHallModal && (

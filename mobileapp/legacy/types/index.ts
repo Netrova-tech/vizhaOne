@@ -84,6 +84,19 @@ export interface Booking {
   event_packages?: EventPackage;
   users?: User;
   hallName?: string;
+  hallId?: string;
+  serviceId?: string;
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  slot?: string;
+  price?: number;
+  name?: string;
+  mobile?: string;
+  status?: BookingStatus;
+  rejectionReason?: string;
+  bookingType?: "hall" | "service";
+  updatedAt?: string;
 }
 
 export interface Notification {

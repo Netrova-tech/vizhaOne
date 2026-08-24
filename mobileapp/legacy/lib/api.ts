@@ -46,6 +46,9 @@ export interface Booking extends BookingPayload {
   id: string;
   status: "pending" | "approved" | "in_progress" | "completed" | "cancelled";
   createdAt: string;
+  updatedAt?: string;
+  rejectionReason?: string;
+  bookingType?: "hall" | "service";
 }
 
 export type InquiryStatus = "interested" | "contacted" | "confirmed" | "dropped";
@@ -165,9 +168,11 @@ export async function createBulkBookings(bookings:BookingPayload[]):Promise<Book
 /**
  * Get all bookings from the backend
  */
-export async function getBookings(): Promise<Booking[]> {
+export async function getBookings(mobile?: string): Promise<Booking[]> {
   try {
-    const res = await fetch(`${API_BASE}/bookings`, {
+    const search = new URLSearchParams();
+    if (mobile) search.set("mobile", mobile);
+    const res = await fetch(`${API_BASE}/bookings${search.size ? `?${search.toString()}` : ""}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -200,7 +205,8 @@ export async function updateBookingStatus(
     });
 
     if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(body.error || `API error: ${res.status}`, res.status);
     }
 
     const data = await res.json();
@@ -348,16 +354,19 @@ export async function updateBookingStatusWithSync(
  * - Tries to fetch from backend first
  * - Falls back to localStorage if backend is unavailable
  */
-export async function getBookingsWithFallback(): Promise<{
+export async function getBookingsWithFallback(mobile?: string): Promise<{
   bookings: Booking[];
   source: "backend" | "localStorage";
 }> {
   try {
-    const backendBookings = await getBookings();
+    const backendBookings = await getBookings(mobile);
     return { bookings: backendBookings, source: "backend" };
   } catch (err) {
     console.warn("Failed to fetch from backend, using localStorage:", err);
-    const localBookings = getLocalBookings();
+    const normalizedMobile = String(mobile || "").replace(/\D/g, "").slice(-10);
+    const localBookings = getLocalBookings().filter((booking) =>
+      !normalizedMobile || String(booking.mobile || "").replace(/\D/g, "").slice(-10) === normalizedMobile
+    );
     return { bookings: localBookings, source: "localStorage" };
   }
 }

@@ -40,10 +40,28 @@ import { HallDetailRoute } from "@/routes/HallDetailRoute";
 import { NotFoundPage } from "@/routes/NotFoundPage";
 import { PackageDetailRoute } from "@/routes/PackageDetailRoute";
 import { ServiceDetailRoute } from "@/routes/ServiceDetailRoute";
+import { useAuth } from "@/context/AuthContext";
 
-export default function App() {
+function AppRoutes() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="grid min-h-dvh place-items-center bg-[#fffafb]"><div className="h-10 w-10 animate-spin rounded-full border-4 border-rose-600 border-t-transparent" /></div>;
+
+  if (user?.role === "admin") {
+    return <>
+      <ScrollToTop />
+      <NativeBackHandler />
+      <Routes>
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/analytics" element={<AnalyticsPage />} />
+        <Route path="/admin/inquiries" element={<InquiriesPage />} />
+        <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    </>;
+  }
+
   return (
-    <AppProviders>
+    <>
       <ScrollToTop />
       <NativeBackHandler />
       <RouteBackButton />
@@ -90,6 +108,10 @@ export default function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </AppProviders>
+    </>
   );
+}
+
+export default function App() {
+  return <AppProviders><AppRoutes /></AppProviders>;
 }

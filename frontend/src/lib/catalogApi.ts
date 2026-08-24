@@ -22,12 +22,31 @@ function readLocalArray<T>(key: string): T[] {
 }
 
 function normalizeCatalog(data: Partial<PublicCatalog> | null | undefined): PublicCatalog {
+  const services = Array.isArray(data?.services)
+    ? data.services.map((service) => ({
+        ...service,
+        price: normalizePrice(service.price),
+        price_min: normalizeOptionalPrice(service.price_min),
+        price_max: normalizeOptionalPrice(service.price_max),
+      }))
+    : [];
+
   return {
     categories: Array.isArray(data?.categories) ? data.categories : [],
-    services: Array.isArray(data?.services) ? data.services : [],
+    services,
     halls: Array.isArray(data?.halls) ? data.halls : [],
     packages: Array.isArray(data?.packages) ? data.packages : [],
   };
+}
+
+function normalizePrice(value: unknown): number {
+  const price = Number(value);
+  return Number.isFinite(price) && price > 0 ? price : 0;
+}
+
+function normalizeOptionalPrice(value: unknown): number | undefined {
+  const price = Number(value);
+  return Number.isFinite(price) && price > 0 ? price : undefined;
 }
 
 export function getFallbackCatalog(): PublicCatalog {
