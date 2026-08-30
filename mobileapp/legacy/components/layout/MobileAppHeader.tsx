@@ -49,7 +49,11 @@ export function MobileAppHeader() {
   const { lang, setLang } = useLang();
   const isProvider = user?.role === "service_provider";
   const languages: { code: Language; label: string; short: string }[] = [
-    {code:"en",label:"English",short:"EN"},{code:"ta",label:"தமிழ்",short:"TA"},{code:"hi",label:"हिन्दी",short:"HI"},{code:"ml",label:"മലയാളം",short:"ML"},{code:"te",label:"తెలుగు",short:"TE"},
+    { code: "en", label: "English", short: "EN" },
+    { code: "ta", label: "Tamil", short: "தமிழ்" },
+    { code: "hi", label: "Hindi", short: "हिंदी" },
+    { code: "ml", label: "Malayalam", short: "മലയാളം" },
+    { code: "te", label: "Telugu", short: "తెలుగు" },
   ];
   function changeLanguage(code:Language){setLang(code);setLanguageOpen(false)}
   function go(href: string) { setOpen(false); window.setTimeout(() => navigate(href), 0); }
@@ -69,7 +73,7 @@ export function MobileAppHeader() {
           <div className="relative flex items-center gap-1.5"><button type="button" onClick={()=>setLanguageOpen(value=>!value)} aria-label="Change language" className="grid h-11 w-11 place-items-center rounded-2xl bg-amber-50 text-amber-800"><Languages className="h-5 w-5"/><span className="absolute -bottom-0.5 text-[7px] font-black">{lang.toUpperCase()}</span></button><Link
             to="/cart"
             aria-label={`Cart with ${count} items`}
-            className="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-sm"
+            className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-lg shadow-rose-200"
           >
             <ShoppingBag className="h-5 w-5"/>
             {count>0&&<span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count>99?"99+":count}</span>}

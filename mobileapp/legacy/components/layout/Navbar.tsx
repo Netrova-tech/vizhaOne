@@ -39,6 +39,7 @@ export function Navbar() {
   const [scrolled,        setScrolled]        = useState(false);
   const [profileOpen,     setProfileOpen]     = useState(false);
   const [desktopLangOpen, setDesktopLangOpen] = useState(false);
+  const [mobileLangOpen,  setMobileLangOpen]  = useState(false);
 
 
 
@@ -260,7 +261,18 @@ export function Navbar() {
             {/* Mobile utilities */}
             <div className="md:hidden flex items-center gap-2 justify-self-end">
 
-              <Link to="/cart" aria-label={`Cart with ${count} items`} className="relative grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-sm active:scale-95">
+              <div className="relative">
+                <button type="button" onClick={() => setMobileLangOpen((value) => !value)} aria-label="Choose language" className="relative grid h-10 w-10 place-items-center rounded-xl border border-amber-100 bg-amber-50 text-amber-800 shadow-sm">
+                  <Globe className="h-4.5 w-4.5" />
+                  <span className="absolute -bottom-0.5 text-[7px] font-black">{langLabel}</span>
+                </button>
+                {mobileLangOpen && <div className="absolute right-0 top-12 z-[120] w-56 rounded-3xl border border-rose-100 bg-white p-2 shadow-2xl">
+                  <div className="flex items-center justify-between px-2 py-1"><div><p className="text-xs font-black">Choose language</p><p className="text-[9px] text-gray-400">Your choice is saved</p></div><button type="button" onClick={() => setMobileLangOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-gray-100" aria-label="Close language menu"><X className="h-4 w-4" /></button></div>
+                  {[{code:"en",label:"English"},{code:"ta",label:"Tamil · தமிழ்"},{code:"hi",label:"Hindi · हिंदी"},{code:"ml",label:"Malayalam · മലയാളം"},{code:"te",label:"Telugu · తెలుగు"}].map((item) => <button type="button" key={item.code} onClick={() => { setLang(item.code as Language); setMobileLangOpen(false); }} className={`mt-1 w-full rounded-2xl px-3 py-3 text-left text-xs font-black ${lang === item.code ? "bg-gradient-to-r from-rose-600 to-pink-600 text-white" : "text-gray-800 active:bg-rose-50"}`}>{item.label}</button>)}
+                </div>}
+              </div>
+
+              <Link to="/cart" aria-label={`Cart with ${count} items`} className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-lg shadow-rose-200 active:scale-95">
                 <ShoppingBag className="h-4.5 w-4.5" />
                 {count > 0 && <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count > 99 ? "99+" : count}</span>}
               </Link>

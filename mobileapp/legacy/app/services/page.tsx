@@ -1,7 +1,7 @@
 "use client";
 import { Suspense,useEffect,useMemo,useState } from "react";
 import { useNavigate,useSearchParams } from "react-router-dom";
-import { Building2,CheckCircle2,Heart,MapPin,RotateCcw,Search,ShieldCheck,ShoppingBag,ShoppingCart,SlidersHorizontal,Star,X } from "lucide-react";
+import { Building2,CheckCircle2,Heart,MapPin,RotateCcw,Search,ShieldCheck,ShoppingCart,SlidersHorizontal,Star,X } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -19,7 +19,7 @@ const HALLS="vizhaone-halls";
 function Explore(){
  const navigate=useNavigate(),[params]=useSearchParams();
  const{services,halls,categories,loading}=useCatalog();
- const{isFavorite,toggle}=useFavorites(),{items:cart,add,count}=useCart();
+ const{isFavorite,toggle}=useFavorites(),{items:cart,add}=useCart();
  const[query,setQuery]=useState(params.get("search")||"");
  const[category,setCategory]=useState("");
  const[filters,setFilters]=useState(false),[location,setLocation]=useState("All locations"),[maxPrice,setMaxPriceValue]=useState(Number(params.get("maxPrice"))||1000000),[budgetFilterActive,setBudgetFilterActive]=useState(params.has("maxPrice"));
@@ -51,6 +51,6 @@ function Explore(){
    <div className="flex min-w-0 flex-1 flex-col py-1"><div className="flex items-start gap-1"><div className="min-w-0 flex-1"><p className="text-[9px] font-black uppercase tracking-wider text-rose-600">{i.categoryName}</p><h3 className="line-clamp-2 text-sm font-black leading-tight sm:text-base">{i.title}</h3></div><button onClick={e=>{e.stopPropagation();toggle({id:i.id,type:i.kind,title:i.title,price:i.price,image_url:i.image,location:i.location});toast.success(saved?"Removed from saved":"Saved to favourites")}} className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${saved?"bg-rose-600 text-white":"bg-rose-50 text-rose-600"}`}><Heart className={`h-4 w-4 ${saved?"fill-current":""}`}/></button></div>
    <p className="mt-1 flex items-center gap-1 truncate text-[10px] font-semibold text-gray-500"><MapPin className="h-3 w-3 text-rose-500"/>{i.location||"Location on request"}</p><p className="mt-1 flex items-center gap-1 truncate text-[10px] font-bold text-amber-600">{i.rating?<><Star className="h-3 w-3 fill-current"/>{i.rating.toFixed(1)}<span className="text-gray-300">•</span></>:null}<span className="truncate text-gray-500">{i.vendor}</span></p>{i.verified?<p className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[8px] font-black uppercase tracking-wide text-emerald-700"><ShieldCheck className="h-3 w-3"/>VizhaOne Verified</p>:null}{i.kind==="hall"&&i.capacity?<p className="mt-1 text-[9px] font-bold text-gray-500">Up to {i.capacity.toLocaleString("en-IN")} guests</p>:null}<p className="mt-auto pt-1 text-xs font-black text-[#9f1239] sm:text-sm">{i.priceLabel}</p>
    <div className="mt-2 grid grid-cols-2 gap-1.5"><button disabled={added} onClick={e=>{e.stopPropagation();add({id:i.id,title:i.title,price:i.price,image_url:i.image,location:i.location});toast.success("Added to cart")}} className="flex min-h-9 items-center justify-center gap-1 rounded-xl bg-[#21151a] text-[9px] font-black text-white disabled:bg-emerald-600"><ShoppingCart className="h-3.5 w-3.5"/>{added?"Added ✓":"Add to Cart"}</button><button onClick={e=>{e.stopPropagation();open(i,true)}} className="min-h-9 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-[9px] font-black text-white">Book Now</button></div></div></article>})}</div>:<section className="rounded-3xl bg-white py-16 text-center"><Search className="mx-auto h-10 w-10 text-rose-300"/><h2 className="mt-3 font-black">No matching vendors</h2><button onClick={()=>{setQuery("");setCategory("");setLocation("All locations");setMaxPrice(1000000)}} className="mt-5 rounded-xl bg-rose-600 px-5 py-3 text-xs font-black text-white">Clear filters</button></section>}
- </main><button onClick={()=>navigate("/cart")} className="fixed bottom-24 right-4 z-40 grid h-14 w-14 place-items-center rounded-2xl bg-[#21151a] text-white shadow-2xl"><ShoppingBag className="h-5 w-5"/>{count>0&&<span className="absolute -right-1 -top-1 grid h-6 min-w-6 place-items-center rounded-full bg-rose-600 px-1 text-[9px] font-black">{count}</span>}</button><SiteFooter/><MobileBottomNav/></div>
+ </main><SiteFooter/><MobileBottomNav/></div>
 }
 export default function ServicesPage(){return <Suspense fallback={<div className="grid min-h-dvh place-items-center"><span className="h-11 w-11 animate-spin rounded-full border-4 border-rose-600 border-t-transparent"/></div>}><Explore/></Suspense>}

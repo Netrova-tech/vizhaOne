@@ -383,6 +383,11 @@ function ServicesContent() {
                         }`}>
                           {formatServicePrice(service)}
                         </p>
+                        {(hasVisiblePrice(service.price) || hasVisiblePrice(service.price_min) || hasVisiblePrice(service.price_max)) && (
+                          <p className="mt-0.5 text-[10px] font-semibold text-gray-400">
+                            {service.price_unit || "per event"}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-end mb-3">

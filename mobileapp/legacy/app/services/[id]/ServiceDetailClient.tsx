@@ -13,7 +13,7 @@ import { createBooking } from "@/lib/api";
 import { formatServicePrice } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { shareContent } from "@/lib/nativeShare";
-import { HallGallery } from "@/components/features/HallGallery";
+import { ServiceDetailGallery } from "@/components/features/ServiceDetailGallery";
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
@@ -90,9 +90,9 @@ export default function ServiceDetailClient({ id }: { id: string }) {
           {/* Main Info */}
           <div className="md:col-span-2 space-y-6">
             <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-              {serviceImages.length > 1 && <div className="relative"><HallGallery images={serviceImages} hallName={service.title}/><button onClick={()=>toggle({id:service.id,type:"service",title:service.title,price:Number(service.price_min||service.price||0),image_url:service.image_url,location:service.location})} className={`absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/70 shadow-md backdrop-blur ${isFavorite(service.id)?"bg-rose-600 text-white":"bg-white/95 text-rose-600"}`} aria-label="Save service"><Heart className={`h-5 w-5 ${isFavorite(service.id)?"fill-current":""}`}/></button></div>}
+              {serviceImages.length > 0 && <div className="relative"><ServiceDetailGallery images={serviceImages} title={service.title}/><button onClick={()=>toggle({id:service.id,type:"service",title:service.title,price:Number(service.price_min||service.price||0),image_url:service.image_url,location:service.location})} className={`absolute right-16 top-4 z-30 grid h-10 w-10 place-items-center rounded-full border border-white/70 shadow-md backdrop-blur ${isFavorite(service.id)?"bg-rose-600 text-white":"bg-white/95 text-rose-600"}`} aria-label="Save service"><Heart className={`h-5 w-5 ${isFavorite(service.id)?"fill-current":""}`}/></button></div>}
               {/* Image */}
-              <div className={`${serviceImages.length > 1?"hidden":""} relative h-64 sm:h-96 w-full bg-rose-50 flex items-center justify-center`}>
+              <div className="hidden">
                 {service.image_url ? (
                   <img src={service.image_url} alt={service.title} className="h-full w-full object-cover" />
                 ) : (

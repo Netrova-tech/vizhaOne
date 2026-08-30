@@ -404,6 +404,16 @@ export default function AdminPage() {
       toast.error("Service title is required");
       return;
     }
+    const startingPrice = Number(form.price_min);
+    if (!Number.isFinite(startingPrice) || startingPrice <= 0) {
+      toast.error("Enter a valid starting price greater than ₹0");
+      return;
+    }
+    const maximumPrice = form.price_max ? Number(form.price_max) : undefined;
+    if (maximumPrice !== undefined && (!Number.isFinite(maximumPrice) || maximumPrice < startingPrice)) {
+      toast.error("Maximum price must be greater than or equal to the starting price");
+      return;
+    }
     if (selectedPhotoCount < 1) {
       toast.error("Please add at least 1 service photo");
       return;
@@ -426,9 +436,9 @@ export default function AdminPage() {
       const payload: Partial<Service> = {
         title: form.title,
         description: form.description,
-        price: form.price_min ? Number(form.price_min) : 0,
-        price_min: form.price_min ? Number(form.price_min) : undefined,
-        price_max: form.price_max ? Number(form.price_max) : undefined,
+        price: startingPrice,
+        price_min: startingPrice,
+        price_max: maximumPrice,
         category_id: form.category_id || undefined,
         vendor_name: form.vendor_name,
         vendor_mobile: form.vendor_mobile,

@@ -14,6 +14,8 @@ declare global {
 
 function GoogleTranslationBridge() {
   useEffect(() => {
+    let requestedLanguage = localStorage.getItem("vizha_lang") || "en";
+    let retryTimer = 0;
     const suppressGoogleChrome = () => {
       document.documentElement.style.setProperty("top", "0px", "important");
       document.body.style.setProperty("top", "0px", "important");
@@ -26,8 +28,13 @@ function GoogleTranslationBridge() {
       });
     };
     const applyLanguage = (language: string) => {
+      requestedLanguage = language;
       const combo = document.querySelector<HTMLSelectElement>("#google_translate_element .goog-te-combo");
-      if (!combo) return;
+      if (!combo) {
+        window.clearTimeout(retryTimer);
+        retryTimer = window.setTimeout(() => applyLanguage(requestedLanguage), 250);
+        return;
+      }
       combo.value = language;
       combo.dispatchEvent(new Event("change", { bubbles: true }));
       window.setTimeout(suppressGoogleChrome, 50);
@@ -37,7 +44,7 @@ function GoogleTranslationBridge() {
     window.googleTranslateElementInit = () => {
       if (!window.google?.translate || document.querySelector("#google_translate_element select")) return;
       new window.google.translate.TranslateElement({ pageLanguage: "en", includedLanguages: "en,ta,hi,ml,te", autoDisplay: false }, "google_translate_element");
-      window.setTimeout(() => applyLanguage(localStorage.getItem("vizha_lang") || "en"), 250);
+      window.setTimeout(() => applyLanguage(requestedLanguage), 250);
     };
     if (window.google?.translate) window.googleTranslateElementInit();
     else if (!document.getElementById("google-translate-script")) {
@@ -50,7 +57,7 @@ function GoogleTranslationBridge() {
     suppressGoogleChrome();
     const observer = new MutationObserver(suppressGoogleChrome);
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    return () => { observer.disconnect(); delete window.__vizha_translate; };
+    return () => { window.clearTimeout(retryTimer); observer.disconnect(); delete window.__vizha_translate; };
   }, []);
   return <div id="google_translate_element" aria-hidden="true" />;
 }

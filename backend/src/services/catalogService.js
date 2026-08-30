@@ -3,6 +3,25 @@ const { transaction } = require("../db/pool");
 
 const dbTable = (table) => table === "packages" ? "event_packages" : table;
 
+function validateServicePrice(payload = {}, { required = false } = {}) {
+  const hasPriceUpdate = ["price", "price_min", "price_max"].some((key) =>
+    Object.prototype.hasOwnProperty.call(payload, key)
+  );
+  if (!required && !hasPriceUpdate) return;
+
+  const startingPrice = Number(payload.price_min ?? payload.price);
+  if (!Number.isFinite(startingPrice) || startingPrice <= 0) {
+    throw new Error("A valid service starting price greater than 0 is required");
+  }
+
+  if (payload.price_max !== undefined && payload.price_max !== null && payload.price_max !== "") {
+    const maximumPrice = Number(payload.price_max);
+    if (!Number.isFinite(maximumPrice) || maximumPrice < startingPrice) {
+      throw new Error("Service maximum price must be greater than or equal to its starting price");
+    }
+  }
+}
+
 async function listCatalogItems(_store, table) {
   const actual = dbTable(table); assertTable(actual);
   const order = actual === "categories" ? "sort_order ASC, created_at DESC" : "created_at DESC";
@@ -12,6 +31,7 @@ async function listCatalogItems(_store, table) {
 
 async function createCatalogItem(_store, table, payload) {
   const actual = dbTable(table); assertTable(actual);
+  if (actual === "services") validateServicePrice(payload, { required: true });
   const idPrefix = table.slice(0, -1) || "item";
   const item = normalizePayload(actual, { ...payload, id: payload.id || `${idPrefix}-${Date.now()}` });
   const keys = Object.keys(item);
@@ -25,6 +45,7 @@ async function createCatalogItem(_store, table, payload) {
 
 async function updateCatalogItem(_store, table, id, payload) {
   const actual = dbTable(table); assertTable(actual);
+  if (actual === "services") validateServicePrice(payload);
   const item = normalizePayload(actual, payload); delete item.id;
   const keys = Object.keys(item);
   if (!keys.length) { const current = await query(`SELECT * FROM ${actual} WHERE id=$1`, [id]); return catalogClient(actual, current.rows[0] || null); }

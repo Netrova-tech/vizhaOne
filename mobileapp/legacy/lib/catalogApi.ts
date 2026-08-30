@@ -22,10 +22,31 @@ function readLocalArray<T>(key: string): T[] {
 }
 
 function normalizeCatalog(data: Partial<PublicCatalog> | null | undefined): PublicCatalog {
+  const normalizePrice = (value: unknown): number | undefined => {
+    if (value === null || value === undefined || value === "") return undefined;
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount : undefined;
+  };
+  const normalizeImages = (value: unknown): string[] => {
+    if (Array.isArray(value)) return value.filter((image): image is string => typeof image === "string" && Boolean(image.trim()));
+    if (typeof value !== "string" || !value.trim()) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.filter((image): image is string => typeof image === "string" && Boolean(image.trim()));
+    } catch { /* Legacy comma-separated gallery values are handled below. */ }
+    return value.split(",").map((image) => image.trim()).filter(Boolean);
+  };
+
   return {
     categories: Array.isArray(data?.categories) ? data.categories : [],
-    services: Array.isArray(data?.services) ? data.services : [],
-    halls: Array.isArray(data?.halls) ? data.halls : [],
+    services: Array.isArray(data?.services) ? data.services.map((service) => ({
+      ...service,
+      price: normalizePrice(service.price) ?? 0,
+      price_min: normalizePrice(service.price_min),
+      price_max: normalizePrice(service.price_max),
+      gallery_urls: normalizeImages(service.gallery_urls),
+    })) : [],
+    halls: Array.isArray(data?.halls) ? data.halls.map((hall) => ({ ...hall, gallery_urls: normalizeImages(hall.gallery_urls) })) : [],
     packages: Array.isArray(data?.packages) ? data.packages : [],
   };
 }
