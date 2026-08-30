@@ -55,6 +55,7 @@ export interface Service {
   review_count?: number;
   response_time?: string;
   video_urls?: string[];
+  food_preference?: "pure-veg" | "veg-non-veg" | "non-veg";
 
   created_at?: string;
   categories?: Category;

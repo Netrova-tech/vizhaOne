@@ -48,6 +48,7 @@ export interface Service {
   longitude?: number;
   availability_status: boolean;
   verified?: boolean;
+  food_preference?: "pure-veg" | "veg-non-veg" | "non-veg";
 
   created_at?: string;
   categories?: Category;

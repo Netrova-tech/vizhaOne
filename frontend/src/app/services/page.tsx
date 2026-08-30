@@ -23,6 +23,22 @@ import { CategoryIcon } from "@/lib/iconMap";
 import { ServiceImageCarousel } from "@/components/features/ServiceImageCarousel";
 import { getCompareIds, toggleCompare } from "@/lib/compare";
 
+type FoodPreference = "all" | "pure-veg" | "veg-non-veg" | "non-veg";
+const FOOD_FILTERS: Array<{ id: FoodPreference; label: string }> = [
+  { id: "all", label: "All Food" }, { id: "pure-veg", label: "Pure Veg Only" },
+  { id: "veg-non-veg", label: "Veg & Non-Veg" }, { id: "non-veg", label: "Non-Veg Only" },
+];
+function matchesFoodPreference(service: Service, preference: FoodPreference, categoryName = "") {
+  if (preference === "all") return true;
+  if (service.food_preference) return service.food_preference === preference;
+  const text = [service.title, service.description, categoryName].filter(Boolean).join(" ").toLowerCase().replace(/[–—]/g, "-");
+  const nonVeg = /non[\s-]?veg|chicken|mutton|fish|seafood|meat|biryani/.test(text);
+  const veg = /pure[\s-]?veg|vegetarian|\bveg\b/.test(text);
+  if (preference === "pure-veg") return veg && !nonVeg;
+  if (preference === "non-veg") return nonVeg && !/(veg\s*(and|&|\/|\+)\s*non|both veg)/.test(text);
+  return veg && nonVeg;
+}
+
 function ServicesContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -30,6 +46,7 @@ function ServicesContent() {
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
+  const [foodPreference, setFoodPreference] = useState<FoodPreference>("all");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [maxPrice, setMaxPrice] = useState(1000000);
   const [budgetFilterActive, setBudgetFilterActive] = useState(false);
@@ -41,6 +58,7 @@ function ServicesContent() {
 
   const { services, loading } = useServices();
   const { categories } = useCategories();
+  const categoryNames = useMemo(() => new Map(categories.map((category) => [category.id, category.category_name])), [categories]);
 
   const LOCATIONS = useMemo(() => {
     const locationsSet = new Set<string>();
@@ -115,6 +133,7 @@ function ServicesContent() {
         if (!matchesSearch) return false;
       }
       if (selectedCategory && s.category_id !== selectedCategory) return false;
+      if (!matchesFoodPreference(s, foodPreference, categoryNames.get(s.category_id || "") || "")) return false;
       if (selectedLocation !== "All Locations" && !s.location?.toLowerCase().includes(selectedLocation.toLowerCase())) return false;
       const price = Number(s.price_min ?? s.price ?? 0);
       if (budgetFilterActive && (price <= 0 || price > maxPrice)) return false;
@@ -128,7 +147,7 @@ function ServicesContent() {
       });
     }
     return results;
-  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, budgetFilterActive, priceSort]);
+  }, [services, searchQuery, selectedCategory, selectedLocation, maxPrice, budgetFilterActive, priceSort, foodPreference, categoryNames]);
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -220,6 +239,13 @@ function ServicesContent() {
               name / vendor / location
             </span>
           )}
+        </div>
+
+        <div className="mb-5">
+          <p className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-gray-500">Food preference</p>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {FOOD_FILTERS.map((option) => <button key={option.id} type="button" onClick={() => setFoodPreference(option.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-all ${foodPreference === option.id ? "border-emerald-600 bg-emerald-600 text-white shadow-md" : "border-emerald-100 bg-white text-emerald-800 hover:border-emerald-400"}`}>{option.id === "pure-veg" ? "● " : ""}{option.label}</button>)}
+          </div>
         </div>
 
         {/* Price filter and sorting */}
