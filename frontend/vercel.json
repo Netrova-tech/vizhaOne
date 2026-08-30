@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://vizhaone.onrender.com/api/:path*"
+      "destination": "https://vizhaone-backend-450892873561.asia-south1.run.app/api/:path*"
     },
     {
       "source": "/(.*)",
