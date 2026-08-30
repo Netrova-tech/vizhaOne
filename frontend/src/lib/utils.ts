@@ -1,6 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+const PRODUCTION_API_BASE_URL =
+  "https://vizhaone-backend-450892873561.asia-south1.run.app";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -24,9 +27,11 @@ export function apiUrl(path: string): string {
     if (isLocal && port !== "5000") {
       return `${protocol}//${hostname}:5000${cleanPath}`;
     }
+
+    return `${PRODUCTION_API_BASE_URL}${cleanPath}`;
   }
 
-  return cleanPath;
+  return `${PRODUCTION_API_BASE_URL}${cleanPath}`;
 }
 
 type PriceValue = number | string | null | undefined;
