@@ -135,8 +135,16 @@ ALTER TABLE reels ALTER COLUMN vendor_id DROP NOT NULL;
 ALTER TABLE reels ADD COLUMN IF NOT EXISTS owner_id uuid REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE reels ADD COLUMN IF NOT EXISTS service_name text;
 ALTER TABLE reels ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'reel';
+ALTER TABLE reels ADD COLUMN IF NOT EXISTS visibility text NOT NULL DEFAULT 'public';
 CREATE INDEX IF NOT EXISTS reels_public_feed_idx ON reels(published,created_at DESC);
 CREATE INDEX IF NOT EXISTS reels_owner_idx ON reels(owner_id);
+CREATE TABLE IF NOT EXISTS social_follows (
+  follower_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  following_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(follower_id,following_id), CHECK(follower_id <> following_id)
+);
+CREATE INDEX IF NOT EXISTS social_follows_following_idx ON social_follows(following_id);
 CREATE TABLE IF NOT EXISTS saved_services (
   user_id uuid REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now(), PRIMARY KEY(user_id,service_id)

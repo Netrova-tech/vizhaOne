@@ -16,8 +16,8 @@ import { ServiceImageCarousel } from "@/components/features/ServiceImageCarousel
 type FoodPreference="all"|"pure-veg"|"veg-non-veg"|"non-veg";
 type Item={id:string;kind:"hall"|"service";title:string;vendor?:string;location?:string;description?:string;image?:string;images:string[];categoryId:string;categoryName:string;price:number;priceLabel:string;available:boolean;rating?:number;capacity?:number;verified?:boolean;foodPreference?:Service["food_preference"]};
 const HALLS="vizhaone-halls";
-const FOOD_FILTERS:{id:FoodPreference;label:string}[]=[{id:"all",label:"All Food"},{id:"pure-veg",label:"Pure Veg Only"},{id:"veg-non-veg",label:"Veg & Non-Veg"},{id:"non-veg",label:"Non-Veg Only"}];
-function matchesFood(i:Item,preference:FoodPreference){if(preference==="all")return true;if(i.kind!=="service")return false;if(i.foodPreference)return i.foodPreference===preference;const text=[i.title,i.description,i.categoryName].filter(Boolean).join(" ").toLowerCase().replace(/[–—]/g,"-");const non=/non[\s-]?veg|chicken|mutton|fish|seafood|meat|biryani/.test(text),veg=/pure[\s-]?veg|vegetarian|\bveg\b/.test(text);if(preference==="pure-veg")return veg&&!non;if(preference==="non-veg")return non&&!/(veg\s*(and|&|\/|\+)\s*non|both veg)/.test(text);return veg&&non}
+const FOOD_FILTERS:{id:FoodPreference;label:string}[]=[{id:"all",label:"All Food"},{id:"pure-veg",label:"Pure Veg"},{id:"veg-non-veg",label:"Veg & Non-Veg"},{id:"non-veg",label:"Non-Veg Only"}];
+function matchesFood(i:Item,preference:FoodPreference){if(preference==="all")return true;if(i.kind!=="service")return false;if(i.foodPreference)return i.foodPreference===preference;const text=[i.title,i.description,i.categoryName].filter(Boolean).join(" ").toLowerCase().replace(/[–—]/g,"-");const non=/non[\s-]?veg|chicken|mutton|fish|seafood|meat|biryani/.test(text),veg=/pure[\s-]?veg|vegetarian|\bveg\b|catering|food/.test(text);if(preference==="pure-veg")return veg&&!non;if(preference==="non-veg")return non&&!/(veg\s*(and|&|\/|\+)\s*non|both veg)/.test(text);return veg&&non}
 
 function Explore(){
  const navigate=useNavigate(),[params]=useSearchParams();
