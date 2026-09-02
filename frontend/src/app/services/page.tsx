@@ -12,7 +12,6 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { LuxuryBanner } from "@/components/layout/LuxuryBanner";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { VendorPromoPoster } from "@/components/app/VendorPromoPoster";
 import { useServices, useCategories } from "@/hooks/useServices";
 import { DEMO_SERVICES } from "@/data/demo";
 import { buildWhatsAppMessage, formatServicePrice, hasVisiblePrice } from "@/lib/utils";
@@ -188,8 +187,6 @@ function ServicesContent() {
   return (
     <div className="min-h-screen luxury-page">
       <Navbar />
-      <VendorPromoPoster />
-
       <LuxuryBanner
         image="/hero/slide-2.jpg"
         badge={<><Sparkles className="h-4 w-4 text-amber-300" /> Verified Vendors</>}

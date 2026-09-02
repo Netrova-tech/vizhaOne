@@ -14,7 +14,6 @@ import { HeroCarousel } from "@/components/features/HeroCarousel";
 import { ServiceCard } from "@/components/features/ServiceCard";
 import { ExternalImg } from "@/components/ui/ExternalImg";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { VendorPromoPoster } from "@/components/app/VendorPromoPoster";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCategories, useServices } from "@/hooks/useServices";
 import { formatPrice } from "@/lib/utils";
@@ -60,7 +59,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen luxury-page">
       <Navbar />
-      <VendorPromoPoster />
       <HeroCarousel />
       <TrustBar />
       {/* CATEGORIES */}
