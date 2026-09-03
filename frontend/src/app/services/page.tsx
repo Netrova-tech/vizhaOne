@@ -24,7 +24,7 @@ import { getCompareIds, toggleCompare } from "@/lib/compare";
 
 type FoodPreference = "all" | "pure-veg" | "veg-non-veg" | "non-veg";
 const FOOD_FILTERS: Array<{ id: FoodPreference; label: string }> = [
-  { id: "all", label: "All Food" }, { id: "pure-veg", label: "Pure Veg Only" },
+  { id: "all", label: "All" }, { id: "pure-veg", label: "Pure Veg Only" },
   { id: "veg-non-veg", label: "Veg & Non-Veg" }, { id: "non-veg", label: "Non-Veg Only" },
 ];
 function matchesFoodPreference(service: Service, preference: FoodPreference, categoryName = "") {

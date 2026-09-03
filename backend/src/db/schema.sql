@@ -42,6 +42,7 @@ ALTER TABLE services ADD COLUMN IF NOT EXISTS rating numeric(3,2);
 ALTER TABLE services ADD COLUMN IF NOT EXISTS review_count integer NOT NULL DEFAULT 0;
 ALTER TABLE services ADD COLUMN IF NOT EXISTS response_time text;
 ALTER TABLE services ADD COLUMN IF NOT EXISTS video_urls text[] NOT NULL DEFAULT '{}';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS food_preference text CHECK(food_preference IN ('pure-veg','veg-non-veg','non-veg'));
 CREATE INDEX IF NOT EXISTS services_category_idx ON services(category_id);
 CREATE INDEX IF NOT EXISTS services_location_idx ON services(location);
 

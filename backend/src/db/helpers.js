@@ -3,7 +3,7 @@ const { query } = require("./pool");
 const TABLES = new Set(["categories", "services", "halls", "event_packages"]);
 const COLUMNS = {
   categories: new Set(["id", "name", "image_url", "description", "icon", "sort_order"]),
-  services: new Set(["id", "category_id", "title", "description", "price", "price_min", "price_max", "image_url", "gallery_urls", "video_urls", "vendor_name", "vendor_mobile", "pincode", "location", "place_name", "latitude", "longitude", "availability_status", "verified", "pricing_type", "price_unit", "packages", "extra_charges", "travel_charges", "advance_percentage", "cancellation_terms", "experience_years", "rating", "review_count", "response_time"]),
+  services: new Set(["id", "category_id", "title", "description", "price", "price_min", "price_max", "image_url", "gallery_urls", "video_urls", "vendor_name", "vendor_mobile", "pincode", "location", "place_name", "latitude", "longitude", "availability_status", "verified", "pricing_type", "price_unit", "packages", "extra_charges", "travel_charges", "advance_percentage", "cancellation_terms", "experience_years", "rating", "review_count", "response_time", "food_preference"]),
   halls: new Set(["id", "name", "description", "address", "pincode", "location", "latitude", "longitude", "price_per_day", "price_morning", "price_evening", "capacity", "dining_capacity", "parking_capacity", "rooms", "has_ac", "has_parking", "has_generator", "has_catering", "image_url", "gallery_urls", "owner_mobile", "owner_name", "is_active"]),
   event_packages: new Set(["id", "name", "description", "package_type", "total_price", "image_url", "is_active", "service_ids"]),
 };
