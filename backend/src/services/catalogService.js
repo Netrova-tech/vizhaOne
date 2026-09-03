@@ -3,20 +3,25 @@ const { transaction } = require("../db/pool");
 
 const dbTable = (table) => table === "packages" ? "event_packages" : table;
 
-function validateServicePrice(payload = {}, { required = false } = {}) {
-  const hasPriceUpdate = ["price", "price_min", "price_max"].some((key) =>
-    Object.prototype.hasOwnProperty.call(payload, key)
-  );
-  if (!required && !hasPriceUpdate) return;
+function validateServicePrice(payload = {}) {
+  const startingRaw = payload.price_min ?? payload.price;
+  const maximumRaw = payload.price_max;
+  const startingBlank = startingRaw === undefined || startingRaw === null || startingRaw === "" || Number(startingRaw) === 0;
+  const maximumBlank = maximumRaw === undefined || maximumRaw === null || maximumRaw === "" || Number(maximumRaw) === 0;
 
-  const startingPrice = Number(payload.price_min ?? payload.price);
-  if (!Number.isFinite(startingPrice) || startingPrice <= 0) {
-    throw new Error("A valid service starting price greater than 0 is required");
+  // Empty and legacy zero values mean "Contact for quote" and are valid.
+  if (startingBlank && maximumBlank) return;
+
+  const startingPrice = startingBlank ? null : Number(startingRaw);
+  const maximumPrice = maximumBlank ? null : Number(maximumRaw);
+  if (startingPrice !== null && (!Number.isFinite(startingPrice) || startingPrice < 0)) {
+    throw new Error("Service starting price must be a valid positive amount");
   }
-
-  if (payload.price_max !== undefined && payload.price_max !== null && payload.price_max !== "") {
-    const maximumPrice = Number(payload.price_max);
-    if (!Number.isFinite(maximumPrice) || maximumPrice < startingPrice) {
+  if (maximumPrice !== null && (!Number.isFinite(maximumPrice) || maximumPrice < 0)) {
+    throw new Error("Service maximum price must be a valid positive amount");
+  }
+  if (startingPrice !== null && maximumPrice !== null) {
+    if (maximumPrice < startingPrice) {
       throw new Error("Service maximum price must be greater than or equal to its starting price");
     }
   }
