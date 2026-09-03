@@ -288,8 +288,8 @@ export default function AdminPage() {
     setForm({
       title: service.title,
       description: service.description || "",
-      price_min: String(service.price_min ?? service.price),
-      price_max: String(service.price_max ?? service.price),
+      price_min: String(service.price_min ?? service.price ?? ""),
+      price_max: String(service.price_max ?? service.price ?? ""),
       category_id: service.category_id || "",
       vendor_name: service.vendor_name || "",
       vendor_mobile: service.vendor_mobile || "",
@@ -395,13 +395,17 @@ export default function AdminPage() {
       toast.error("Service title is required");
       return;
     }
-    const startingPrice = Number(form.price_min);
-    if (!Number.isFinite(startingPrice) || startingPrice <= 0) {
+    const startingPrice = form.price_min.trim() ? Number(form.price_min) : undefined;
+    if (startingPrice !== undefined && (!Number.isFinite(startingPrice) || startingPrice <= 0)) {
       toast.error("Enter a valid starting price greater than ₹0");
       return;
     }
     const maximumPrice = form.price_max ? Number(form.price_max) : undefined;
-    if (maximumPrice !== undefined && (!Number.isFinite(maximumPrice) || maximumPrice < startingPrice)) {
+    if (maximumPrice !== undefined && startingPrice === undefined) {
+      toast.error("Enter a starting price or leave both price fields empty");
+      return;
+    }
+    if (maximumPrice !== undefined && (!Number.isFinite(maximumPrice) || maximumPrice < (startingPrice as number))) {
       toast.error("Maximum price must be greater than or equal to the starting price");
       return;
     }
@@ -1864,7 +1868,7 @@ export default function AdminPage() {
                                 const payload: Partial<Service> = {
                                   title: quickSvcForm.title,
                                   description: "",
-                                  price: quickSvcForm.price ? Number(quickSvcForm.price) : 0,
+                                  price: quickSvcForm.price ? Number(quickSvcForm.price) : undefined,
                                   price_min: quickSvcForm.price ? Number(quickSvcForm.price) : undefined,
                                   price_max: quickSvcForm.price ? Number(quickSvcForm.price) : undefined,
                                   category_id: quickSvcForm.category_id || undefined,
@@ -2156,17 +2160,18 @@ export default function AdminPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Min Price (₹) *</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Starting Price (₹) <span className="font-normal text-gray-400">Optional</span></label>
                       <input type="number" min={0} value={form.price_min} onChange={(e) => setForm({ ...form, price_min: e.target.value })}
                         placeholder="25000"
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48]" />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">Max Price (₹) *</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Maximum Price (₹) <span className="font-normal text-gray-400">Optional</span></label>
                       <input type="number" min={0} value={form.price_max} onChange={(e) => setForm({ ...form, price_max: e.target.value })}
                         placeholder="50000"
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48]" />
                     </div>
+                    <p className="sm:col-span-2 -mt-2 text-xs text-gray-500">Leave both price fields empty to show “Contact for quote” to customers.</p>
                   </div>
                 </div>
 

@@ -31,7 +31,7 @@ async function listCatalogItems(_store, table) {
 
 async function createCatalogItem(_store, table, payload) {
   const actual = dbTable(table); assertTable(actual);
-  if (actual === "services") validateServicePrice(payload, { required: true });
+  if (actual === "services") validateServicePrice(payload);
   const idPrefix = table.slice(0, -1) || "item";
   const item = normalizePayload(actual, { ...payload, id: payload.id || `${idPrefix}-${Date.now()}` });
   const keys = Object.keys(item);
