@@ -100,6 +100,7 @@ const menu = [
 export default function MobileProfilePage() {
   const { user, loading, signOut } = useAuth();
   const provider = user?.role === "service_provider";
+  const canPublish = provider || user?.role === "admin";
   const [editing, setEditing] = useState(false);
   const [profile, setProfile] = useState({
     name: "",
@@ -110,14 +111,17 @@ export default function MobileProfilePage() {
   });
   const [profileTab, setProfileTab] = useState<
     "posts" | "saved" | "bookings" | "reviews"
-  >("posts");
+  >("saved");
   const [socialStats, setSocialStats] = useState({
     followers: 0,
     following: 0,
   });
   const [savedCount, setSavedCount] = useState(0);
   const [bookingCount, setBookingCount] = useState(0);
-  const [connections, setConnections] = useState<{title:string;items:SocialConnection[]}|null>(null);
+  const [connections, setConnections] = useState<{
+    title: string;
+    items: SocialConnection[];
+  } | null>(null);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [uploads, setUploads] = useState<SocialItem[]>([]);
   const [kind, setKind] = useState<SocialKind>("reel");
@@ -194,11 +198,23 @@ export default function MobileProfilePage() {
 
   async function openConnections(type: "followers" | "following") {
     if (!user) return;
-    setConnections({ title: type === "followers" ? "Followers" : "Following", items: [] });
+    setConnections({
+      title: type === "followers" ? "Followers" : "Following",
+      items: [],
+    });
     setConnectionsLoading(true);
-    try { setConnections({ title: type === "followers" ? "Followers" : "Following", items: await fetchSocialConnections(user.id, type) }); }
-    catch (error) { toast.error(error instanceof Error ? error.message : "Unable to load people"); }
-    finally { setConnectionsLoading(false); }
+    try {
+      setConnections({
+        title: type === "followers" ? "Followers" : "Following",
+        items: await fetchSocialConnections(user.id, type),
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Unable to load people",
+      );
+    } finally {
+      setConnectionsLoading(false);
+    }
   }
 
   if (loading)
@@ -433,7 +449,11 @@ export default function MobileProfilePage() {
                     Posts
                   </span>
                 </div>
-                <button type="button" onClick={() => void openConnections("followers")} className="rounded-xl py-1 active:bg-rose-50">
+                <button
+                  type="button"
+                  onClick={() => void openConnections("followers")}
+                  className="rounded-xl py-1 active:bg-rose-50"
+                >
                   <strong className="block text-lg font-black">
                     {socialStats.followers}
                   </strong>
@@ -441,7 +461,11 @@ export default function MobileProfilePage() {
                     Followers
                   </span>
                 </button>
-                <button type="button" onClick={() => void openConnections("following")} className="rounded-xl py-1 active:bg-rose-50">
+                <button
+                  type="button"
+                  onClick={() => void openConnections("following")}
+                  className="rounded-xl py-1 active:bg-rose-50"
+                >
                   <strong className="block text-lg font-black">
                     {socialStats.following}
                   </strong>
@@ -586,115 +610,119 @@ export default function MobileProfilePage() {
           </div>
         )}
 
-        <section className="mt-5 rounded-3xl border border-rose-100 bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-black">Create & share</h2>
-              <p className="text-[10px] text-gray-500">
-                Post your celebration or upload a reel
-              </p>
+        {canPublish && (
+          <section className="mt-5 rounded-3xl border border-rose-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-black">Create & share</h2>
+                <p className="text-[10px] text-gray-500">
+                  Post your celebration or upload a reel
+                </p>
+              </div>
+              <Upload className="h-5 w-5 text-rose-500" />
             </div>
-            <Upload className="h-5 w-5 text-rose-500" />
-          </div>
-          <div className="mt-4 flex gap-2">
-            {(["reel", "post"] as SocialKind[]).map((x) => (
-              <button
-                type="button"
-                key={x}
-                onClick={() => setKind(x)}
-                className={`flex-1 rounded-xl py-3 text-xs font-black capitalize ${kind === x ? "bg-rose-600 text-white" : "bg-gray-100 text-gray-500"}`}
-              >
-                {x}
-              </button>
-            ))}
-          </div>
-          <form onSubmit={publish} className="mt-4 space-y-3">
-            <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-rose-200 bg-rose-50/50">
-              {media ? (
-                mediaType === "image" ? (
-                  <img
-                    src={media}
-                    alt="Upload preview"
-                    className="max-h-56 w-full object-cover"
-                  />
-                ) : (
-                  <video src={media} controls className="max-h-56 w-full" />
-                )
-              ) : (
-                <>
-                  <ImagePlus className="h-8 w-8 text-rose-500" />
-                  <strong className="mt-2 text-xs">
-                    Choose photo or video
-                  </strong>
-                  <span className="mt-1 text-[9px] text-gray-400">
-                    Images or videos up to 25 MB
-                  </span>
-                </>
-              )}
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={chooseMedia}
-                className="hidden"
-              />
-            </label>
-            <input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="Write a caption..."
-              className="w-full rounded-2xl border px-4 py-3 text-sm"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                placeholder={provider ? "Service name" : "Celebration type"}
-                className="min-w-0 rounded-2xl border px-3 py-3 text-xs"
-              />
-              <input
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                inputMode="numeric"
-                placeholder={provider ? "Starting price" : "Optional budget"}
-                className="min-w-0 rounded-2xl border px-3 py-3 text-xs"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1.5">
-              {(["public", "followers"] as SocialVisibility[]).map((option) => (
+            <div className="mt-4 flex gap-2">
+              {(["reel", "post"] as SocialKind[]).map((x) => (
                 <button
                   type="button"
-                  key={option}
-                  onClick={() => setVisibility(option)}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black ${visibility === option ? "bg-white text-rose-600 shadow-sm" : "text-gray-400"}`}
+                  key={x}
+                  onClick={() => setKind(x)}
+                  className={`flex-1 rounded-xl py-3 text-xs font-black capitalize ${kind === x ? "bg-rose-600 text-white" : "bg-gray-100 text-gray-500"}`}
                 >
-                  {option === "public" ? (
-                    <Globe2 className="h-3.5 w-3.5" />
-                  ) : (
-                    <Users className="h-3.5 w-3.5" />
-                  )}
-                  {option === "public" ? "Public" : "Followers only"}
+                  {x}
                 </button>
               ))}
             </div>
-            <p className="flex items-center gap-1 text-[9px] text-gray-400">
-              {visibility === "public" ? (
-                <Globe2 className="h-3 w-3" />
-              ) : (
-                <Lock className="h-3 w-3" />
-              )}
-              {visibility === "public"
-                ? "Everyone on VizhaOne can see this"
-                : "Only people following you can see this"}
-            </p>
-            <button
-              disabled={posting || uploadingMedia}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3.5 text-xs font-black text-white disabled:opacity-60"
-            >
-              <Upload className="h-4 w-4" />
-              {posting ? "Publishing..." : `Publish ${kind}`}
-            </button>
-          </form>
-        </section>
+            <form onSubmit={publish} className="mt-4 space-y-3">
+              <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-rose-200 bg-rose-50/50">
+                {media ? (
+                  mediaType === "image" ? (
+                    <img
+                      src={media}
+                      alt="Upload preview"
+                      className="max-h-56 w-full object-cover"
+                    />
+                  ) : (
+                    <video src={media} controls className="max-h-56 w-full" />
+                  )
+                ) : (
+                  <>
+                    <ImagePlus className="h-8 w-8 text-rose-500" />
+                    <strong className="mt-2 text-xs">
+                      Choose photo or video
+                    </strong>
+                    <span className="mt-1 text-[9px] text-gray-400">
+                      Images or videos up to 25 MB
+                    </span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={chooseMedia}
+                  className="hidden"
+                />
+              </label>
+              <input
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Write a caption..."
+                className="w-full rounded-2xl border px-4 py-3 text-sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  placeholder={provider ? "Service name" : "Celebration type"}
+                  className="min-w-0 rounded-2xl border px-3 py-3 text-xs"
+                />
+                <input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  inputMode="numeric"
+                  placeholder={provider ? "Starting price" : "Optional budget"}
+                  className="min-w-0 rounded-2xl border px-3 py-3 text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1.5">
+                {(["public", "followers"] as SocialVisibility[]).map(
+                  (option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      onClick={() => setVisibility(option)}
+                      className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-black ${visibility === option ? "bg-white text-rose-600 shadow-sm" : "text-gray-400"}`}
+                    >
+                      {option === "public" ? (
+                        <Globe2 className="h-3.5 w-3.5" />
+                      ) : (
+                        <Users className="h-3.5 w-3.5" />
+                      )}
+                      {option === "public" ? "Public" : "Followers only"}
+                    </button>
+                  ),
+                )}
+              </div>
+              <p className="flex items-center gap-1 text-[9px] text-gray-400">
+                {visibility === "public" ? (
+                  <Globe2 className="h-3 w-3" />
+                ) : (
+                  <Lock className="h-3 w-3" />
+                )}
+                {visibility === "public"
+                  ? "Everyone on VizhaOne can see this"
+                  : "Only people following you can see this"}
+              </p>
+              <button
+                disabled={posting || uploadingMedia}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3.5 text-xs font-black text-white disabled:opacity-60"
+              >
+                <Upload className="h-4 w-4" />
+                {posting ? "Publishing..." : `Publish ${kind}`}
+              </button>
+            </form>
+          </section>
+        )}
         {provider && (
           <section className="mt-5">
             <div className="flex justify-between">
@@ -738,10 +766,9 @@ export default function MobileProfilePage() {
         )}
         {!provider && (
           <section className="mt-5 overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm">
-            <div className="grid grid-cols-4 border-b border-gray-100">
+            <div className="grid grid-cols-3 border-b border-gray-100">
               {(
                 [
-                  ["posts", Grid3X3, "My Posts"],
                   ["saved", Bookmark, "Saved"],
                   ["bookings", Bell, "Bookings"],
                   ["reviews", Star, "Reviews"],
@@ -946,13 +973,79 @@ export default function MobileProfilePage() {
           </div>
         )}
         {connections && (
-          <div className="fixed inset-0 z-[135] flex items-end bg-black/55" role="dialog" aria-modal="true" aria-label={connections.title}>
-            <button type="button" aria-label="Close people list" onClick={() => setConnections(null)} className="absolute inset-0" />
+          <div
+            className="fixed inset-0 z-[135] flex items-end bg-black/55"
+            role="dialog"
+            aria-modal="true"
+            aria-label={connections.title}
+          >
+            <button
+              type="button"
+              aria-label="Close people list"
+              onClick={() => setConnections(null)}
+              className="absolute inset-0"
+            />
             <section className="relative flex max-h-[75dvh] min-h-[40dvh] w-full flex-col rounded-t-[30px] bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-2xl">
               <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-gray-300" />
-              <header className="flex h-14 items-center justify-between border-b px-5"><h2 className="font-black">{connections.title}</h2><button type="button" onClick={() => setConnections(null)} className="rounded-full bg-gray-100 p-2" aria-label="Close"><X className="h-5 w-5" /></button></header>
+              <header className="flex h-14 items-center justify-between border-b px-5">
+                <h2 className="font-black">{connections.title}</h2>
+                <button
+                  type="button"
+                  onClick={() => setConnections(null)}
+                  className="rounded-full bg-gray-100 p-2"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </header>
               <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                {connectionsLoading ? <div className="py-12 text-center text-sm font-bold text-gray-400">Loading people...</div> : connections.items.length ? <div className="space-y-2">{connections.items.map((person) => <Link key={person.id} to={`/vendor/${person.id}`} onClick={() => setConnections(null)} className="flex items-center gap-3 rounded-2xl p-2 active:bg-rose-50"><span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-rose-500 to-purple-900 font-black text-white">{person.avatar ? <img src={person.avatar} alt="" className="h-full w-full object-cover" /> : person.name[0]}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{person.name}</strong><small className="block truncate text-[10px] text-gray-500">{person.location || (person.role === "service_provider" ? "Service provider" : "VizhaOne member")}</small></span><ChevronRight className="h-4 w-4 text-gray-400" /></Link>)}</div> : <div className="py-12 text-center"><Users className="mx-auto h-9 w-9 text-rose-200"/><p className="mt-3 text-sm font-bold text-gray-500">No {connections.title.toLowerCase()} yet</p></div>}
+                {connectionsLoading ? (
+                  <div className="py-12 text-center text-sm font-bold text-gray-400">
+                    Loading people...
+                  </div>
+                ) : connections.items.length ? (
+                  <div className="space-y-2">
+                    {connections.items.map((person) => (
+                      <Link
+                        key={person.id}
+                        to={`/vendor/${person.id}`}
+                        onClick={() => setConnections(null)}
+                        className="flex items-center gap-3 rounded-2xl p-2 active:bg-rose-50"
+                      >
+                        <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-rose-500 to-purple-900 font-black text-white">
+                          {person.avatar ? (
+                            <img
+                              src={person.avatar}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            person.name[0]
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <strong className="block truncate text-sm">
+                            {person.name}
+                          </strong>
+                          <small className="block truncate text-[10px] text-gray-500">
+                            {person.location ||
+                              (person.role === "service_provider"
+                                ? "Service provider"
+                                : "VizhaOne member")}
+                          </small>
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center">
+                    <Users className="mx-auto h-9 w-9 text-rose-200" />
+                    <p className="mt-3 text-sm font-bold text-gray-500">
+                      No {connections.title.toLowerCase()} yet
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           </div>

@@ -48,11 +48,12 @@ function clientItem(row) {
 
 async function canViewSocialItem(id, viewerId) {
   const result = await query(`SELECT 1 FROM reels r LEFT JOIN vendors v ON v.id=r.vendor_id
+    LEFT JOIN users u ON u.id=COALESCE(r.owner_id,v.user_id)
     WHERE r.id=$1 AND r.published=true AND (
       r.visibility='public' OR COALESCE(r.owner_id,v.user_id)=$2 OR EXISTS(
         SELECT 1 FROM social_follows f WHERE f.follower_id=$2 AND f.following_id=COALESCE(r.owner_id,v.user_id)
       )
-    )`, [id, viewerId || null]);
+    ) AND u.role IN ('service_provider','admin')`, [id, viewerId || null]);
   return result.rowCount > 0;
 }
 
@@ -75,7 +76,7 @@ function createSocialRouter() {
         (SELECT COUNT(*) FROM social_comments sc WHERE sc.reel_id=r.id) AS comment_count, $1::uuid AS viewer_id
         FROM reels r LEFT JOIN vendors v ON v.id=r.vendor_id
         LEFT JOIN users u ON u.id=COALESCE(r.owner_id,v.user_id) LEFT JOIN services s ON s.id=r.service_id
-        WHERE r.published=true${ownerFilter}
+        WHERE r.published=true AND u.role IN ('service_provider','admin')${ownerFilter}
           AND (r.visibility='public' OR u.id=$1 OR EXISTS(
             SELECT 1 FROM social_follows access WHERE access.follower_id=$1 AND access.following_id=u.id))
         ORDER BY r.created_at DESC LIMIT 200`, values);
@@ -174,6 +175,9 @@ function createSocialRouter() {
       if (!session) return res.status(401).json({ error: "Sign in to publish" });
       const user = (await query("SELECT id,role FROM users WHERE id=$1", [session.sub])).rows[0];
       if (!user) return res.status(401).json({ error: "Account not found" });
+      if (!["service_provider", "admin"].includes(user.role)) {
+        return res.status(403).json({ error: "Only service providers and admins can publish posts or reels" });
+      }
       const mediaUrl = String(req.body.media || req.body.media_url || "").trim();
       const mediaType = req.body.mediaType === "video" || req.body.media_type === "video" ? "video" : "image";
       const kind = req.body.kind === "post" ? "post" : "reel";
