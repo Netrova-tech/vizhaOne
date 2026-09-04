@@ -68,6 +68,7 @@ export default function MobileBookingsPage() {
       const result = await getBookingsWithFallback(mobile);
       const local = getLocalBookings().filter(
         (booking) =>
+          booking.userId === user?.id ||
           !mobile ||
           normalizeMobile(booking.mobile) === normalizeMobile(mobile),
       );
@@ -101,7 +102,7 @@ export default function MobileBookingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.mobile]);
+  }, [user?.id, user?.mobile]);
 
   useEffect(() => {
     setRequests(quotes());
@@ -247,10 +248,25 @@ export default function MobileBookingsPage() {
                 )}
                 {item.status !== "cancelled" && item.vendorMobile && (
                   <section className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">Your service contact</p>
-                    <h3 className="mt-1 text-sm font-black text-gray-900">{item.vendorName || item.hallName || item.serviceName || "VizhaOne Partner"}</h3>
-                    <p className="mt-1 text-xs font-bold text-gray-600">{item.vendorMobile}</p>
-                    <a href={`tel:${String(item.vendorMobile).replace(/[^+\d]/g, "")}`} className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-xs font-black text-white"><PhoneCall className="h-4 w-4"/>Continue — Call Vendor</a>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
+                      Your service contact
+                    </p>
+                    <h3 className="mt-1 text-sm font-black text-gray-900">
+                      {item.vendorName ||
+                        item.hallName ||
+                        item.serviceName ||
+                        "VizhaOne Partner"}
+                    </h3>
+                    <p className="mt-1 text-xs font-bold text-gray-600">
+                      {item.vendorMobile}
+                    </p>
+                    <a
+                      href={`tel:${String(item.vendorMobile).replace(/[^+\d]/g, "")}`}
+                      className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-xs font-black text-white"
+                    >
+                      <PhoneCall className="h-4 w-4" />
+                      Continue — Call Vendor
+                    </a>
                   </section>
                 )}
                 <div className="mt-3 flex items-center justify-between">
@@ -311,7 +327,10 @@ function BookingProgress({ status }: { status: Booking["status"] }) {
         ))}
       </div>
       <div className="mt-1.5 flex justify-between text-[8px] font-bold text-gray-400">
-        <span>Received</span><span>Approved</span><span>In progress</span><span>Complete</span>
+        <span>Received</span>
+        <span>Approved</span>
+        <span>In progress</span>
+        <span>Complete</span>
       </div>
     </div>
   );

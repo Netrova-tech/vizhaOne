@@ -4,8 +4,13 @@
  */
 
 import { apiUrl } from "@/lib/utils";
+import { token } from "@/lib/mobileAuth";
 
 const API_BASE = apiUrl("/api");
+const bookingHeaders = () => ({
+  "Content-Type": "application/json",
+  ...(token() ? { Authorization: `Bearer ${token()}` } : {}),
+});
 
 interface ApiResponse<T> {
   success: boolean;
@@ -44,6 +49,7 @@ export interface BookingPayload {
 
 export interface Booking extends BookingPayload {
   id: string;
+  userId?: string;
   status: "pending" | "approved" | "in_progress" | "completed" | "cancelled";
   createdAt: string;
   updatedAt?: string;
@@ -53,7 +59,8 @@ export interface Booking extends BookingPayload {
   vendorMobile?: string;
 }
 
-export type InquiryStatus = "interested" | "contacted" | "confirmed" | "dropped";
+export type InquiryStatus =
+  "interested" | "contacted" | "confirmed" | "dropped";
 
 export interface CrmInquiry {
   id: string;
@@ -82,7 +89,9 @@ export interface CrmStats {
   dropped: number;
 }
 
-export async function createInquiry(inquiry: Partial<CrmInquiry>): Promise<CrmInquiry> {
+export async function createInquiry(
+  inquiry: Partial<CrmInquiry>,
+): Promise<CrmInquiry> {
   const res = await fetch(`${API_BASE}/admin/crm/inquiries`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -98,14 +107,26 @@ export async function getCrmStats(): Promise<CrmStats> {
   return res.json();
 }
 
-export async function getCrmInquiries(params: Record<string, string | number>): Promise<{ items: CrmInquiry[]; total: number; page: number; limit: number }> {
-  const qs = new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)]));
+export async function getCrmInquiries(
+  params: Record<string, string | number>,
+): Promise<{
+  items: CrmInquiry[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  const qs = new URLSearchParams(
+    Object.entries(params).map(([key, value]) => [key, String(value)]),
+  );
   const res = await fetch(`${API_BASE}/admin/crm/inquiries?${qs.toString()}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
 
-export async function updateInquiryStatus(id: string, status: InquiryStatus): Promise<CrmInquiry> {
+export async function updateInquiryStatus(
+  id: string,
+  status: InquiryStatus,
+): Promise<CrmInquiry> {
   const res = await fetch(`${API_BASE}/admin/crm/inquiries/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -149,7 +170,7 @@ export async function createBooking(booking: BookingPayload): Promise<Booking> {
   try {
     const res = await fetch(`${API_BASE}/bookings`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: bookingHeaders(),
       body: JSON.stringify(booking),
     });
 
@@ -165,7 +186,22 @@ export async function createBooking(booking: BookingPayload): Promise<Booking> {
     throw err;
   }
 }
-export async function createBulkBookings(bookings:BookingPayload[]):Promise<Booking[]>{const res=await fetch(`${API_BASE}/bookings/bulk`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bookings})});if(!res.ok){const body=await res.json().catch(()=>({}));throw new ApiError(body.error||`API error: ${res.status}`,res.status)}return res.json()}
+export async function createBulkBookings(
+  bookings: BookingPayload[],
+): Promise<Booking[]> {
+  const res = await fetch(`${API_BASE}/bookings/bulk`, {
+    method: "POST",
+    headers: bookingHeaders(),
+    body: JSON.stringify({ bookings }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(body.error || `API error: ${res.status}`, res.status);
+  }
+  const items = (await res.json()) as Booking[];
+  items.forEach(saveLocalBooking);
+  return items;
+}
 
 /**
  * Get all bookings from the backend
@@ -174,10 +210,13 @@ export async function getBookings(mobile?: string): Promise<Booking[]> {
   try {
     const search = new URLSearchParams();
     if (mobile) search.set("mobile", mobile);
-    const res = await fetch(`${API_BASE}/bookings${search.size ? `?${search.toString()}` : ""}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const res = await fetch(
+      `${API_BASE}/bookings${search.size ? `?${search.toString()}` : ""}`,
+      {
+        method: "GET",
+        headers: bookingHeaders(),
+      },
+    );
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -197,7 +236,7 @@ export async function getBookings(mobile?: string): Promise<Booking[]> {
  */
 export async function updateBookingStatus(
   bookingId: string,
-  status: "pending" | "approved" | "in_progress" | "completed" | "cancelled"
+  status: "pending" | "approved" | "in_progress" | "completed" | "cancelled",
 ): Promise<Booking> {
   try {
     const res = await fetch(`${API_BASE}/bookings/${bookingId}`, {
@@ -265,7 +304,7 @@ export function saveLocalBooking(booking: Booking): void {
  */
 export function updateLocalBookingStatus(
   bookingId: string,
-  status: Booking["status"]
+  status: Booking["status"],
 ): void {
   try {
     const bookings = getLocalBookings();
@@ -294,15 +333,28 @@ export function deleteLocalBooking(bookingId: string): void {
  * - Falls back to localStorage if backend is unavailable
  */
 export async function createBookingWithSync(
-  booking: BookingPayload
+  booking: BookingPayload,
 ): Promise<{ success: boolean; booking: Booking; synced: boolean }> {
-  const referralCode = typeof window !== "undefined" ? localStorage.getItem("vizha_referral_code") || undefined : undefined;
+  const referralCode =
+    typeof window !== "undefined"
+      ? localStorage.getItem("vizha_referral_code") || undefined
+      : undefined;
   const bookingForSync = referralCode ? { ...booking, referralCode } : booking;
   const bookingWithId: Booking = {
     ...bookingForSync,
     id: `VZH-${Date.now().toString(36).toUpperCase().slice(-6)}`,
     status: "pending",
     createdAt: new Date().toISOString(),
+    userId: (() => {
+      try {
+        return (
+          JSON.parse(localStorage.getItem("vizha_demo_user") || "null")?.id ||
+          ""
+        );
+      } catch {
+        return "";
+      }
+    })(),
   };
 
   let synced = false;
@@ -333,7 +385,7 @@ export async function createBookingWithSync(
  */
 export async function updateBookingStatusWithSync(
   bookingId: string,
-  status: Booking["status"]
+  status: Booking["status"],
 ): Promise<{ success: boolean; synced: boolean }> {
   try {
     await updateBookingStatus(bookingId, status);
@@ -365,9 +417,15 @@ export async function getBookingsWithFallback(mobile?: string): Promise<{
     return { bookings: backendBookings, source: "backend" };
   } catch (err) {
     console.warn("Failed to fetch from backend, using localStorage:", err);
-    const normalizedMobile = String(mobile || "").replace(/\D/g, "").slice(-10);
-    const localBookings = getLocalBookings().filter((booking) =>
-      !normalizedMobile || String(booking.mobile || "").replace(/\D/g, "").slice(-10) === normalizedMobile
+    const normalizedMobile = String(mobile || "")
+      .replace(/\D/g, "")
+      .slice(-10);
+    const localBookings = getLocalBookings().filter(
+      (booking) =>
+        !normalizedMobile ||
+        String(booking.mobile || "")
+          .replace(/\D/g, "")
+          .slice(-10) === normalizedMobile,
     );
     return { bookings: localBookings, source: "localStorage" };
   }

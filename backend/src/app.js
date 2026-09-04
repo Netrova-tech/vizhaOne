@@ -57,8 +57,8 @@ function createApp({ store }) {
     res.set("Cache-Control", "public, max-age=300");
     res.json({
       android: {
-        latestVersionCode: Number(process.env.ANDROID_LATEST_VERSION_CODE || 14),
-        latestVersionName: process.env.ANDROID_LATEST_VERSION_NAME || "1.13",
+        latestVersionCode: Number(process.env.ANDROID_LATEST_VERSION_CODE || 15),
+        latestVersionName: process.env.ANDROID_LATEST_VERSION_NAME || "1.14",
         forceUpdate: process.env.ANDROID_FORCE_UPDATE === "true",
         storeUrl:
           process.env.ANDROID_STORE_URL ||
