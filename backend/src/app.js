@@ -53,6 +53,22 @@ function createApp({ store }) {
   app.use(express.urlencoded({ extended: true }));
 
   app.get("/api/health", healthController);
+  app.get("/api/app-config", (_req, res) => {
+    res.set("Cache-Control", "public, max-age=300");
+    res.json({
+      android: {
+        latestVersionCode: Number(process.env.ANDROID_LATEST_VERSION_CODE || 14),
+        latestVersionName: process.env.ANDROID_LATEST_VERSION_NAME || "1.13",
+        forceUpdate: process.env.ANDROID_FORCE_UPDATE === "true",
+        storeUrl:
+          process.env.ANDROID_STORE_URL ||
+          "https://play.google.com/store/apps/details?id=com.vizhaone.app",
+        message:
+          process.env.ANDROID_UPDATE_MESSAGE ||
+          "A new VizhaOne update is ready with improvements and important fixes.",
+      },
+    });
+  });
   app.use("/api/auth", createAuthRouter({ store }));
   app.use("/api/catalog", createCatalogRouter({ store }));
   app.use("/api/bookings", createBookingRouter({ store }));
