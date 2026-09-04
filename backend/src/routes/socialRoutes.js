@@ -13,6 +13,19 @@ function ensureSocialSchema() {
       PRIMARY KEY(follower_id, following_id), CHECK(follower_id <> following_id)
     );
     CREATE INDEX IF NOT EXISTS social_follows_following_idx ON social_follows(following_id);
+    CREATE TABLE IF NOT EXISTS social_reactions (
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reel_id uuid NOT NULL REFERENCES reels(id) ON DELETE CASCADE,
+      reaction text NOT NULL CHECK(reaction IN ('like','save')),
+      created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(user_id,reel_id,reaction)
+    );
+    CREATE INDEX IF NOT EXISTS social_reactions_reel_idx ON social_reactions(reel_id,reaction);
+    CREATE TABLE IF NOT EXISTS social_comments (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(), reel_id uuid NOT NULL REFERENCES reels(id) ON DELETE CASCADE,
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body text NOT NULL CHECK(char_length(body) BETWEEN 1 AND 500), created_at timestamptz NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS social_comments_reel_idx ON social_comments(reel_id,created_at DESC);
   `).catch((error) => { schemaReady = undefined; throw error; });
   return schemaReady;
 }
@@ -26,7 +39,10 @@ function clientItem(row) {
     media: row.media_url, mediaType: row.media_type === "video" ? "video" : "image",
     caption: row.caption || "", service: row.service_name || row.service_title || "Celebration moment",
     price: row.price == null ? "" : String(row.price).replace(/\.00$/, ""), createdAt: row.created_at,
-    isFollowing: Boolean(row.is_following), followerCount: Number(row.follower_count || 0), likes: [], savedBy: [],
+    isFollowing: Boolean(row.is_following), followerCount: Number(row.follower_count || 0),
+    liked: Boolean(row.liked), saved: Boolean(row.saved), likeCount: Number(row.like_count || 0),
+    commentCount: Number(row.comment_count || 0), likes: row.liked && row.viewer_id ? [row.viewer_id] : [],
+    savedBy: row.saved && row.viewer_id ? [row.viewer_id] : [],
   };
 }
 
@@ -42,7 +58,11 @@ function createSocialRouter() {
       const result = await query(`SELECT r.*,u.name AS owner_name,u.role AS owner_role,u.avatar_url,
         v.user_id AS vendor_user_id,v.business_name,s.title AS service_title,
         EXISTS(SELECT 1 FROM social_follows sf WHERE sf.follower_id=$1 AND sf.following_id=u.id) AS is_following,
-        (SELECT COUNT(*) FROM social_follows sf WHERE sf.following_id=u.id) AS follower_count
+        (SELECT COUNT(*) FROM social_follows sf WHERE sf.following_id=u.id) AS follower_count,
+        EXISTS(SELECT 1 FROM social_reactions sr WHERE sr.user_id=$1 AND sr.reel_id=r.id AND sr.reaction='like') AS liked,
+        EXISTS(SELECT 1 FROM social_reactions sr WHERE sr.user_id=$1 AND sr.reel_id=r.id AND sr.reaction='save') AS saved,
+        (SELECT COUNT(*) FROM social_reactions sr WHERE sr.reel_id=r.id AND sr.reaction='like') AS like_count,
+        (SELECT COUNT(*) FROM social_comments sc WHERE sc.reel_id=r.id) AS comment_count, $1::uuid AS viewer_id
         FROM reels r LEFT JOIN vendors v ON v.id=r.vendor_id
         LEFT JOIN users u ON u.id=COALESCE(r.owner_id,v.user_id) LEFT JOIN services s ON s.id=r.service_id
         WHERE r.published=true${ownerFilter}
@@ -84,6 +104,43 @@ function createSocialRouter() {
       const count = (await query("SELECT COUNT(*) AS followers FROM social_follows WHERE following_id=$1", [target])).rows[0];
       return res.json({ following, followers: Number(count.followers) });
     } catch (error) { return res.status(500).json({ error: error.message || "Unable to update follow" }); }
+  });
+
+  router.put("/reaction/:id", async (req, res) => {
+    try {
+      await ensureSocialSchema();
+      const session = mobileSession(req);
+      if (!session) return res.status(401).json({ error: "Sign in to react" });
+      const id = String(req.params.id || ""), reaction = req.body.reaction === "save" ? "save" : "like";
+      if (!(await query("SELECT 1 FROM reels WHERE id=$1 AND published=true", [id])).rowCount) return res.status(404).json({ error: "Post not found" });
+      const active = req.body.active !== false;
+      if (active) await query("INSERT INTO social_reactions(user_id,reel_id,reaction) VALUES($1,$2,$3) ON CONFLICT DO NOTHING", [session.sub, id, reaction]);
+      else await query("DELETE FROM social_reactions WHERE user_id=$1 AND reel_id=$2 AND reaction=$3", [session.sub, id, reaction]);
+      const count = (await query("SELECT COUNT(*) AS count FROM social_reactions WHERE reel_id=$1 AND reaction=$2", [id, reaction])).rows[0];
+      return res.json({ active, count: Number(count.count) });
+    } catch (error) { return res.status(500).json({ error: error.message || "Unable to update reaction" }); }
+  });
+
+  router.get("/comments/:id", async (req, res) => {
+    try {
+      await ensureSocialSchema();
+      const result = await query(`SELECT c.id,c.body,c.created_at,u.id AS user_id,u.name,u.avatar_url
+        FROM social_comments c JOIN users u ON u.id=c.user_id WHERE c.reel_id=$1 ORDER BY c.created_at ASC LIMIT 200`, [String(req.params.id || "")]);
+      return res.json({ comments: result.rows.map((row) => ({ id: row.id, body: row.body, createdAt: row.created_at, userId: row.user_id, userName: row.name, avatar: row.avatar_url || "" })) });
+    } catch (error) { return res.status(500).json({ error: error.message || "Unable to load comments" }); }
+  });
+
+  router.post("/comments/:id", async (req, res) => {
+    try {
+      await ensureSocialSchema();
+      const session = mobileSession(req);
+      if (!session) return res.status(401).json({ error: "Sign in to comment" });
+      const id = String(req.params.id || ""), body = String(req.body.body || "").trim();
+      if (!body || body.length > 500) return res.status(400).json({ error: "Comment must be between 1 and 500 characters" });
+      const row = (await query(`INSERT INTO social_comments(reel_id,user_id,body) VALUES($1,$2,$3) RETURNING id,body,created_at`, [id, session.sub, body])).rows[0];
+      const owner = (await query("SELECT name,avatar_url FROM users WHERE id=$1", [session.sub])).rows[0];
+      return res.status(201).json({ comment: { id: row.id, body: row.body, createdAt: row.created_at, userId: session.sub, userName: owner?.name || "VizhaOne User", avatar: owner?.avatar_url || "" } });
+    } catch (error) { return res.status(500).json({ error: error.message || "Unable to add comment" }); }
   });
 
   router.post("/", async (req, res) => {

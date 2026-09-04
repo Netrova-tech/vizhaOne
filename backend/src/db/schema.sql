@@ -145,6 +145,19 @@ CREATE TABLE IF NOT EXISTS social_follows (
   PRIMARY KEY(follower_id,following_id), CHECK(follower_id <> following_id)
 );
 CREATE INDEX IF NOT EXISTS social_follows_following_idx ON social_follows(following_id);
+CREATE TABLE IF NOT EXISTS social_reactions (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reel_id uuid NOT NULL REFERENCES reels(id) ON DELETE CASCADE,
+  reaction text NOT NULL CHECK(reaction IN ('like','save')),
+  created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(user_id,reel_id,reaction)
+);
+CREATE INDEX IF NOT EXISTS social_reactions_reel_idx ON social_reactions(reel_id,reaction);
+CREATE TABLE IF NOT EXISTS social_comments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), reel_id uuid NOT NULL REFERENCES reels(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, body text NOT NULL CHECK(char_length(body) BETWEEN 1 AND 500),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS social_comments_reel_idx ON social_comments(reel_id,created_at DESC);
 CREATE TABLE IF NOT EXISTS saved_services (
   user_id uuid REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now(), PRIMARY KEY(user_id,service_id)
