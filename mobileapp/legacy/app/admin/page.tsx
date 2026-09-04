@@ -222,6 +222,7 @@ export default function AdminPage() {
     title: "", description: "", price_min: "", price_max: "", category_id: "",
     vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true,
     verified: false,
+    food_preference: "" as "" | "pure-veg" | "veg-non-veg" | "non-veg",
     image_urls: "",
   });
 
@@ -281,7 +282,7 @@ export default function AdminPage() {
   }, []);
 
   function openAddForm() {
-    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, verified: false, image_urls: "" });
+    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, verified: false, food_preference: "", image_urls: "" });
     setImageFiles([]);
     setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -304,6 +305,7 @@ export default function AdminPage() {
       place_name: service.place_name || "",
       availability_status: service.availability_status,
       verified: Boolean(service.verified),
+      food_preference: service.food_preference || "",
       image_urls: "",
     });
     setImagePreviews(gallery);
@@ -431,6 +433,7 @@ export default function AdminPage() {
         place_name: form.place_name,
         availability_status: form.availability_status,
         verified: form.verified,
+        food_preference: form.food_preference || undefined,
         image_url: galleryUrls[0] || "",
         gallery_urls: galleryUrls,
       };
@@ -2234,6 +2237,28 @@ export default function AdminPage() {
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3} placeholder="Describe the service..."
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48] resize-none" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Food preference</label>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {([
+                      ["", "Not applicable"],
+                      ["pure-veg", "Pure Veg Only"],
+                      ["veg-non-veg", "Veg & Non-Veg"],
+                      ["non-veg", "Non-Veg Only"],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        key={value || "none"}
+                        type="button"
+                        onClick={() => setForm({ ...form, food_preference: value })}
+                        className={`min-h-11 rounded-xl border px-2 py-2 text-xs font-bold transition-colors ${form.food_preference === value ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-200 bg-gray-50 text-gray-700"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">Select this for catering and food services. Customers can filter using the same option.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

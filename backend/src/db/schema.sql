@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS services (
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE services ADD COLUMN IF NOT EXISTS verified boolean NOT NULL DEFAULT false;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS food_preference text CHECK (food_preference IN ('pure-veg','veg-non-veg','non-veg'));
 ALTER TABLE services ADD COLUMN IF NOT EXISTS pricing_type text NOT NULL DEFAULT 'quote';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS price_unit text NOT NULL DEFAULT 'per event';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS packages jsonb NOT NULL DEFAULT '[]'::jsonb;
