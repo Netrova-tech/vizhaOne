@@ -19,6 +19,10 @@ async function updateBookingController(req, res, store) {
   const { id } = req.params;
   const updates = req.body || {};
   try {
+    const validStatuses = ["pending", "approved", "in_progress", "completed", "cancelled"];
+    if (updates.status && !validStatuses.includes(updates.status)) {
+      return res.status(400).json({ error: "Invalid booking status" });
+    }
     const booking = await updateBooking(store, id, updates);
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
