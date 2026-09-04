@@ -46,6 +46,16 @@ function clientItem(row) {
   };
 }
 
+async function canViewSocialItem(id, viewerId) {
+  const result = await query(`SELECT 1 FROM reels r LEFT JOIN vendors v ON v.id=r.vendor_id
+    WHERE r.id=$1 AND r.published=true AND (
+      r.visibility='public' OR COALESCE(r.owner_id,v.user_id)=$2 OR EXISTS(
+        SELECT 1 FROM social_follows f WHERE f.follower_id=$2 AND f.following_id=COALESCE(r.owner_id,v.user_id)
+      )
+    )`, [id, viewerId || null]);
+  return result.rowCount > 0;
+}
+
 function createSocialRouter() {
   const router = express.Router();
 
@@ -112,7 +122,7 @@ function createSocialRouter() {
       const session = mobileSession(req);
       if (!session) return res.status(401).json({ error: "Sign in to react" });
       const id = String(req.params.id || ""), reaction = req.body.reaction === "save" ? "save" : "like";
-      if (!(await query("SELECT 1 FROM reels WHERE id=$1 AND published=true", [id])).rowCount) return res.status(404).json({ error: "Post not found" });
+      if (!(await canViewSocialItem(id, session.sub))) return res.status(404).json({ error: "Post not found" });
       const active = req.body.active !== false;
       if (active) await query("INSERT INTO social_reactions(user_id,reel_id,reaction) VALUES($1,$2,$3) ON CONFLICT DO NOTHING", [session.sub, id, reaction]);
       else await query("DELETE FROM social_reactions WHERE user_id=$1 AND reel_id=$2 AND reaction=$3", [session.sub, id, reaction]);
@@ -124,8 +134,10 @@ function createSocialRouter() {
   router.get("/comments/:id", async (req, res) => {
     try {
       await ensureSocialSchema();
+      const session = mobileSession(req), id = String(req.params.id || "");
+      if (!(await canViewSocialItem(id, session?.sub))) return res.status(404).json({ error: "Post not found" });
       const result = await query(`SELECT c.id,c.body,c.created_at,u.id AS user_id,u.name,u.avatar_url
-        FROM social_comments c JOIN users u ON u.id=c.user_id WHERE c.reel_id=$1 ORDER BY c.created_at ASC LIMIT 200`, [String(req.params.id || "")]);
+        FROM social_comments c JOIN users u ON u.id=c.user_id WHERE c.reel_id=$1 ORDER BY c.created_at ASC LIMIT 200`, [id]);
       return res.json({ comments: result.rows.map((row) => ({ id: row.id, body: row.body, createdAt: row.created_at, userId: row.user_id, userName: row.name, avatar: row.avatar_url || "" })) });
     } catch (error) { return res.status(500).json({ error: error.message || "Unable to load comments" }); }
   });
@@ -136,6 +148,7 @@ function createSocialRouter() {
       const session = mobileSession(req);
       if (!session) return res.status(401).json({ error: "Sign in to comment" });
       const id = String(req.params.id || ""), body = String(req.body.body || "").trim();
+      if (!(await canViewSocialItem(id, session.sub))) return res.status(404).json({ error: "Post not found" });
       if (!body || body.length > 500) return res.status(400).json({ error: "Comment must be between 1 and 500 characters" });
       const row = (await query(`INSERT INTO social_comments(reel_id,user_id,body) VALUES($1,$2,$3) RETURNING id,body,created_at`, [id, session.sub, body])).rows[0];
       const owner = (await query("SELECT name,avatar_url FROM users WHERE id=$1", [session.sub])).rows[0];

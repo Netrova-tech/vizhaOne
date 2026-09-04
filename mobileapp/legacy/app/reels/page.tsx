@@ -11,6 +11,11 @@ import { fetchSocial, fetchSocialComments, publishSocialComment, setFollowing, s
 import { shareContent } from "@/lib/nativeShare";
 import { token } from "@/lib/mobileAuth";
 
+function videoPoster(url: string) {
+  if (!url.includes("/video/upload/")) return undefined;
+  return url.replace("/video/upload/", "/video/upload/so_0,f_jpg,q_auto/").replace(/\.[a-z0-9]+(?=([?#]|$))/i, ".jpg");
+}
+
 export default function ReelsPage() {
   const { user, loading } = useAuth();
   const [items, setItems] = useState<SocialItem[]>([]);
@@ -162,7 +167,7 @@ export default function ReelsPage() {
 
     {tab === "reel" ? <main ref={reelScroller} className="h-[calc(100dvh-196px-env(safe-area-inset-top,0px))] snap-y snap-mandatory overflow-y-auto overscroll-contain">
       {visibleItems.length ? visibleItems.map((item) => <article key={item.id} data-social-id={item.id} className="relative h-full snap-start snap-always overflow-hidden bg-gray-950">
-        {item.mediaType === "video" ? <video ref={(video) => registerVideo(item.id, video)} src={item.media} playsInline loop preload={item.id === activeId ? "auto" : "metadata"} onClick={() => mediaTap(item)} className="h-full w-full touch-pan-y object-contain" /> : <img src={item.media} alt={item.caption} onClick={() => mediaTap(item)} className="h-full w-full touch-pan-y object-cover" />}
+        {item.mediaType === "video" ? <video ref={(video) => registerVideo(item.id, video)} src={item.media} poster={videoPoster(item.media)} playsInline loop preload={item.id === activeId ? "auto" : "metadata"} onClick={() => mediaTap(item)} className="h-full w-full touch-pan-y object-contain" /> : <img src={item.media} alt={item.caption} onClick={() => mediaTap(item)} className="h-full w-full touch-pan-y object-cover" />}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
         {heartBurst === item.id && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center"><Heart className="h-24 w-24 animate-ping fill-white text-white drop-shadow-2xl" /></div>}
         {item.mediaType === "video" && item.id === activeId && <button type="button" aria-label={muted ? "Turn sound on" : "Mute reel"} onClick={() => setMuted((value) => !value)} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
@@ -170,7 +175,7 @@ export default function ReelsPage() {
         <div className="absolute bottom-5 right-3 flex flex-col items-center gap-2 text-white">{actionButtons(item)}<Link aria-label={`View ${item.ownerName} profile`} className="p-2" to={`/vendor/${item.ownerId}`}><UserRound className="h-6 w-6" /></Link><Link to={`/quote/${item.id}`} aria-label="Get quotation" className="grid h-11 w-11 place-items-center rounded-full bg-rose-600"><CalendarCheck className="h-5 w-5" /></Link></div>
       </article>) : <Empty kind="reel" signedIn={Boolean(user)} />}
     </main> : <main className="h-[calc(100dvh-196px-env(safe-area-inset-top,0px))] overflow-y-auto bg-[#fff8f9] px-3 py-4">
-      {visibleItems.length ? <div className="space-y-4">{visibleItems.map((item) => <article key={item.id} className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-rose-100"><div className="p-4 text-gray-900">{ownerRow(item)}</div>{item.mediaType === "video" ? <video src={item.media} controls playsInline preload="metadata" className="max-h-[65dvh] w-full bg-black object-contain" /> : <img src={item.media} alt={item.caption} className="max-h-[65dvh] w-full object-cover" />}<div className="p-4 text-gray-800"><div className="-ml-2">{actionButtons(item, false)}</div><p className="text-sm leading-5"><strong>{item.ownerName}</strong> {item.caption}</p><p className="mt-2 text-xs font-black text-rose-600">{item.service}{item.price ? ` · ₹${item.price}` : ""}</p>{item.visibility === "followers" && <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-gray-400"><Lock className="h-3 w-3" />Followers only</span>}</div></article>)}</div> : <Empty kind="post" signedIn={Boolean(user)} />}
+      {visibleItems.length ? <div className="space-y-4">{visibleItems.map((item) => <article key={item.id} className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-rose-100"><div className="p-4 text-gray-900">{ownerRow(item)}</div>{item.mediaType === "video" ? <video src={item.media} poster={videoPoster(item.media)} controls playsInline preload="metadata" className="max-h-[65dvh] w-full bg-black object-contain" /> : <img src={item.media} alt={item.caption} className="max-h-[65dvh] w-full object-cover" />}<div className="p-4 text-gray-800"><div className="-ml-2">{actionButtons(item, false)}</div><p className="text-sm leading-5"><strong>{item.ownerName}</strong> {item.caption}</p><p className="mt-2 text-xs font-black text-rose-600">{item.service}{item.price ? ` · ₹${item.price}` : ""}</p>{item.visibility === "followers" && <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-gray-400"><Lock className="h-3 w-3" />Followers only</span>}</div></article>)}</div> : <Empty kind="post" signedIn={Boolean(user)} />}
     </main>}
     {commentItem && <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/55" role="dialog" aria-modal="true" aria-label="Comments">
       <button type="button" aria-label="Close comments" onClick={() => setCommentItem(null)} className="absolute inset-0" />
