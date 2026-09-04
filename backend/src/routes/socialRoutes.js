@@ -116,6 +116,17 @@ function createSocialRouter() {
     } catch (error) { return res.status(500).json({ error: error.message || "Unable to update follow" }); }
   });
 
+  router.get("/connections/:id", async (req, res) => {
+    try {
+      await ensureSocialSchema();
+      const id = String(req.params.id || ""), following = req.query.type === "following";
+      const result = await query(`SELECT u.id,u.name,u.role,u.location,u.avatar_url FROM social_follows f
+        JOIN users u ON u.id=${following ? "f.following_id" : "f.follower_id"}
+        WHERE ${following ? "f.follower_id" : "f.following_id"}=$1 ORDER BY f.created_at DESC LIMIT 500`, [id]);
+      return res.json({ items: result.rows.map((row) => ({ id: row.id, name: row.name, role: row.role, location: row.location || "", avatar: row.avatar_url || "" })) });
+    } catch (error) { return res.status(500).json({ error: error.message || "Unable to load connections" }); }
+  });
+
   router.put("/reaction/:id", async (req, res) => {
     try {
       await ensureSocialSchema();

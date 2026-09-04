@@ -49,6 +49,8 @@ export interface Booking extends BookingPayload {
   updatedAt?: string;
   rejectionReason?: string;
   bookingType?: "hall" | "service";
+  vendorName?: string;
+  vendorMobile?: string;
 }
 
 export type InquiryStatus = "interested" | "contacted" | "confirmed" | "dropped";

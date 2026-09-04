@@ -33,10 +33,12 @@ import { MobilePageHeader } from "@/components/layout/MobilePageHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import {
   fetchSocial,
+  fetchSocialConnections,
   fetchSocialProfile,
   publishSocial,
   socialItems,
   type SocialItem,
+  type SocialConnection,
   type SocialKind,
   type SocialVisibility,
 } from "@/lib/social";
@@ -115,6 +117,8 @@ export default function MobileProfilePage() {
   });
   const [savedCount, setSavedCount] = useState(0);
   const [bookingCount, setBookingCount] = useState(0);
+  const [connections, setConnections] = useState<{title:string;items:SocialConnection[]}|null>(null);
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [uploads, setUploads] = useState<SocialItem[]>([]);
   const [kind, setKind] = useState<SocialKind>("reel");
   const [visibility, setVisibility] = useState<SocialVisibility>("public");
@@ -187,6 +191,15 @@ export default function MobileProfilePage() {
       setBookingCount(0);
     }
   }, [user]);
+
+  async function openConnections(type: "followers" | "following") {
+    if (!user) return;
+    setConnections({ title: type === "followers" ? "Followers" : "Following", items: [] });
+    setConnectionsLoading(true);
+    try { setConnections({ title: type === "followers" ? "Followers" : "Following", items: await fetchSocialConnections(user.id, type) }); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Unable to load people"); }
+    finally { setConnectionsLoading(false); }
+  }
 
   if (loading)
     return (
@@ -420,22 +433,22 @@ export default function MobileProfilePage() {
                     Posts
                   </span>
                 </div>
-                <div>
+                <button type="button" onClick={() => void openConnections("followers")} className="rounded-xl py-1 active:bg-rose-50">
                   <strong className="block text-lg font-black">
                     {socialStats.followers}
                   </strong>
                   <span className="text-[9px] font-bold text-gray-500">
                     Followers
                   </span>
-                </div>
-                <div>
+                </button>
+                <button type="button" onClick={() => void openConnections("following")} className="rounded-xl py-1 active:bg-rose-50">
                   <strong className="block text-lg font-black">
                     {socialStats.following}
                   </strong>
                   <span className="text-[9px] font-bold text-gray-500">
                     Following
                   </span>
-                </div>
+                </button>
               </div>
             </div>
             <div className="mt-3">
@@ -928,6 +941,18 @@ export default function MobileProfilePage() {
                 >
                   {deleting ? "Deleting..." : "Delete permanently"}
                 </button>
+              </div>
+            </section>
+          </div>
+        )}
+        {connections && (
+          <div className="fixed inset-0 z-[135] flex items-end bg-black/55" role="dialog" aria-modal="true" aria-label={connections.title}>
+            <button type="button" aria-label="Close people list" onClick={() => setConnections(null)} className="absolute inset-0" />
+            <section className="relative flex max-h-[75dvh] min-h-[40dvh] w-full flex-col rounded-t-[30px] bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-2xl">
+              <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-gray-300" />
+              <header className="flex h-14 items-center justify-between border-b px-5"><h2 className="font-black">{connections.title}</h2><button type="button" onClick={() => setConnections(null)} className="rounded-full bg-gray-100 p-2" aria-label="Close"><X className="h-5 w-5" /></button></header>
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                {connectionsLoading ? <div className="py-12 text-center text-sm font-bold text-gray-400">Loading people...</div> : connections.items.length ? <div className="space-y-2">{connections.items.map((person) => <Link key={person.id} to={`/vendor/${person.id}`} onClick={() => setConnections(null)} className="flex items-center gap-3 rounded-2xl p-2 active:bg-rose-50"><span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-rose-500 to-purple-900 font-black text-white">{person.avatar ? <img src={person.avatar} alt="" className="h-full w-full object-cover" /> : person.name[0]}</span><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{person.name}</strong><small className="block truncate text-[10px] text-gray-500">{person.location || (person.role === "service_provider" ? "Service provider" : "VizhaOne member")}</small></span><ChevronRight className="h-4 w-4 text-gray-400" /></Link>)}</div> : <div className="py-12 text-center"><Users className="mx-auto h-9 w-9 text-rose-200"/><p className="mt-3 text-sm font-bold text-gray-500">No {connections.title.toLowerCase()} yet</p></div>}
               </div>
             </section>
           </div>

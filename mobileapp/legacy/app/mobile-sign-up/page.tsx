@@ -1,5 +1,5 @@
 ﻿"use client";
-import { FormEvent,useState } from "react";
+import { FormEvent,useEffect,useState } from "react";
 import { Link,useNavigate } from "react-router-dom";
 import { BriefcaseBusiness,Check,Eye,EyeOff,LocateFixed,LockKeyhole,Mail,MapPin,Phone,ShieldCheck,UserRound } from "lucide-react";
 import { Geolocation } from "@capacitor/geolocation";import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { destination,registerAccount,startSession,type MobileRole } from "@/lib/
 export default function MobileSignUpPage(){
  const navigate=useNavigate();const[name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[confirm,setConfirm]=useState(""),[location,setLocation]=useState(""),[role,setRole]=useState<MobileRole>("customer"),[terms,setTerms]=useState(false),[show,setShow]=useState(false),[busy,setBusy]=useState(false),[locating,setLocating]=useState(false);
  async function locate(){setLocating(true);try{const permission=await Geolocation.requestPermissions();if(permission.location==="denied")throw new Error();const p=await Geolocation.getCurrentPosition({enableHighAccuracy:true,timeout:12000});setLocation(`${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}`);toast.success("Live location detected");}catch{toast.error("Please allow location permission");}finally{setLocating(false)}}
+ useEffect(()=>{void locate()},[]);
  async function submit(e:FormEvent){e.preventDefault();if(name.trim().length<3)return toast.error("Enter your full name");if(!/^\+?[0-9 ]{10,14}$/.test(phone.trim()))return toast.error("Enter a valid phone number");if(!/^\S+@\S+\.\S+$/.test(email))return toast.error("Enter a valid email");if(password.length<8)return toast.error("Password minimum 8 characters");if(password!==confirm)return toast.error("Passwords do not match");if(!location)return toast.error("Detect or enter your location");if(!terms)return toast.error("Accept Terms and Privacy Policy");setBusy(true);try{const r=await registerAccount({name:name.trim(),phone:phone.trim(),email:email.trim().toLowerCase(),password,location:location.trim(),role,provider:"email"});startSession(r.user,r.token);toast.success("Welcome to VizhaOne!");navigate(destination(role),{replace:true});}catch(error){toast.error(error instanceof Error?error.message:"Signup failed");}finally{setBusy(false)}}
  const field="mt-2 flex min-h-14 items-center rounded-2xl border border-[#e8ddd5] bg-white/90 px-4 shadow-[0_8px_30px_rgba(72,28,45,.05)] transition focus-within:border-[#9b3655] focus-within:ring-4 focus-within:ring-[#9b3655]/10";const label="block text-[11px] font-extrabold uppercase tracking-wider text-[#4a303c]";
  return <main className="auth-luxury-shell relative min-h-dvh overflow-y-auto px-5 pb-[calc(32px+env(safe-area-inset-bottom,0px))] pt-[calc(18px+env(safe-area-inset-top,0px))]">
