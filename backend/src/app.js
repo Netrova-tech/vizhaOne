@@ -54,12 +54,21 @@ function createApp({ store }) {
 
   app.get("/api/health", healthController);
   app.get("/api/app-config", (_req, res) => {
-    res.set("Cache-Control", "public, max-age=300");
+    const updateEnabled = process.env.ANDROID_UPDATE_ENABLED === "true";
+    const configuredVersionCode = Number(
+      process.env.ANDROID_LATEST_VERSION_CODE || 0,
+    );
+    res.set("Cache-Control", "no-store");
     res.json({
       android: {
-        latestVersionCode: Number(process.env.ANDROID_LATEST_VERSION_CODE || 15),
-        latestVersionName: process.env.ANDROID_LATEST_VERSION_NAME || "1.14",
-        forceUpdate: process.env.ANDROID_FORCE_UPDATE === "true",
+        updateEnabled,
+        latestVersionCode:
+          updateEnabled && configuredVersionCode > 0
+            ? configuredVersionCode
+            : 0,
+        latestVersionName: process.env.ANDROID_LATEST_VERSION_NAME || "",
+        forceUpdate:
+          updateEnabled && process.env.ANDROID_FORCE_UPDATE === "true",
         storeUrl:
           process.env.ANDROID_STORE_URL ||
           "https://play.google.com/store/apps/details?id=com.vizhaone.app",
