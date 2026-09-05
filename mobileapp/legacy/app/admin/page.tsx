@@ -89,7 +89,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loading && !isAdmin) {
       toast.error("Restricted access. Admins only!");
-      navigate("/auth/login?role=admin");
+      navigate("/sign-in");
     }
   }, [loading, isAdmin, navigate]);
 
@@ -926,7 +926,7 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold text-gray-900">Opening admin panel...</h1>
         <p className="mt-2 text-sm text-gray-500">Please verify admin access if this takes more than a moment.</p>
         <Link
-          to="/auth/login?role=admin"
+          to="/sign-in"
           className="mt-5 rounded-2xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-white"
         >
           Admin Login

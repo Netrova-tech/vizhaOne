@@ -101,7 +101,6 @@ export default function MobileSignInPage() {
           <button disabled={busy} className="mt-1 min-h-14 w-full rounded-2xl bg-[linear-gradient(115deg,#6e1637,#9f3157_58%,#bd486b)] px-5 text-sm font-black text-white shadow-[0_15px_34px_rgba(73,13,38,.3)] disabled:opacity-60">{busy ? "Opening your account..." : "Sign in to VizhaOne"}</button>
         </form>
         <p className="mt-5 text-center text-sm text-[#806d75]">New to VizhaOne? <Link to="/sign-up" className="font-black text-[#8c294c]">Create an account</Link></p>
-        <a href="#/auth/login?role=admin" className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#d8bdc6] bg-[#fff4f6] text-sm font-black text-[#7a2143]"><ShieldCheck className="h-4 w-4" /> Super Admin Login</a>
         <p className="mt-5 flex items-start justify-center gap-2 text-[10px] leading-5 text-[#97858c]"><ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-emerald-600" />Secure sign-in powered by VizhaOne.</p>
       </section>
     </div>
