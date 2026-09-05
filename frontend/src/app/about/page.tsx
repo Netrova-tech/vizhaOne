@@ -148,10 +148,10 @@ export default function AboutPage() {
               <Sparkles className="h-4 w-4 text-amber-400" /> The VizhaOne Journey
             </span>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight tracking-tight">
-              Crafting Memorable Celebrations <br className="hidden md:block"/> Across Tamil Nadu
+              Crafting Memorable Celebrations <br className="hidden md:block"/> Across India
             </h1>
             <p className="text-lg md:text-xl text-rose-100 max-w-3xl mx-auto leading-relaxed mb-10">
-              VizhaOne is more than just a marketplace; it is a movement to organize, simplify, and elevate how we celebrate our most cherished moments. We bring the best of Tamil Nadu's event industry directly to your fingertips.
+              VizhaOne is more than a marketplace; it is a movement to organize, simplify and elevate how we celebrate our most cherished moments. We bring trusted event professionals across India directly to your fingertips.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/services" className="px-8 py-3.5 bg-amber-500 text-rose-950 font-bold rounded-xl shadow-lg hover:bg-amber-400 transition-colors">
@@ -194,7 +194,7 @@ export default function AboutPage() {
               <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6 leading-tight">Why We Started VizhaOne</h2>
               <div className="space-y-5 text-gray-600 text-lg leading-relaxed">
                 <p>
-                  Planning a function in Tamil Nadu has traditionally been a chaotic and exhausting process. Families spend weeks making endless phone calls, negotiating with multiple middlemen, and worrying about hidden charges that pop up at the last minute.
+                  Planning a function can be chaotic and exhausting. Families spend weeks making endless phone calls, negotiating with multiple middlemen and worrying about hidden charges that appear at the last minute.
                 </p>
                 <p>
                   We recognized that celebrations are meant to be enjoyed with loved ones, not managed like a stressful corporate project. We wanted to change the narrative.
@@ -222,7 +222,7 @@ export default function AboutPage() {
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative h-[400px] sm:h-[500px] lg:h-[600px] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-rose-200 group">
               <img
                 src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1000"
-                alt="Wedding celebration in Tamil Nadu"
+                alt="Wedding celebration in India"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-rose-900/80 via-transparent to-transparent flex items-end p-8">
@@ -249,7 +249,7 @@ export default function AboutPage() {
               { icon: Heart, colors: "bg-rose-50 text-rose-600", accent: "bg-rose-500/5", title: "Trust & Honesty", desc: "We believe in clear, upfront pricing and honest reviews. What you see is what you pay." },
               { icon: Shield, colors: "bg-blue-50 text-blue-600", accent: "bg-blue-500/5", title: "Quality Assured", desc: "Only the best decorators, caterers, and halls pass our strict verification process." },
               { icon: Sparkles, colors: "bg-amber-50 text-amber-600", accent: "bg-amber-500/5", title: "Stress-Free Planning", desc: "Your celebration should be enjoyed. We simplify the entire management process." },
-              { icon: Users, colors: "bg-[#fff1f2] text-[#e11d48]", accent: "bg-[#e11d48]/5", title: "Cultural Heritage", desc: "We deeply respect and cater to the rich, diverse cultural traditions of Tamil Nadu." }
+              { icon: Users, colors: "bg-[#fff1f2] text-[#e11d48]", accent: "bg-[#e11d48]/5", title: "Cultural Heritage", desc: "We deeply respect and support India's rich and diverse celebration traditions." }
             ].map((v, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} 
                 className="p-8 bg-white rounded-3xl border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">

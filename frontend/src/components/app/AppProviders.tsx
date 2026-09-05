@@ -3,6 +3,8 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { VizhaOneAssistant } from "@/components/app/VizhaOneAssistant";
+import { InstallAppCta } from "@/components/app/InstallAppCta";
+import { SeoManager } from "@/components/app/SeoManager";
 
 declare global {
   interface Window {
@@ -78,7 +80,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <LanguageProvider>
         <GoogleTranslateBridge />
+        <SeoManager />
         {children}
+        <InstallAppCta />
         <VizhaOneAssistant />
         <Toaster richColors position="top-center" toastOptions={{ duration: 3000 }} />
       </LanguageProvider>

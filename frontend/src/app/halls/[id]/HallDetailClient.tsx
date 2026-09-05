@@ -951,7 +951,7 @@ export default function HallDetailClient({ id }: { id: string }) {
                 <div className="py-3 border-y border-gray-100">
                   <div>
                     <span className="text-xs text-gray-400 font-medium block">Location</span>
-                    <span className="text-sm font-semibold text-gray-800 truncate block">{activeDetailService.location || "Tamil Nadu"}</span>
+                    <span className="text-sm font-semibold text-gray-800 truncate block">{activeDetailService.location || "India"}</span>
                   </div>
                 </div>
 

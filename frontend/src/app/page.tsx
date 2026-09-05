@@ -221,7 +221,7 @@ export default function HomePage() {
               <div>
                 <p className="text-rose-600 text-sm font-bold uppercase tracking-widest mb-2">Top Vendors</p>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Featured Services</h2>
-                <p className="text-gray-500 mt-2">Hand-picked, highly rated vendors across Tamil Nadu</p>
+                <p className="text-gray-500 mt-2">Hand-picked, highly rated event professionals across India</p>
               </div>
               <Link to="/services" className="hidden sm:flex items-center gap-1.5 text-rose-600 text-sm font-bold group hover:gap-3 transition-all">
                 View all <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -472,7 +472,7 @@ export default function HomePage() {
               Loved by families
             </p>
             <p className="font-display text-xl sm:text-2xl text-[#9f1239] italic leading-snug mb-2 max-w-lg mx-auto">
-              50+ families across Tamil Nadu trust VizhaOne for their celebrations.
+              Families across India trust VizhaOne for their celebrations.
             </p>
             <p className="text-gray-400 text-xs mb-8">Verified vendors · Best prices · WhatsApp booking</p>
             <div className="flex flex-wrap items-center justify-center gap-3">

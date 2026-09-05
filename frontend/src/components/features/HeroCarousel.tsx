@@ -21,7 +21,7 @@ const SLIDES = [
     image: "/hero/slide-mahal.jpg",
     label: "Marriage Mahal",
     title: "Grand Mandap & Hall Bookings",
-    subtitle: "Premium marriage halls across Tamil Nadu — check availability & book directly",
+    subtitle: "Premium marriage halls across India — check availability and book directly",
     primary: { href: "/halls", label: "Browse Halls", icon: true },
     secondary: { href: "/calculator", label: "Plan Event" },
   },

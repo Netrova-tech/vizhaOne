@@ -298,7 +298,7 @@ function VerifyContent() {
             </p>
           </div>
 
-          <p className="text-center text-xs text-gray-300 mt-5">🪔 Made with love for Tamil Nadu families</p>
+          <p className="text-center text-xs text-gray-300 mt-5">🪔 Made with love for celebrations across India</p>
         </motion.div>
       </div>
     </div>
