@@ -16,7 +16,7 @@ export const translations = {
     calculateCost: "Calculate Cost",
     // Halls
     browseHalls: "Browse Marriage Halls",
-    hallsSubtitle: "Find your perfect venue across Tamil Nadu",
+    hallsSubtitle: "Find your perfect venue across India",
     hallDetails: "Hall Details",
     bookHall: "Book Hall",
     checkAvailability: "Check Availability",

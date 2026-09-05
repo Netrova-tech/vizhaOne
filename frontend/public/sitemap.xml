@@ -9,4 +9,9 @@
   <url><loc>https://www.vizhaone.com/invitations</loc><priority>0.8</priority></url>
   <url><loc>https://www.vizhaone.com/tools/hashtag-generator</loc><priority>0.7</priority></url>
   <url><loc>https://www.vizhaone.com/vendor-onboarding</loc><priority>0.8</priority></url>
+  <url><loc>https://www.vizhaone.com/compare</loc><priority>0.8</priority></url>
+  <url><loc>https://www.vizhaone.com/blog</loc><priority>0.8</priority></url>
+  <url><loc>https://www.vizhaone.com/faq</loc><priority>0.7</priority></url>
+  <url><loc>https://www.vizhaone.com/referrals</loc><priority>0.6</priority></url>
+  <url><loc>https://www.vizhaone.com/partner-plans</loc><priority>0.7</priority></url>
 </urlset>

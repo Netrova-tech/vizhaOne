@@ -191,7 +191,7 @@ function ServicesContent() {
         image="/hero/slide-2.jpg"
         badge={<><Sparkles className="h-4 w-4 text-amber-300" /> Verified Vendors</>}
         title="Browse All Services"
-        subtitle={`${DEMO_SERVICES.length}+ verified vendors across Tamil Nadu for every celebration`}
+        subtitle={`${DEMO_SERVICES.length}+ verified vendors across India for every celebration`}
         compact
       />
 

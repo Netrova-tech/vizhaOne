@@ -100,7 +100,7 @@ export default function BlogPost() {
           
           <div className="mt-12 p-6 bg-rose-50 rounded-2xl border border-rose-100">
             <h4 className="text-lg font-bold text-rose-900 mb-2">Ready to start planning?</h4>
-            <p className="text-rose-800 text-sm mb-4">VizhaOne helps you discover, calculate, and book the best vendors across Tamil Nadu.</p>
+            <p className="text-rose-800 text-sm mb-4">VizhaOne helps you discover, compare and book trusted event professionals across India.</p>
             <Link to="/calculator" className="inline-flex items-center gap-2 px-6 py-3 bg-[#e11d48] text-white rounded-xl font-bold text-sm hover:bg-[#be123c] transition-all">
               Try our Free Planning Calculator <CheckCircle className="h-4 w-4" />
             </Link>

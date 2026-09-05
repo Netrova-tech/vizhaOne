@@ -1340,7 +1340,7 @@ export default function AdminPage() {
                           </td>
                           <td className="px-5 py-3.5">
                             <a
-                              href={`https://wa.me/${user.mobile.replace("+", "").replace(/\s/g, "")}?text=Hi! Thanks for joining VizhaOne 🎊 We are Tamil Nadu's #1 event management app. Can we help you plan your next event?`}
+                              href={`https://wa.me/${user.mobile.replace("+", "").replace(/\s/g, "")}?text=Hi! Thanks for joining VizhaOne 🎊 We help families across India plan celebrations with trusted event professionals. Can we help you plan your next event?`}
                               target="_blank" rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#e11d48] text-white rounded-xl text-xs font-semibold hover:bg-[#e11d48] transition-colors"
                             >

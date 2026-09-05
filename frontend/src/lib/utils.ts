@@ -158,7 +158,7 @@ export function buildWhatsAppMessage(
     websiteUrl,
     "",
     "🏢 *VizhaOne*",
-    "Tamil Nadu's Event Planning & Vendor Coordination Platform",
+    "India's Event Planning & Vendor Coordination Platform",
   ].join("\n");
 }
 

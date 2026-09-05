@@ -158,7 +158,7 @@ export const ServiceCard = memo(function ServiceCard({
 
         <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
           <MapPin className="h-3 w-3 text-[#e11d48] flex-shrink-0" />
-          <span className="line-clamp-1">{service.location || "Tamil Nadu"}</span>
+          <span className="line-clamp-1">{service.location || "India"}</span>
           {service.vendor_name && (
             <>
               <span className="text-gray-300 mx-1">•</span>

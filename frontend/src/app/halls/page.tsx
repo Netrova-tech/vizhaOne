@@ -89,7 +89,7 @@ export default function HallsPage() {
         image="/hero/slide-mahal.jpg"
         badge={<><Building2 className="h-4 w-4 text-amber-300" /> Top Venues</>}
         title={lang === "ta" ? "திருமண மண்டபங்கள்" : "Marriage Halls & Mahals"}
-        subtitle={`${allHalls.length}+ premium halls across Tamil Nadu — book directly with owners`}
+        subtitle={`${allHalls.length}+ premium halls across India — connect directly with owners`}
         compact
       />
 
