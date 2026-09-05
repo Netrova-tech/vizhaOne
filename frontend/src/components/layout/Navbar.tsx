@@ -152,10 +152,7 @@ export function Navbar() {
                 )}
               >
                 <Sparkles className="h-4 w-4" />
-                Add Your Service Now
-                <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-[#be123c]">
-                  Rs 365
-                </span>
+                Add Your Service
               </Link>
 
               {user && isAdmin ? (
