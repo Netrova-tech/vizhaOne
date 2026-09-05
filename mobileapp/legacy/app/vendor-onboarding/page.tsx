@@ -16,14 +16,14 @@ export default function VendorOnboardingPage() {
   function update(key: keyof typeof form, value: string) { setForm((current) => ({ ...current, [key]: value })); }
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!form.vendorName.trim() || !form.phone.match(/^\d{10}$/) || !form.serviceName.trim() || !form.price.trim() || !form.location.trim()) {
+    if (!form.vendorName.trim() || !form.phone.match(/^\d{10}$/) || !form.serviceName.trim() || !form.location.trim()) {
       toast.error("Please complete all required details with a valid 10-digit phone number."); return;
     }
     const message = [
       "*New VizhaOne Vendor Onboarding Request*", "",
       `Vendor name: ${form.vendorName}`, `Business name: ${form.businessName || "Not provided"}`,
       `Phone number: +91 ${form.phone}`, `Service name: ${form.serviceName}`,
-      `Category: ${form.category || "Other"}`, `Starting price: Rs ${form.price}`,
+      `Category: ${form.category || "Other"}`, `Starting price: ${form.price ? `Rs ${form.price}` : "Contact for quote"}`,
       `Service location: ${form.location}`, `Description: ${form.description || "Not provided"}`, "",
       "I would like to list my service on VizhaOne.",
     ].join("\n");
@@ -41,7 +41,7 @@ export default function VendorOnboardingPage() {
         <Field icon={Phone} label="Phone number *"><div className="flex"><span className="border-r border-gray-200 pr-3 text-gray-400">+91</span><input className="pl-3" inputMode="numeric" value={form.phone} onChange={e=>update("phone",e.target.value.replace(/\D/g,"").slice(0,10))} placeholder="10-digit number"/></div></Field>
         <Field icon={Sparkles} label="Service name *"><input value={form.serviceName} onChange={e=>update("serviceName",e.target.value)} placeholder="e.g. Wedding Photography"/></Field>
         <Field icon={Building2} label="Service category"><select value={form.category} onChange={e=>update("category",e.target.value)}><option value="">Select category</option>{categories.map(item=><option key={item}>{item}</option>)}</select></Field>
-        <Field icon={IndianRupee} label="Starting price *"><input inputMode="numeric" value={form.price} onChange={e=>update("price",e.target.value.replace(/[^\d.]/g,""))} placeholder="e.g. 15000"/></Field>
+        <Field icon={IndianRupee} label="Starting price (optional)"><input inputMode="numeric" value={form.price} onChange={e=>update("price",e.target.value.replace(/[^\d.]/g,""))} placeholder="Leave blank for contact quote"/></Field>
         <div className="sm:col-span-2"><Field icon={MapPin} label="Service location *"><input value={form.location} onChange={e=>update("location",e.target.value)} placeholder="City, district or service area"/></Field></div>
         <label className="sm:col-span-2 text-sm font-black text-gray-700">About your service<textarea value={form.description} onChange={e=>update("description",e.target.value)} rows={4} maxLength={500} placeholder="Tell us about your experience, packages and what makes your service special..." className="mt-2 w-full resize-none rounded-2xl border border-gray-200 px-4 py-4 font-medium outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"/></label>
         <button type="submit" className="sm:col-span-2 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#16a34a] to-[#25D366] px-6 py-5 text-base font-black text-white shadow-xl shadow-emerald-200 transition hover:-translate-y-0.5"><MessageCircle className="h-6 w-6"/>Send Details on WhatsApp</button><p className="sm:col-span-2 text-center text-xs text-gray-400">By submitting, you agree to be contacted by the VizhaOne onboarding team.</p>

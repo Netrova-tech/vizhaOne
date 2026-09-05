@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   BriefcaseBusiness,
   Calculator,
@@ -43,7 +43,6 @@ const links = [
 export function MobileAppHeader() {
   const [open, setOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
-  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { count } = useCart();
   const { lang, setLang } = useLang();
@@ -56,24 +55,23 @@ export function MobileAppHeader() {
     { code: "te", label: "Telugu", short: "తెలుగు" },
   ];
   function changeLanguage(code:Language){setLang(code);setLanguageOpen(false)}
-  function go(href: string) { setOpen(false); window.setTimeout(() => navigate(href), 0); }
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-rose-100 bg-white/95 pt-[env(safe-area-inset-top,0px)] shadow-sm backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-gradient-to-r from-[#3d0825] via-[#5b0b35] to-[#3d0825] pt-[env(safe-area-inset-top,0px)] shadow-[0_8px_28px_rgba(61,8,37,.28)] backdrop-blur-xl">
         <div className="grid h-[76px] grid-cols-[48px_1fr_auto] items-center px-4">
           <button
             onClick={() => setOpen(true)}
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-rose-50 text-rose-700"
+            className="grid h-11 w-11 place-items-center rounded-2xl bg-[#ffdce8] text-[#5b0b35] shadow-sm active:scale-95"
           >
             <Menu className="h-5 w-5" />
           </button>
           <Link to="/" aria-label="VizhaOne home" className="min-w-0 justify-self-center text-center">
-            <VizhaLogo size="md" className="origin-center scale-[1.06]" />
+            <VizhaLogo size="md" light className="origin-center scale-[1.06]" />
           </Link>
-          <div className="relative flex items-center gap-1.5"><button type="button" onClick={()=>setLanguageOpen(value=>!value)} aria-label="Change language" className="grid h-11 w-11 place-items-center rounded-2xl bg-amber-50 text-amber-800"><Languages className="h-5 w-5"/><span className="absolute -bottom-0.5 text-[7px] font-black">{lang.toUpperCase()}</span></button><Link
+          <div className="relative flex items-center gap-1.5"><button type="button" onClick={()=>setLanguageOpen(value=>!value)} aria-label="Change language" className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff3dd] text-[#6b3b00] shadow-sm"><Languages className="h-5 w-5"/><span className="absolute -bottom-0.5 text-[7px] font-black">{lang.toUpperCase()}</span></button><Link
             to="/cart"
             aria-label={`Cart with ${count} items`}
-            className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-700 text-white shadow-lg shadow-rose-200"
+            className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#f50057] to-[#c60045] text-white shadow-lg shadow-black/20"
           >
             <ShoppingBag className="h-5 w-5"/>
             {count>0&&<span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count>99?"99+":count}</span>}
@@ -89,11 +87,11 @@ export function MobileAppHeader() {
             className="flex h-full w-[86vw] max-w-[350px] flex-col bg-white pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-rose-100 px-5 py-5">
-              <VizhaLogo size="sm" />
+            <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#3d0825] to-[#6d103e] px-5 py-5">
+              <VizhaLogo size="sm" light />
               <button
                 onClick={() => setOpen(false)}
-                className="grid h-10 w-10 place-items-center rounded-xl bg-gray-100"
+                className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 text-white"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -136,17 +134,17 @@ export function MobileAppHeader() {
                 </Link>
               )}
               {links.map(([label, href, Icon]) => (
-                <button
-                  type="button"
+                <Link
                   key={href}
-                  onClick={() => go(href)}
+                  to={href}
+                  onClick={() => setOpen(false)}
                   className="flex w-full touch-manipulation items-center gap-3 rounded-2xl px-3 py-3.5 text-left text-sm font-bold text-gray-700 active:bg-rose-50"
                 >
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-rose-600">
                     <Icon className="h-5 w-5" />
                   </span>
                   {label}
-                </button>
+                </Link>
               ))}
             </nav>
             <div className="border-t p-4">

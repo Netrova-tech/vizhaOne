@@ -70,7 +70,7 @@ export function Navbar() {
     <>
       <nav className={cn(
         "mobile-app-header",
-        "fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg transition-all duration-300 border-b border-transparent",
+        "fixed top-0 left-0 right-0 z-50 bg-[#4b082b] md:bg-white/95 backdrop-blur-lg transition-all duration-300 border-b border-transparent",
         scrolled && "shadow-[0_4px_20px_rgba(225,29,72,0.08)] border-b border-rose-100/80"
       )}>
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
@@ -78,7 +78,8 @@ export function Navbar() {
 
             {/* Logo */}
             <Link to="/" className="justify-self-start hover:opacity-90 transition-opacity">
-              <VizhaLogo size="sm" />
+              <span className="md:hidden"><VizhaLogo size="sm" light /></span>
+              <span className="hidden md:inline"><VizhaLogo size="sm" /></span>
             </Link>
 
             {/* Desktop nav — centered pill bar */}
