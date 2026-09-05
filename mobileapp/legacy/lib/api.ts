@@ -57,6 +57,15 @@ export interface Booking extends BookingPayload {
   bookingType?: "hall" | "service";
   vendorName?: string;
   vendorMobile?: string;
+  reviewRating?: number | null;
+  reviewBody?: string;
+}
+
+export async function submitBookingReview(bookingId:string,rating:number,body:string):Promise<{rating:number;body:string}>{
+  const res=await fetch(`${API_BASE}/bookings/${encodeURIComponent(bookingId)}/review`,{method:"POST",headers:bookingHeaders(),body:JSON.stringify({rating,body})});
+  const result=await res.json().catch(()=>null);
+  if(!res.ok)throw new Error(result?.error||"Unable to save review");
+  return result.review;
 }
 
 export type InquiryStatus =

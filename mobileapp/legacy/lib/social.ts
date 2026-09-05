@@ -1,6 +1,6 @@
 export type SocialKind="reel"|"post";
 export type SocialVisibility="public"|"followers";
-export interface SocialItem{id:string;ownerId:string;ownerName:string;ownerRole?:"user"|"customer"|"service_provider";avatar?:string;kind:SocialKind;visibility:SocialVisibility;media:string;mediaType:"image"|"video";caption:string;service:string;price?:string;createdAt:string;isFollowing?:boolean;followerCount?:number;liked?:boolean;saved?:boolean;likeCount?:number;commentCount?:number;likes:string[];savedBy:string[]}
+export interface SocialItem{id:string;ownerId:string;ownerName:string;ownerRole?:"user"|"customer"|"service_provider";avatar?:string;kind:SocialKind;visibility:SocialVisibility;media:string;mediaType:"image"|"video";caption:string;service:string;serviceId?:string;price?:string;createdAt:string;isFollowing?:boolean;followerCount?:number;liked?:boolean;saved?:boolean;likeCount?:number;commentCount?:number;likes:string[];savedBy:string[]}
 export interface SocialComment{id:string;body:string;createdAt:string;userId:string;userName:string;avatar:string}
 export interface SocialProfile{id:string;name:string;role:"user"|"customer"|"service_provider";location:string;avatar:string;posts:number;followers:number;following:number;isFollowing:boolean;isOwn:boolean}
 export interface SocialConnection{id:string;name:string;role:"user"|"customer"|"service_provider";location:string;avatar:string}

@@ -159,6 +159,12 @@ CREATE TABLE IF NOT EXISTS social_comments (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS social_comments_reel_idx ON social_comments(reel_id,created_at DESC);
+CREATE TABLE IF NOT EXISTS booking_reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), booking_id text NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE SET NULL,
+  rating integer NOT NULL CHECK(rating BETWEEN 1 AND 5), body text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS booking_reviews_service_idx ON booking_reviews(service_id,created_at DESC);
 CREATE TABLE IF NOT EXISTS saved_services (
   user_id uuid REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now(), PRIMARY KEY(user_id,service_id)

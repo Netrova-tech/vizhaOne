@@ -5,6 +5,12 @@ async function connectDatabase() {
   await getPool().query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS rejection_reason text");
   await getPool().query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users(id) ON DELETE SET NULL");
   await getPool().query("CREATE INDEX IF NOT EXISTS bookings_user_idx ON bookings(user_id)");
+  await getPool().query(`CREATE TABLE IF NOT EXISTS booking_reviews (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), booking_id text NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE SET NULL,
+    rating integer NOT NULL CHECK(rating BETWEEN 1 AND 5), body text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now()
+  )`);
+  await getPool().query("CREATE INDEX IF NOT EXISTS booking_reviews_service_idx ON booking_reviews(service_id,created_at DESC)");
   await getPool().query(`UPDATE bookings b SET user_id=(
     SELECT u.id FROM users u
     WHERE regexp_replace(u.mobile,'[^0-9]','','g')=regexp_replace(b.mobile,'[^0-9]','','g')

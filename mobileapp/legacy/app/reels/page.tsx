@@ -502,6 +502,13 @@ export default function ReelsPage() {
                     {item.service}
                     {item.price ? ` · ₹${item.price}` : ""}
                   </p>
+                  <Link
+                    to={item.serviceId ? `/services/${encodeURIComponent(item.serviceId)}` : `/services?search=${encodeURIComponent(item.service)}`}
+                    onClick={(event) => event.stopPropagation()}
+                    className="mt-3 inline-flex min-h-10 items-center rounded-full bg-white px-4 text-xs font-black text-[#6e1637] shadow-lg"
+                  >
+                    View &amp; Book Service
+                  </Link>
                 </div>
                 <div className="absolute bottom-5 right-3 flex flex-col items-center gap-2 text-white">
                   {actionButtons(item)}

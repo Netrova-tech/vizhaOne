@@ -10,11 +10,13 @@ import {
   PartyPopper,
   PhoneCall,
   RefreshCw,
+  Star,
 } from "lucide-react";
 import {
   getBookingsWithFallback,
   getLocalBookings,
   type Booking,
+  submitBookingReview,
 } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -55,6 +57,12 @@ export default function MobileBookingsPage() {
   const [tab, setTab] = useState<"all" | "active" | "completed">("all");
   const [loading, setLoading] = useState(true);
   const [offline, setOffline] = useState(false);
+  const [reviewing,setReviewing]=useState<Booking|null>(null);
+  const [rating,setRating]=useState(5);
+  const [reviewBody,setReviewBody]=useState("");
+  const [reviewBusy,setReviewBusy]=useState(false);
+
+  async function saveReview(){if(!reviewing||reviewBusy)return;setReviewBusy(true);try{const review=await submitBookingReview(reviewing.id,rating,reviewBody);setItems(current=>current.map(item=>item.id===reviewing.id?{...item,reviewRating:review.rating,reviewBody:review.body}:item));setReviewing(null);toast.success("Thank you! Your verified booking review is saved.");}catch(error){toast.error(error instanceof Error?error.message:"Unable to save review");}finally{setReviewBusy(false)}}
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -280,6 +288,10 @@ export default function MobileBookingsPage() {
                     Explore more <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
+                {item.status === "completed" && (
+                  item.reviewRating ? <div className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs"><p className="font-black text-amber-800">Verified Booking Review · {item.reviewRating}/5 ★</p>{item.reviewBody&&<p className="mt-1 text-gray-600">{item.reviewBody}</p>}</div> :
+                  <button type="button" onClick={()=>{setReviewing(item);setRating(5);setReviewBody("");}} className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-400 text-xs font-black text-amber-950"><Star className="h-4 w-4"/>Rate completed service</button>
+                )}
               </article>
             ))}
           </div>
@@ -302,6 +314,7 @@ export default function MobileBookingsPage() {
           </div>
         )}
       </main>
+      {reviewing&&<div className="fixed inset-0 z-[200] flex items-end bg-black/55 p-3 backdrop-blur-sm" onClick={()=>setReviewing(null)}><section className="w-full rounded-[28px] bg-white p-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))]" onClick={event=>event.stopPropagation()}><p className="text-[10px] font-black uppercase tracking-widest text-rose-600">Verified booking review</p><h2 className="mt-1 text-xl font-black">How was {reviewing.hallName||reviewing.serviceName||"your service"}?</h2><div className="mt-5 flex justify-center gap-2">{[1,2,3,4,5].map(value=><button type="button" key={value} onClick={()=>setRating(value)} aria-label={`${value} stars`}><Star className={`h-10 w-10 ${value<=rating?"fill-amber-400 text-amber-400":"text-gray-200"}`}/></button>)}</div><textarea value={reviewBody} onChange={event=>setReviewBody(event.target.value)} maxLength={500} rows={4} placeholder="Share your experience (optional)" className="mt-5 w-full resize-none rounded-2xl border border-gray-200 p-4 text-sm outline-none focus:border-rose-400"/><button type="button" disabled={reviewBusy} onClick={()=>void saveReview()} className="mt-4 min-h-14 w-full rounded-2xl bg-rose-600 text-sm font-black text-white disabled:opacity-50">{reviewBusy?"Saving review...":"Submit verified review"}</button></section></div>}
       <MobileBottomNav />
     </div>
   );

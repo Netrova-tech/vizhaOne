@@ -1,4 +1,4 @@
-const { createBooking, createBulkBookings, listBookings, updateBooking, deleteBooking } = require("../services/bookingService");
+const { createBooking, createBulkBookings, listBookings, updateBooking, deleteBooking, submitBookingReview } = require("../services/bookingService");
 const { mobileSession } = require("../services/authService");
 
 async function listBookingsController(req, res, store) {
@@ -43,6 +43,7 @@ async function deleteBookingController(req, res, store) {
   }
   return res.status(204).send();
 }
+async function submitBookingReviewController(req,res){try{const session=mobileSession(req);const review=await submitBookingReview(req.params.id,session?.sub,req.body||{});return res.status(201).json({success:true,review});}catch(error){return res.status(400).json({error:error instanceof Error?error.message:"Unable to save review"});}}
 
 module.exports = {
   listBookingsController,
@@ -50,4 +51,5 @@ module.exports = {
   createBulkBookingsController,
   updateBookingController,
   deleteBookingController,
+  submitBookingReviewController,
 };

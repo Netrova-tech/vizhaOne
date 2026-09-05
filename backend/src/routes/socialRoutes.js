@@ -37,7 +37,7 @@ function clientItem(row) {
     avatar: row.avatar_url || "", kind: row.kind === "post" ? "post" : "reel",
     visibility: row.visibility === "followers" ? "followers" : "public",
     media: row.media_url, mediaType: row.media_type === "video" ? "video" : "image",
-    caption: row.caption || "", service: row.service_name || row.service_title || "Celebration moment",
+    caption: row.caption || "", service: row.service_name || row.service_title || "Celebration moment", serviceId: row.service_id || "",
     price: row.price == null ? "" : String(row.price).replace(/\.00$/, ""), createdAt: row.created_at,
     isFollowing: Boolean(row.is_following), followerCount: Number(row.follower_count || 0),
     liked: Boolean(row.liked), saved: Boolean(row.saved), likeCount: Number(row.like_count || 0),
