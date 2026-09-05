@@ -2,14 +2,13 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, BarChart2, CalendarCheck, LayoutDashboard, LogOut, MessageSquare, PlaySquare, UserRound } from "lucide-react";
+import { Home, LayoutGrid, BarChart2, LayoutDashboard, LogOut, MessageSquare, PlaySquare, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { href: "/",         label: "Home",     icon: Home        },
   { href: "/services", label: "Explore", icon: LayoutGrid  },
-  { href: "/bookings", label: "Bookings", icon: CalendarCheck  },
   { href: "/reels", label: "Reels", icon: PlaySquare  },
   { href: "/profile", label: "Profile", icon: UserRound  },
 ];

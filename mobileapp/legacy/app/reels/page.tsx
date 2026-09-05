@@ -49,6 +49,7 @@ export default function ReelsPage() {
   const [items, setItems] = useState<SocialItem[]>([]);
   const [tab, setTab] = useState<SocialKind>("reel");
   const [activeId, setActiveId] = useState("");
+  const [pausedId, setPausedId] = useState("");
   const [muted, setMuted] = useState(false);
   const [followingId, setFollowingId] = useState("");
   const [sharingId, setSharingId] = useState("");
@@ -122,6 +123,10 @@ export default function ReelsPage() {
         video.muted = true;
         return;
       }
+      if (pausedId === id) {
+        video.pause();
+        return;
+      }
       video.muted = muted;
       video.currentTime = Math.max(0, video.currentTime);
       void video.play().catch(() => {
@@ -129,7 +134,7 @@ export default function ReelsPage() {
         setMuted(true);
       });
     });
-  }, [activeId, commentItem, muted, tab]);
+  }, [activeId, commentItem, muted, pausedId, tab]);
 
   function registerVideo(id: string, video: HTMLVideoElement | null) {
     if (video) videos.current.set(id, video);
@@ -212,8 +217,17 @@ export default function ReelsPage() {
     lastTap.current = now;
     tapTimer.current = setTimeout(() => {
       lastTap.current = 0;
-      if (item.mediaType === "video" && item.id === activeId)
-        setMuted((value) => !value);
+      if (item.mediaType === "video" && item.id === activeId) {
+        const video = videos.current.get(item.id);
+        if (!video) return;
+        if (video.paused) {
+          setPausedId("");
+          void video.play().catch(() => undefined);
+        } else {
+          setPausedId(item.id);
+          video.pause();
+        }
+      }
     }, 280);
   }
   async function openComments(item: SocialItem) {
@@ -450,6 +464,13 @@ export default function ReelsPage() {
                 {heartBurst === item.id && (
                   <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
                     <Heart className="h-24 w-24 animate-ping fill-white text-white drop-shadow-2xl" />
+                  </div>
+                )}
+                {item.mediaType === "video" && pausedId === item.id && (
+                  <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
+                    <span className="grid h-16 w-16 place-items-center rounded-full bg-black/55 text-white backdrop-blur">
+                      <PlaySquare className="h-8 w-8" />
+                    </span>
                   </div>
                 )}
                 {item.mediaType === "video" && item.id === activeId && (
