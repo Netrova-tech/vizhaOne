@@ -55,7 +55,7 @@ export default function VendorOnboardingPage() {
             <p className="text-xs font-black uppercase tracking-[0.2em] text-rose-100">Vendor registration</p>
             <h1 className="mt-2 font-display text-3xl font-bold sm:text-4xl">Add your service</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-rose-50 sm:text-base">
-              Basic details மட்டும் fill pannunga. WhatsApp-la எங்கள் team உங்களை contact செய்து listing complete பண்ண உதவும்.
+              Share your basic details and our team will contact you on WhatsApp to help complete your listing.
             </p>
           </div>
 
@@ -69,9 +69,6 @@ export default function VendorOnboardingPage() {
               </div>
             ) : (
               <form onSubmit={submit} className="grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-                  <MessageCircle className="mr-2 inline h-4 w-4" />No technical setup needed. Submit pannina details WhatsApp-la ready-ah open aagum.
-                </div>
                 <Field icon={UserRound} label="Your name *"><input autoComplete="name" value={form.vendorName} onChange={(e) => update("vendorName", e.target.value)} placeholder="Full name" /></Field>
                 <Field icon={Building2} label="Business name (optional)"><input autoComplete="organization" value={form.businessName} onChange={(e) => update("businessName", e.target.value)} placeholder="Business or brand name" /></Field>
                 <Field icon={Phone} label="Phone number *"><div className="flex items-center"><span className="border-r border-gray-200 pr-3 text-gray-400">+91</span><input className="pl-3" autoComplete="tel" inputMode="numeric" value={form.phone} onChange={(e) => update("phone", e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="10-digit number" /></div></Field>
