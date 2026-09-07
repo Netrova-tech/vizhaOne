@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "react-router-dom";
-import { MessageCircle, Sparkles, ArrowRight, ExternalLink, Heart, Building2, MessageSquare } from "lucide-react";
+import { MessageCircle, Sparkles, ArrowRight, Heart, Building2, MessageSquare } from "lucide-react";
 import { VizhaLogo } from "@/components/ui/VizhaLogo";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 
@@ -164,13 +164,7 @@ export function SiteFooter() {
                   <strong className="mt-0.5 block text-sm font-black">Download VizhaOne</strong>
                 </span>
               </a>
-              <a
-                href="https://www.jeppiaarinstitute.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Visit Jeppiaar Institute of Technology"
-                className="group mt-5 block max-w-md overflow-hidden rounded-2xl border border-white/25 bg-white p-3 text-gray-950 shadow-xl transition-all hover:-translate-y-0.5 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-white/30"
-              >
+              <div className="mt-5 block max-w-md overflow-hidden rounded-2xl border border-white/25 bg-white p-3 text-gray-950 shadow-xl">
                 <div className="rounded-xl bg-gradient-to-br from-white to-cyan-50 px-3 py-3">
                   <img
                     src="/jit-foundation-innovation-hub.png"
@@ -179,16 +173,13 @@ export function SiteFooter() {
                     className="h-auto w-full object-contain"
                   />
                 </div>
-                <div className="flex items-center justify-between gap-3 px-2 pb-1 pt-3">
+                <div className="px-2 pb-1 pt-3">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#0b8796]">Proudly incubated at</p>
                     <p className="mt-1 text-sm font-black leading-snug text-[#881337]">Jeppiaar Institute of Technology Innovation Hub</p>
                   </div>
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0b8796] text-white transition-transform group-hover:translate-x-0.5">
-                    <ExternalLink className="h-4 w-4" />
-                  </span>
                 </div>
-              </a>
+              </div>
             </div>
 
             {FOOTER_LINKS.map((col) => (
