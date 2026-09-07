@@ -1,4 +1,4 @@
-const mobileApiUrl=(path:string)=>`${(process.env.NEXT_PUBLIC_API_URL||"https://api.vizhaone.com").replace(/\/$/,"")}${path}`;
+const mobileApiUrl=(path:string)=>`${(process.env.NEXT_PUBLIC_API_URL||"https://vizhaone-backend-450892873561.asia-south1.run.app").replace(/\/$/,"")}${path}`;
 export type MobileRole = "customer" | "service_provider" | "admin";
 export interface MobileAccount { id:string; name:string; phone:string; mobile?:string; email:string; password?:string; location:string; role:MobileRole; provider:"email"|"google"; avatar_url?:string; created_at:string; }
 const SESSION="vizha_demo_user", TOKEN="vizha_mobile_token";
