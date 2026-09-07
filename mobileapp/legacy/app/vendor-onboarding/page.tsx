@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, BadgeCheck, Building2, CheckCircle2, Clock3, IndianRupee, MapPin, MessageCircle, Phone, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, BadgeCheck, Building2, CheckCircle2, Clock3, ImagePlus, IndianRupee, MapPin, MessageCircle, Phone, Sparkles, UserRound, Video } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
@@ -15,6 +15,8 @@ export default function VendorOnboardingPage() {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [video, setVideo] = useState<File | null>(null);
   const [form, setForm] = useState({ vendorName: "", businessName: "", phone: "", serviceName: "", category: "", price: "", location: "", description: "" });
 
   function update(key: keyof typeof form, value: string) { setForm((current) => ({ ...current, [key]: value })); }
@@ -23,6 +25,7 @@ export default function VendorOnboardingPage() {
     if (!form.vendorName.trim() || !form.phone.match(/^\d{10}$/) || !form.serviceName.trim() || !form.location.trim()) {
       toast.error("Please complete all required details with a valid 10-digit phone number."); return;
     }
+    if (images.length < 1 || images.length > 5) { toast.error("Upload between 1 and 5 service images."); return; }
     const authToken = token();
     if (!authToken) {
       toast.error("Sign in or create a vendor account first.");
@@ -39,7 +42,15 @@ export default function VendorOnboardingPage() {
     ].join("\n");
     setBusy(true);
     try {
-      const response = await fetch(apiUrl("/api/provider/publish"), { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }, body: JSON.stringify(form) });
+      const imageBody = new FormData();
+      images.forEach(file=>imageBody.append("images",file));
+      const imageResponse = await fetch(apiUrl("/api/uploads/cloudinary"),{method:"POST",body:imageBody});
+      const imageResult = await imageResponse.json().catch(()=>null);
+      const imageUrls = Array.isArray(imageResult?.images)?imageResult.images.map((item:{url?:string})=>item.url).filter(Boolean).slice(0,5):[];
+      if(!imageResponse.ok||!imageUrls.length)throw new Error(imageResult?.error||"Service image upload failed");
+      let videoUrls:string[]=[];
+      if(video){const videoBody=new FormData();videoBody.append("media",video);const videoResponse=await fetch(apiUrl("/api/uploads/media"),{method:"POST",body:videoBody});const videoResult=await videoResponse.json().catch(()=>null);if(!videoResponse.ok||!videoResult?.media?.url)throw new Error(videoResult?.error||"Service video upload failed");videoUrls=[videoResult.media.url]}
+      const response = await fetch(apiUrl("/api/provider/publish"), { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }, body: JSON.stringify({...form,imageUrls,videoUrls}) });
       const published = await response.json().catch(() => null);
       if (!response.ok) throw new Error(published?.error || "Unable to publish your service");
       setSubmitted(true);
@@ -64,6 +75,8 @@ export default function VendorOnboardingPage() {
         <Field icon={Building2} label="Service category"><select value={form.category} onChange={e=>update("category",e.target.value)}><option value="">Select category</option>{categories.map(item=><option key={item}>{item}</option>)}</select></Field>
         <Field icon={IndianRupee} label="Starting price (optional)"><input inputMode="numeric" value={form.price} onChange={e=>update("price",e.target.value.replace(/[^\d.]/g,""))} placeholder="Leave blank for contact quote"/></Field>
         <div className="sm:col-span-2"><Field icon={MapPin} label="Service location *"><input value={form.location} onChange={e=>update("location",e.target.value)} placeholder="City, district or service area"/></Field></div>
+        <label className="sm:col-span-2 text-sm font-black text-gray-700"><span className="flex items-center gap-2"><ImagePlus className="h-4 w-4 text-rose-500"/>Service images * (1 to 5)</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>{const selected=Array.from(e.target.files||[]);if(selected.length>5){toast.error("Maximum 5 images allowed");e.target.value="";return}if(selected.some(file=>file.size>5*1024*1024)){toast.error("Each image must be 5 MB or smaller");e.target.value="";return}setImages(selected)}} className="mt-2 block w-full rounded-2xl border border-dashed border-rose-200 bg-rose-50/40 p-4 text-xs file:mr-2 file:rounded-xl file:border-0 file:bg-rose-600 file:px-3 file:py-2 file:font-bold file:text-white"/><span className="mt-2 block text-[10px] text-gray-400">{images.length?`${images.length} selected`:"JPG, PNG or WebP · max 5 MB each"}</span></label>
+        <label className="sm:col-span-2 text-sm font-black text-gray-700"><span className="flex items-center gap-2"><Video className="h-4 w-4 text-rose-500"/>Service video (optional)</span><input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>{const selected=e.target.files?.[0]||null;if(selected&&selected.size>25*1024*1024){toast.error("Video must be 25 MB or smaller");e.target.value="";return}setVideo(selected)}} className="mt-2 block w-full rounded-2xl border border-gray-200 p-4 text-xs file:mr-2 file:rounded-xl file:border-0 file:bg-gray-900 file:px-3 file:py-2 file:font-bold file:text-white"/></label>
         <label className="sm:col-span-2 text-sm font-black text-gray-700">About your service<textarea value={form.description} onChange={e=>update("description",e.target.value)} rows={4} maxLength={500} placeholder="Tell us about your experience, packages and what makes your service special..." className="mt-2 w-full resize-none rounded-2xl border border-gray-200 px-4 py-4 font-medium outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"/></label>
         <button type="submit" disabled={busy} className="sm:col-span-2 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#16a34a] to-[#25D366] px-6 py-5 text-base font-black text-white shadow-xl shadow-emerald-200 transition hover:-translate-y-0.5 disabled:opacity-60"><MessageCircle className="h-6 w-6"/>{busy?"Publishing service...":"Publish Service & Notify on WhatsApp"}</button><p className="sm:col-span-2 text-center text-xs text-gray-400">By submitting, you agree to be contacted by the VizhaOne onboarding team.</p>
       </form></>}</div>
