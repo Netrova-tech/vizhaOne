@@ -43,6 +43,8 @@ const FOOTER_LINKS = [
   },
 ];
 
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.vizhaone.app";
+
 export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden">
@@ -141,6 +143,27 @@ export function SiteFooter() {
                   LinkedIn
                 </a>
               </div>
+              <a
+                href={PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Download VizhaOne from Google Play"
+                title="Download VizhaOne from Google Play"
+                className="mt-4 inline-flex min-h-14 items-center gap-3 rounded-2xl border border-white/25 bg-white px-5 py-3 text-left text-gray-950 shadow-xl transition-all hover:-translate-y-0.5 hover:bg-rose-50 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-white/30"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gray-950 shadow-sm" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" className="h-7 w-7">
+                    <path fill="#00d7fe" d="M7 5.7v36.6l20-18.3L7 5.7Z" />
+                    <path fill="#00f076" d="m7 5.7 25.3 14.6L27 24 7 5.7Z" />
+                    <path fill="#ffda00" d="M27 24l5.3 3.7L7 42.3 27 24Z" />
+                    <path fill="#ff3a44" d="m32.3 20.3 6.2 3.6c1.3.8 1.3 2.5 0 3.3l-6.2 3.6L27 24l5.3-3.7Z" />
+                  </svg>
+                </span>
+                <span>
+                  <small className="block text-[10px] font-bold uppercase tracking-[0.12em] text-gray-500">Get it on Google Play</small>
+                  <strong className="mt-0.5 block text-sm font-black">Download VizhaOne</strong>
+                </span>
+              </a>
             </div>
 
             {FOOTER_LINKS.map((col) => (
