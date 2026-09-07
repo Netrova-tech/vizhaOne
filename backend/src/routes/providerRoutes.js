@@ -55,11 +55,16 @@ function createProviderRouter() {
     const location = clean(req.body.location, 220);
     const description = clean(req.body.description, 1000);
     const categoryName = clean(req.body.category, 100);
+    const imageUrls = [...new Set((Array.isArray(req.body.imageUrls) ? req.body.imageUrls : []).map((value) => clean(value, 1000)).filter((value) => /^https:\/\//i.test(value)))].slice(0, 5);
+    const videoUrls = [...new Set((Array.isArray(req.body.videoUrls) ? req.body.videoUrls : []).map((value) => clean(value, 1000)).filter((value) => /^https:\/\//i.test(value)))].slice(0, 1);
     const priceValue = Number(req.body.price);
     const price = Number.isFinite(priceValue) && priceValue > 0 ? priceValue : null;
 
     if (!vendorName || phone.length !== 10 || !serviceName || !location) {
       return res.status(400).json({ error: "Name, valid 10-digit phone, service name and location are required" });
+    }
+    if (imageUrls.length < 1) {
+      return res.status(400).json({ error: "Upload at least 1 service image (maximum 5)" });
     }
 
     try {
@@ -85,10 +90,11 @@ function createProviderRouter() {
         const service = (await client.query(`
           INSERT INTO services(
             id,vendor_id,category_id,title,description,price,price_min,vendor_name,
-            vendor_mobile,location,place_name,availability_status,verified,pricing_type
-          ) VALUES($1,$2,$3,$4,$5,$6,$6,$7,$8,$9,$9,true,false,$10)
+            vendor_mobile,location,place_name,image_url,gallery_urls,video_urls,
+            availability_status,verified,pricing_type
+          ) VALUES($1,$2,$3,$4,$5,$6,$6,$7,$8,$9,$9,$10,$11,$12,true,false,$13)
           RETURNING *
-        `, [serviceId, vendor.id, categoryId, serviceName, description || null, price, businessName, phone, location, price ? "starting" : "quote"])).rows[0];
+        `, [serviceId, vendor.id, categoryId, serviceName, description || null, price, businessName, phone, location, imageUrls[0], imageUrls, videoUrls, price ? "starting" : "quote"])).rows[0];
 
         return { vendor, service: serviceClient(service) };
       });
