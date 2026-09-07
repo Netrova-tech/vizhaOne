@@ -103,7 +103,7 @@ export function SiteFooter() {
               <p className="text-sm text-white/70 leading-relaxed mb-5 max-w-xs">
                 India&apos;s celebration marketplace. Discover venues and trusted event professionals, compare options and plan stress-free.
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <a
                   href="https://wa.me/918190094755"
                   target="_blank"
@@ -126,6 +126,19 @@ export function SiteFooter() {
                     <circle cx="17.5" cy="6.5" r="1" className="fill-current stroke-none" />
                   </svg>
                   Instagram
+                </a>
+                <a
+                  href="https://www.linkedin.com/company/vizhaone/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Follow VizhaOne on LinkedIn"
+                  title="Follow VizhaOne on LinkedIn"
+                  className="flex h-10 items-center gap-2 rounded-full bg-[#0A66C2] px-4 text-xs font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#004182] hover:shadow-lg"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+                    <path d="M5.3 7.4H1.7V22h3.6V7.4ZM3.5 2A2.1 2.1 0 1 0 3.5 6.2 2.1 2.1 0 0 0 3.5 2ZM22.3 13.6c0-4.4-2.4-6.5-5.5-6.5a4.8 4.8 0 0 0-4.3 2.4V7.4H8.9V22h3.6v-7.2c0-1.9.4-3.8 2.8-3.8 2.4 0 2.4 2.2 2.4 3.9V22h3.6l1-8.4Z" />
+                  </svg>
+                  LinkedIn
                 </a>
               </div>
             </div>
