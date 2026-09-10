@@ -9,7 +9,10 @@ import {
   ChevronRight,
   Download,
   Gift,
+  Heart,
+  IndianRupee,
   MapPin,
+  Play,
   Search,
   SlidersHorizontal,
   Sparkles,
@@ -109,6 +112,13 @@ const usableLocation = (value: string) =>
       value.toLowerCase().includes(word),
     ),
   );
+const featuredTabs = ["All", "Halls", "Catering", "Photography", "Decoration"] as const;
+const budgetBands = [
+  ["Under \u20b925K", "25000"],
+  ["\u20b925K - \u20b950K", "50000"],
+  ["\u20b950K - \u20b91L", "100000"],
+  ["\u20b91L+", "1000000"],
+] as const;
 export default function MobileHomePage() {
   const navigate = useNavigate();
   const { halls, categories, services, loading } = useCatalog();
@@ -121,6 +131,7 @@ export default function MobileHomePage() {
   const [distance, setDistance] = useState(200);
   const [maxPrice, setMaxPrice] = useState(1000000);
   const [category, setCategory] = useState("");
+  const [featuredTab, setFeaturedTab] = useState<(typeof featuredTabs)[number]>("All");
   const [update, setUpdate] = useState<{
     version: string;
     message: string;
@@ -280,6 +291,34 @@ export default function MobileHomePage() {
     p.set("maxPrice", String(Math.min(1000000, Math.max(0, maxPrice))));
     navigate(`/services?${p.toString()}`);
   }
+  const featuredItems = [
+    ...halls.slice(0, 5).map((hall) => ({
+      id: hall.id,
+      type: "hall" as const,
+      title: hall.name,
+      location: hall.location || hall.place_name || "Near you",
+      image: hall.image_url || "/hero/slide-mahal.jpg",
+      price: hall.price_per_day || hall.price_morning || hall.price_evening || 0,
+      category: "Halls",
+      rating: hall.rating || 4.7,
+      reviews: hall.review_count || 0,
+    })),
+    ...services.slice(0, 10).map((service) => ({
+      id: service.id,
+      type: "service" as const,
+      title: service.title,
+      location: service.location || service.place_name || "Near you",
+      image: service.image_url || "/hero/slide-2.jpg",
+      price: service.price_min || service.price || 0,
+      category: service.categories?.category_name || "Service",
+      rating: 4.7,
+      reviews: 0,
+    })),
+  ];
+  const visibleFeatured = featuredItems.filter((item) => {
+    if (featuredTab === "All") return true;
+    return `${item.category} ${item.title}`.toLowerCase().includes(featuredTab.toLowerCase());
+  });
   return (
     <div className="native-mobile-page min-h-dvh bg-[#fffafb] pb-24">
       <MobileAppHeader />
@@ -336,7 +375,7 @@ export default function MobileHomePage() {
           </section>
         </div>
       )}
-      <main className="px-4 pt-[94px]">
+      <main className="px-4 pt-[88px]">
         <button
           onClick={locate}
           className="mb-4 flex w-full items-center gap-2 text-left"
@@ -365,7 +404,7 @@ export default function MobileHomePage() {
               );
             touch.current = null;
           }}
-          className="relative h-[330px] overflow-hidden rounded-[28px] text-white shadow-xl"
+          className="relative h-[292px] overflow-hidden rounded-[26px] text-white shadow-xl"
         >
           {slides.map((s, i) => (
             <img
@@ -482,6 +521,35 @@ export default function MobileHomePage() {
             </div>
           )}
         </form>
+        <section className="mt-7">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[.18em] text-rose-500">Handpicked for you</p>
+              <h2 className="mt-1 text-[21px] font-black tracking-tight">Featured on VizhaOne</h2>
+            </div>
+            <Link to="/services" className="text-[11px] font-black text-rose-600">See all</Link>
+          </div>
+          <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+            {featuredTabs.map((tab) => <button key={tab} type="button" onClick={() => setFeaturedTab(tab)} className={`min-h-9 shrink-0 rounded-xl px-4 text-[11px] font-black transition ${featuredTab === tab ? "bg-[#e9004f] text-white shadow-md shadow-rose-200" : "border border-rose-100 bg-white text-gray-600"}`}>{tab}</button>)}
+          </div>
+          <div className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
+            {(visibleFeatured.length ? visibleFeatured : featuredItems).slice(0, 8).map((item) => (
+              <Link key={`${item.type}-${item.id}`} to={`/${item.type === "hall" ? "halls" : "services"}/${item.id}`} className="w-[47vw] max-w-[190px] flex-none snap-start overflow-hidden rounded-[20px] border border-rose-100 bg-white shadow-[0_8px_24px_rgba(61,8,37,.10)]">
+                <div className="relative h-32 overflow-hidden">
+                  <ExternalImg src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                  <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/95 text-rose-500 shadow"><Heart className="h-4 w-4" /></span>
+                </div>
+                <div className="p-3">
+                  <h3 className="truncate text-[13px] font-black text-gray-950">{item.title}</h3>
+                  <p className="mt-1 text-[10px] font-bold text-amber-500">\u2605 {item.rating.toFixed(1)} <span className="font-medium text-gray-400">({item.reviews} reviews)</span></p>
+                  <p className="mt-1 flex items-center gap-1 truncate text-[10px] text-gray-500"><MapPin className="h-3 w-3 text-rose-500" />{item.location}</p>
+                  <p className="mt-2 truncate text-xs font-black text-gray-900">{formatPriceOrQuote(item.price)}</p>
+                  <span className="mt-3 flex min-h-9 items-center justify-center gap-1 rounded-xl border border-rose-300 text-[10px] font-black text-rose-600">View details <ArrowRight className="h-3 w-3" /></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
         <section className="mt-8">
           <div className="mb-4 flex items-end justify-between">
             <div>
@@ -499,12 +567,12 @@ export default function MobileHomePage() {
               View all
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
             {quick.map(([label, Icon, href, image, hint]) => (
               <Link
                 key={label}
                 to={href}
-                className="group relative h-36 overflow-hidden rounded-3xl bg-gray-900 shadow-md"
+                className="group relative h-36 w-[44vw] max-w-[180px] flex-none snap-start overflow-hidden rounded-[20px] bg-gray-900 shadow-md"
               >
                 <img
                   src={image}
@@ -534,33 +602,27 @@ export default function MobileHomePage() {
               Create & celebrate
             </h2>
           </div>
-          <div className="space-y-3">
+          <div className="rounded-[24px] bg-gradient-to-br from-[#3d0825] via-[#650c3a] to-[#8f174e] p-3 shadow-lg">
+            <p className="px-1 pb-3 text-base font-black text-white">Make your celebration special</p>
+            <div className="grid grid-cols-3 gap-2">
             {tools.map(([label, Icon, href, image, hint], index) => (
               <Link
                 key={label}
                 to={href}
-                className="relative flex h-28 items-center overflow-hidden rounded-3xl bg-gray-900 px-5 text-white shadow-md"
+                className="relative flex min-h-32 flex-col items-center justify-center overflow-hidden rounded-2xl bg-white px-2 py-3 text-center text-gray-950 shadow-md"
               >
-                <img
-                  src={image}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r ${index === 0 ? "from-rose-950/95" : "from-violet-950/95"} via-black/65 to-transparent`}
-                />
-                <span className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white/15 backdrop-blur">
+                <span className={`grid h-11 w-11 place-items-center rounded-2xl ${index === 1 ? "bg-cyan-50 text-cyan-600" : "bg-rose-50 text-rose-600"}`}>
                   <Icon className="h-6 w-6" />
                 </span>
-                <span className="relative ml-4 flex-1">
-                  <strong className="block text-base">{label}</strong>
-                  <small className="mt-1 block text-[10px] text-white/75">
+                <span className="mt-2">
+                  <strong className="block text-[11px] leading-4">{label}</strong>
+                  <small className="mt-1 block text-[8px] leading-3 text-gray-500">
                     {hint}
                   </small>
                 </span>
-                <ChevronRight className="relative h-5 w-5" />
               </Link>
             ))}
+            </div>
           </div>
         </section>
         <section className="mt-8">
@@ -629,6 +691,16 @@ export default function MobileHomePage() {
           )}
         </section>
         <section className="mt-8">
+          <div className="mb-3 flex items-end justify-between"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-violet-500">Real celebrations. Real ideas.</p><h2 className="mt-1 text-[21px] font-black">Get inspired</h2></div><Link to="/reels" className="text-[11px] font-black text-rose-600">See all</Link></div>
+          <div className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
+            {services.slice(0, 6).map((service) => <Link key={`inspire-${service.id}`} to="/reels" className="relative h-44 w-[31vw] max-w-[132px] flex-none snap-start overflow-hidden rounded-[18px] bg-gray-900 shadow-md"><ExternalImg src={service.image_url || "/hero/slide-3.jpg"} alt={service.title} className="h-full w-full object-cover"/><span className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/5"/><span className="absolute left-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-rose-600"><Play className="h-3.5 w-3.5 fill-current"/></span><span className="absolute inset-x-2 bottom-3 line-clamp-2 text-[10px] font-black leading-4 text-white">{service.title}</span></Link>)}
+          </div>
+        </section>
+        <section className="mt-7">
+          <div className="mb-3 flex items-center justify-between"><h2 className="text-[19px] font-black">Plan your celebration budget</h2><Link to="/planner/budget" className="text-[11px] font-black text-rose-600">See all</Link></div>
+          <div className="grid grid-cols-4 gap-2">{budgetBands.map(([label, value]) => <Link key={value} to={`/services?maxPrice=${value}`} className="flex min-h-12 items-center justify-center rounded-xl bg-white px-1 text-center text-[9px] font-black text-gray-700 shadow-sm ring-1 ring-rose-100"><IndianRupee className="mr-0.5 h-3 w-3 text-rose-500"/>{label.replace("\u20b9", "")}</Link>)}</div>
+        </section>
+        <section className="mt-8">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-700">
@@ -679,13 +751,11 @@ export default function MobileHomePage() {
         </section>
         <Link
           to="/vendor-onboarding"
-          className="mt-7 flex items-center gap-3 rounded-3xl bg-gray-950 p-5 text-white"
+          className="relative mt-7 flex min-h-36 items-center gap-3 overflow-hidden rounded-[24px] bg-gradient-to-r from-gray-950 via-[#280818] to-[#760b3e] p-5 text-white shadow-xl"
         >
-          <Building2 className="h-6 w-6" />
-          <span className="flex-1 text-sm font-black">
-            Add Your Service on VizhaOne
-          </span>
-          <ChevronRight className="h-5 w-5" />
+          <span className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-rose-500/20 blur-2xl" />
+          <span className="relative flex-1"><small className="text-[10px] font-bold uppercase tracking-widest text-rose-200">Are you a celebration vendor?</small><strong className="mt-1 block max-w-[240px] text-xl leading-6">Grow your business with VizhaOne</strong><span className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-[11px] font-black text-gray-950">List your business <ArrowRight className="h-4 w-4"/></span></span>
+          <Building2 className="relative h-14 w-14 text-rose-200" />
         </Link>
       </main>
       <MobileBottomNav />
