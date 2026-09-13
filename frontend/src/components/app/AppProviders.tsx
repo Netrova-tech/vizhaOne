@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -76,14 +77,16 @@ function GoogleTranslateBridge() {
 }
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const isAuthPage = pathname.startsWith("/auth/");
   return (
     <AuthProvider>
       <LanguageProvider>
         <GoogleTranslateBridge />
         <SeoManager />
         {children}
-        <InstallAppCta />
-        <VizhaOneAssistant />
+        {!isAuthPage && <InstallAppCta />}
+        {!isAuthPage && <VizhaOneAssistant />}
         <Toaster richColors position="top-center" toastOptions={{ duration: 3000 }} />
       </LanguageProvider>
     </AuthProvider>
