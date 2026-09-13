@@ -164,13 +164,13 @@ export function SiteFooter() {
                   <strong className="mt-0.5 block text-sm font-black">Download VizhaOne</strong>
                 </span>
               </a>
-              <div className="mt-5 block max-w-md overflow-hidden rounded-2xl border border-white/25 bg-white p-3 text-gray-950 shadow-xl">
-                <div className="rounded-xl bg-gradient-to-br from-white to-cyan-50 px-3 py-3">
+              <div className="mt-5 block w-full max-w-sm overflow-hidden rounded-2xl border border-white/25 bg-white p-3 text-gray-950 shadow-xl">
+                <div className="rounded-xl bg-gradient-to-br from-white to-cyan-50 p-2">
                   <img
                     src="/jit-foundation-innovation-hub.png"
                     alt="JIT Foundation Innovation Hub"
                     loading="lazy"
-                    className="h-auto w-full object-contain"
+                    className="mx-auto h-28 w-full object-contain sm:h-32"
                   />
                 </div>
                 <div className="px-2 pb-1 pt-3">
