@@ -5,6 +5,8 @@ import AdminPage from "@/app/admin/page";
 import AnalyticsPage from "@/app/admin/analytics/page";
 import InquiriesPage from "@/app/admin/inquiries/page";
 import LoginPage from "@/app/auth/login/page";
+import SignUpPage from "@/app/auth/sign-up/page";
+import ForgotPasswordPage from "@/app/auth/forgot-password/page";
 import VerifyPage from "@/app/auth/verify/page";
 import BlogPage from "@/app/blog/page";
 import CalculatorPage from "@/app/calculator/page";
@@ -42,6 +44,8 @@ export default function App() {
         <Route path="/admin/analytics" element={<AnalyticsPage />} />
         <Route path="/admin/inquiries" element={<InquiriesPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
+        <Route path="/auth/sign-up" element={<SignUpPage />} />
+        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/verify" element={<VerifyPage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogPostRoute />} />
