@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "@/app/page";
 import AboutPage from "@/app/about/page";
 import AdminPage from "@/app/admin/page";
@@ -32,13 +32,31 @@ import { PackageDetailRoute } from "@/routes/PackageDetailRoute";
 import { ServiceDetailRoute } from "@/routes/ServiceDetailRoute";
 import ComparePage from "@/app/compare/page";
 import VendorLandingPage from "@/app/vendors/landing/page";
+import { useAuth } from "@/context/AuthContext";
+
+function WebsiteHomeGate() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#fff8f7]">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-rose-100 border-t-rose-600" />
+          <p className="mt-4 text-xs font-black uppercase tracking-[.2em] text-rose-700">Opening VizhaOne</p>
+        </div>
+      </main>
+    );
+  }
+
+  return user ? <HomePage /> : <Navigate to="/auth/login" replace />;
+}
 
 export default function App() {
   return (
     <AppProviders>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<WebsiteHomeGate />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/analytics" element={<AnalyticsPage />} />
