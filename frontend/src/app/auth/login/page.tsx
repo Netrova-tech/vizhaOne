@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail, MapPin, ShieldCheck, Store, UsersRound, X } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail, MapPin, ShieldCheck, Store, UsersRound, X } from "lucide-react";
 import { toast } from "sonner";
 import { VizhaLogo } from "@/components/ui/VizhaLogo";
 import { completeGoogleWebProfile, loginWebAccount, saveWebSession, startGoogleWebSignIn, type WebRole } from "@/lib/webAuth";
@@ -28,7 +28,7 @@ export default function LoginPage() {
   function enter(user: Parameters<typeof saveWebSession>[0], token?: string) {
     saveWebSession(user, token);
     toast.success(`Welcome, ${user.name || "VizhaOne user"}!`);
-    navigate(user.role === "admin" ? "/admin" : "/", { replace: true });
+    navigate(user.role === "admin" ? "/admin" : user.role === "service_provider" ? "/profile" : "/", { replace: true });
   }
 
   async function submit(event: FormEvent) {
@@ -78,13 +78,16 @@ export default function LoginPage() {
       </div>
     </section>
 
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-8 sm:px-10">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pb-8 pt-44 sm:px-10 sm:pt-52 lg:px-10 lg:py-8">
+      <div className="absolute inset-x-0 top-0 h-60 overflow-hidden bg-[#5d092f] lg:hidden">
+        <img src="/vizhaone-website-auth-concept.png" alt="" className="h-full w-full scale-[2.35] object-cover object-[52%_22%]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#4a0628]/20 via-transparent to-[#fff9f7]" />
+      </div>
       <div className="absolute -right-20 top-0 h-72 w-72 rounded-full bg-rose-200/30 blur-3xl" />
-      <div className="relative w-full max-w-[470px] rounded-[32px] border border-white bg-white/95 p-6 shadow-[0_30px_90px_rgba(91,11,53,.16)] sm:p-9">
-        <div className="mb-7 text-center lg:hidden"><VizhaLogo size="lg" /></div>
-        <Link to="/" className="mb-6 inline-flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-rose-700"><ArrowLeft className="h-4 w-4"/>Home</Link>
+      <div className="relative min-w-0 w-[calc(100vw-2rem)] max-w-[470px] overflow-hidden rounded-[28px] border border-white bg-white/95 p-5 shadow-[0_30px_90px_rgba(91,11,53,.16)] sm:w-full sm:rounded-[32px] sm:p-9">
+        <div className="mb-5 text-center lg:hidden"><VizhaLogo size="lg" /></div>
         <p className="text-[10px] font-black uppercase tracking-[.26em] text-[#a96b35]">Welcome to VizhaOne</p>
-        <h1 className="mt-2 font-display text-[32px] font-semibold leading-tight text-[#2f1027]">{isAdminLogin ? "Secure admin sign in" : "Sign in to your account"}</h1>
+        <h1 className="mt-2 font-display text-[28px] font-semibold leading-tight text-[#2f1027] sm:text-[32px]">{isAdminLogin ? "Secure admin sign in" : "Sign in to your account"}</h1>
         <p className="mt-2 text-sm text-gray-500">Plan, connect and celebrate—all in one trusted place.</p>
 
         {!isAdminLogin && <button type="button" disabled={googleBusy} onClick={googleSignIn} className="mt-7 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-800 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 disabled:opacity-60"><span className="text-xl font-black text-[#4285f4]">G</span>{googleBusy ? <><Loader2 className="h-4 w-4 animate-spin"/>Connecting securely...</> : "Continue with Google"}</button>}

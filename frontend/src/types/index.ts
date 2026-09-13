@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "hall_admin" | "user";
+export type UserRole = "admin" | "hall_admin" | "user" | "customer" | "service_provider";
 export type BookingStatus =
   | "pending"
   | "approved"
@@ -11,7 +11,10 @@ export interface User {
   id: string;
   role: UserRole;
   name?: string;
+  email?: string;
   mobile?: string;
+  phone?: string;
+  location?: string;
   avatar_url?: string;
   created_at: string;
 }
