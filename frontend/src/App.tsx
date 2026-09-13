@@ -23,6 +23,8 @@ import PublicInvitationPage from "@/app/invitations/public/page";
 import ReferralsPage from "@/app/referrals/page";
 import CreatePage from "@/app/create/page";
 import VendorOnboardingPage from "@/app/vendor-onboarding/page";
+import ProfilePage from "@/app/profile/page";
+import BookingsPage from "@/app/bookings/page";
 import { AppProviders } from "@/components/app/AppProviders";
 import { ScrollToTop } from "@/components/app/ScrollToTop";
 import { BlogPostRoute } from "@/routes/BlogPostRoute";
@@ -48,7 +50,8 @@ function WebsiteHomeGate() {
     );
   }
 
-  return user ? <HomePage /> : <Navigate to="/auth/login" replace />;
+  if (!user) return <Navigate to="/auth/login" replace />;
+  return user.role === "service_provider" ? <Navigate to="/profile" replace /> : <HomePage />;
 }
 
 export default function App() {
@@ -86,6 +89,8 @@ export default function App() {
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/create" element={<CreatePage />} />
         <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/bookings" element={<BookingsPage />} />
         <Route path="**" element={<NotFoundPage />} />
       </Routes>
     </AppProviders>

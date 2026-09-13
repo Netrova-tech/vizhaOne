@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, Building2, BarChart2, LayoutDashboard, LogOut, MessageSquare, Calculator, Sparkles, WandSparkles } from "lucide-react";
+import { Home, LayoutGrid, Building2, BarChart2, LayoutDashboard, LogOut, MessageSquare, Calculator, WandSparkles, UserCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
@@ -17,7 +17,7 @@ const navItems = [
 export function MobileBottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const isAdminPath = pathname.startsWith("/admin");
   const items = isAdminPath && isAdmin
     ? [
@@ -25,7 +25,9 @@ export function MobileBottomNav() {
         { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
         { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
       ]
-    : navItems;
+    : user?.role === "service_provider"
+      ? [{ href: "/", label: "Home", icon: Home }, { href: "/profile", label: "Profile", icon: UserCircle2 }, { href: "/vendor-onboarding", label: "Services", icon: Building2 }]
+      : [...navItems.slice(0, 4), { href: "/profile", label: "Profile", icon: UserCircle2 }];
 
   async function handleSignOut() {
     await signOut();

@@ -62,6 +62,12 @@ export function Navbar() {
   }
 
   const langLabel = lang === "en" ? "EN" : lang === "ta" ? "த" : lang === "hi" ? "हि" : lang === "ml" ? "മ" : "తె";
+  const visibleNavLinks = user?.role === "service_provider"
+    ? [
+        { href: "/profile", labelKey: "home", label: "Business" },
+        { href: "/vendor-onboarding", labelKey: "services", label: "Services" },
+      ]
+    : navLinks;
 
   return (
     <>
@@ -79,7 +85,7 @@ export function Navbar() {
 
             {/* Desktop nav — centered pill bar */}
             <nav className="hidden md:flex items-center justify-self-center bg-rose-50/60 border border-rose-100/80 rounded-full px-1.5 py-1 gap-0.5 shadow-sm">
-              {navLinks.map((link) => {
+              {visibleNavLinks.map((link) => {
                 const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
                 return (
                   <Link key={link.href} to={link.href}
@@ -89,7 +95,7 @@ export function Navbar() {
                         ? "text-white bg-gradient-to-r from-[#e11d48] to-[#db2777] shadow-sm"
                         : "text-[#881337]/75 hover:text-[#e11d48] hover:bg-white/70"
                     )}>
-                    {link.label === "Create" ? link.label : t(link.labelKey as Parameters<typeof t>[0])}
+                    {user?.role === "service_provider" || link.label === "Create" ? link.label : t(link.labelKey as Parameters<typeof t>[0])}
                   </Link>
                 );
               })}
@@ -142,7 +148,7 @@ export function Navbar() {
 
             {/* Desktop utilities */}
             <div className="hidden md:flex items-center gap-2 justify-self-end">
-              <Link
+              {(!user || user.role === "service_provider" || isAdmin) && <Link
                 to="/vendor-onboarding"
                 className={cn(
                   "inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black uppercase tracking-[0.12em] shadow-lg shadow-rose-900/15 transition-all",
@@ -153,9 +159,9 @@ export function Navbar() {
               >
                 <Sparkles className="h-4 w-4" />
                 Add Your Service
-              </Link>
+              </Link>}
 
-              {user && isAdmin ? (
+              {user ? (
                 <div className="flex items-center gap-3">
                   <div ref={dropRef} className="relative">
                     <button
@@ -182,9 +188,7 @@ export function Navbar() {
                         <p className="text-xs font-bold text-gray-800 leading-none truncate max-w-[72px]">
                           {user.name || "User"}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          👑 Admin
-                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{isAdmin ? "Admin" : user.role === "service_provider" ? "Service provider" : "Customer"}</p>
                       </div>
                       <ChevronDown className={cn("h-4 w-4 text-gray-400 transition-transform duration-200 ml-0.5", profileOpen && "rotate-180")} />
                     </button>
@@ -213,9 +217,11 @@ export function Navbar() {
 
                           <div className="p-2 space-y-0.5">
                             {[
-                              { href: "/about",     icon: Info,           label: "About Us"      },
-                              { href: "/calculator",icon: Calculator,     label: "Event Planner" },
-                              { href: "/admin",      icon: LayoutDashboard,label: "Dashboard"     },
+                              { href: "/profile", icon: UserCircle2, label: "My Profile" },
+                              ...(isAdmin ? [{ href: "/admin", icon: LayoutDashboard, label: "Admin Dashboard" }] : []),
+                              ...(user.role === "service_provider" ? [{ href: "/vendor-onboarding", icon: ShoppingBag, label: "Manage Services" }] : []),
+                              ...(user.role !== "service_provider" && !isAdmin ? [{ href: "/bookings", icon: ShoppingBag, label: "My Bookings" }, { href: "/calculator", icon: Calculator, label: "Event Planner" }] : []),
+                              { href: "/about", icon: Info, label: "About Us" },
                             ].map((item) => (
                               <Link key={item.href} to={item.href}
                                 onClick={() => setProfileOpen(false)}
@@ -258,14 +264,14 @@ export function Navbar() {
             <div className="md:hidden flex items-center gap-2 justify-self-end">
 
               {/* Profile icon */}
-              {user && isAdmin && (
+              {user && (
                 <>
-                  <Link to="/admin"
+                  <Link to={isAdmin ? "/admin" : "/profile"}
                     className={cn(
                       "relative flex items-center justify-center h-9 w-9 rounded-xl transition-all duration-200 shadow-sm",
                       pathname === "/admin" ? "ring-2 ring-rose-500 ring-offset-1" : ""
                     )}
-                    aria-label="Admin dashboard"
+                    aria-label={isAdmin ? "Admin dashboard" : "My profile"}
                   >
                     <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-rose-400 to-rose-700 flex items-center justify-center shadow-md">
                       {user.avatar_url
