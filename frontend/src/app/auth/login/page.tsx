@@ -78,25 +78,31 @@ export default function LoginPage() {
       </div>
     </section>
 
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pb-8 pt-44 sm:px-10 sm:pt-52 lg:px-10 lg:py-8">
-      <div className="absolute inset-x-0 top-0 h-60 overflow-hidden bg-[#5d092f] lg:hidden">
-        <img src="/vizhaone-website-auth-concept.png" alt="" className="h-full w-full scale-[2.35] object-cover object-[52%_22%]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#4a0628]/20 via-transparent to-[#fff9f7]" />
+    <section className="relative flex min-h-screen items-start justify-center overflow-hidden px-4 pb-8 pt-28 sm:px-8 sm:pt-36 lg:items-center lg:px-10 lg:py-8">
+      <div className="absolute inset-x-0 top-0 h-44 overflow-hidden bg-gradient-to-br from-[#50042b] via-[#861044] to-[#c71959] lg:hidden">
+        <div className="absolute -left-12 -top-20 h-48 w-48 rounded-full border border-white/15 bg-white/5" />
+        <div className="absolute -right-10 top-4 h-40 w-40 rounded-full border border-rose-200/20 bg-rose-200/10" />
+        <div className="relative px-6 pt-7 text-white">
+          <p className="text-[10px] font-black uppercase tracking-[.26em] text-rose-100">VizhaOne celebration marketplace</p>
+          <p className="mt-2 max-w-xs font-display text-2xl font-semibold leading-tight">Customers and vendors, connected.</p>
+          <p className="mt-1 text-xs text-white/70">All events. All services. One trusted place.</p>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-[#fff9f7]" />
       </div>
       <div className="absolute -right-20 top-0 h-72 w-72 rounded-full bg-rose-200/30 blur-3xl" />
-      <div className="relative min-w-0 w-[calc(100vw-2rem)] max-w-[470px] overflow-hidden rounded-[28px] border border-white bg-white/95 p-5 shadow-[0_30px_90px_rgba(91,11,53,.16)] sm:w-full sm:rounded-[32px] sm:p-9">
-        <div className="mb-5 text-center lg:hidden"><VizhaLogo size="lg" /></div>
+      <div className="relative min-w-0 w-[calc(100vw-2rem)] max-w-[470px] overflow-hidden rounded-[26px] border border-white bg-white/98 p-5 shadow-[0_24px_70px_rgba(91,11,53,.18)] sm:w-full sm:rounded-[32px] sm:p-8 lg:p-9">
+        <div className="mb-4 text-center lg:hidden"><VizhaLogo size="md" /></div>
         <p className="text-[10px] font-black uppercase tracking-[.26em] text-[#a96b35]">Welcome to VizhaOne</p>
         <h1 className="mt-2 font-display text-[28px] font-semibold leading-tight text-[#2f1027] sm:text-[32px]">{isAdminLogin ? "Secure admin sign in" : "Sign in to your account"}</h1>
         <p className="mt-2 text-sm text-gray-500">Plan, connect and celebrate—all in one trusted place.</p>
 
-        {!isAdminLogin && <button type="button" disabled={googleBusy} onClick={googleSignIn} className="mt-7 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-800 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 disabled:opacity-60"><span className="text-xl font-black text-[#4285f4]">G</span>{googleBusy ? <><Loader2 className="h-4 w-4 animate-spin"/>Connecting securely...</> : "Continue with Google"}</button>}
+        {!isAdminLogin && <button type="button" disabled={googleBusy} onClick={googleSignIn} className="mt-6 flex min-h-13 w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white text-sm font-black text-gray-800 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 disabled:opacity-60 sm:min-h-14"><span className="text-xl font-black text-[#4285f4]">G</span>{googleBusy ? <><Loader2 className="h-4 w-4 animate-spin"/>Connecting securely...</> : "Continue with Google"}</button>}
         {!isAdminLogin && <div className="my-5 flex items-center gap-3 text-[9px] font-black uppercase tracking-[.2em] text-gray-400"><span className="h-px flex-1 bg-gray-200"/>or continue with email<span className="h-px flex-1 bg-gray-200"/></div>}
 
         <form onSubmit={submit} className={isAdminLogin ? "mt-7 space-y-4" : "space-y-4"}>
           <label className="block text-[11px] font-black uppercase tracking-wider text-gray-700">Email address<span className="mt-2 flex min-h-14 items-center rounded-2xl border border-gray-200 bg-white px-4 focus-within:border-rose-500 focus-within:ring-4 focus-within:ring-rose-100"><Mail className="h-4 w-4 text-rose-600"/><input required type="email" value={email} onChange={(e)=>setEmail(e.target.value)} autoComplete="email" placeholder="you@example.com" className="min-w-0 flex-1 bg-transparent px-3 outline-none"/></span></label>
           <label className="block text-[11px] font-black uppercase tracking-wider text-gray-700">Password<span className="mt-2 flex min-h-14 items-center rounded-2xl border border-gray-200 bg-white px-4 focus-within:border-rose-500 focus-within:ring-4 focus-within:ring-rose-100"><LockKeyhole className="h-4 w-4 text-rose-600"/><input required minLength={isAdminLogin ? 4 : 8} type={showPassword ? "text" : "password"} value={password} onChange={(e)=>setPassword(e.target.value)} autoComplete="current-password" placeholder="Enter your password" className="min-w-0 flex-1 bg-transparent px-3 outline-none"/><button type="button" onClick={()=>setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className="p-2 text-gray-400">{showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}</button></span></label>
-          {!isAdminLogin && <div className="flex items-center justify-between text-xs"><label className="flex items-center gap-2 font-semibold text-gray-500"><input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)} className="accent-rose-700"/>Remember me</label><Link to="/auth/forgot-password" className="font-black text-rose-700">Forgot password?</Link></div>}
+          {!isAdminLogin && <div className="flex items-center justify-between gap-3 text-[11px] sm:text-xs"><label className="flex shrink-0 items-center gap-2 font-semibold text-gray-500"><input type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)} className="accent-rose-700"/>Remember me</label><Link to="/auth/forgot-password" className="whitespace-nowrap font-black text-rose-700">Forgot password?</Link></div>}
           <button disabled={busy} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7a123f] to-[#bd185b] text-sm font-black text-white shadow-lg shadow-rose-200 disabled:opacity-60">{busy ? <><Loader2 className="h-4 w-4 animate-spin"/>Signing in...</> : <>Sign in <ArrowRight className="h-4 w-4"/></>}</button>
         </form>
 
