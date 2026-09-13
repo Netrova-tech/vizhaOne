@@ -47,7 +47,15 @@ export default function LoginPage() {
       setProfile((current) => ({ ...current, name: result.profile?.name || "" }));
       toast.success("Google account verified. Complete your profile.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Google sign-in failed";
+      const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+      const fallback = error instanceof Error ? error.message : "Google sign-in failed";
+      const message = code === "auth/unauthorized-domain"
+        ? "Google Sign-In is not enabled for this website domain yet. Please contact VizhaOne support."
+        : code === "auth/operation-not-allowed"
+          ? "Google Sign-In is temporarily unavailable. Please use email sign-in."
+          : code === "auth/popup-blocked"
+            ? "Your browser blocked the Google sign-in window. Allow pop-ups for VizhaOne and try again."
+            : fallback;
       if (!/popup.closed|cancel/i.test(message)) toast.error(message);
     } finally { setGoogleBusy(false); }
   }
@@ -61,7 +69,7 @@ export default function LoginPage() {
 
   return <main className="min-h-screen bg-[#fff9f7] lg:grid lg:grid-cols-[minmax(0,1.36fr)_minmax(430px,.64fr)]">
     <section className="relative hidden min-h-screen overflow-hidden bg-[#5d092f] lg:block">
-      <img src="/vizhaone-website-auth-concept.png" alt="VizhaOne connects customers with venues and event professionals" className="absolute inset-0 h-full w-full object-cover object-left" />
+      <img src="/vizhaone-website-auth-concept.png" alt="VizhaOne connects customers with venues and event professionals" className="absolute inset-y-0 left-0 h-full w-[118%] max-w-none object-cover object-left" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#4a0628]/20 via-transparent to-[#4a0628]/45" />
       <Link to="/" aria-label="Back to VizhaOne home" className="absolute left-8 top-7 rounded-2xl bg-white/92 px-5 py-3 shadow-xl backdrop-blur"><VizhaLogo size="md" /></Link>
       <div className="absolute bottom-7 left-7 right-7 flex items-center justify-between rounded-2xl border border-white/20 bg-[#4f082b]/85 px-6 py-4 text-white shadow-2xl backdrop-blur-md">
