@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { AiEventPlanner } from "@/components/app/AiEventPlanner";
 
 type ChatMessage = {
   role: "assistant" | "user";
@@ -357,6 +358,7 @@ export function VizhaOneAssistant() {
           </div>
 
           <div className="shrink-0 border-t border-rose-100 bg-white px-4 py-3">
+            <AiEventPlanner />
             <div className="mb-3 flex flex-wrap gap-2">
               {quickQuestions.map((question) => (
                 <button key={question} type="button" onClick={() => question === "Start booking" ? startBookingFlow(question) : ask(question)} className="rounded-full border border-rose-100 px-3 py-1.5 text-[11px] font-semibold text-[#be123c] transition hover:bg-rose-50">
