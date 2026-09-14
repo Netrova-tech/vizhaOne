@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Sparkles, Share2, Scale, ShieldCheck, PlayCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
@@ -15,6 +15,7 @@ import { formatServicePrice } from "@/lib/utils";
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [requestMode, setRequestMode] = useState<"quote"|"booking"|null>(null);
   const { services, categories, loading } = useCatalog();
   const resolvedId = (id === "_" && typeof window !== "undefined")
@@ -25,6 +26,13 @@ export default function ServiceDetailClient({ id }: { id: string }) {
     ? { ...foundService, categories: categories.find((c) => c.id === foundService.category_id) }
     : null;
   const serviceImages = service ? [...new Set([service.image_url,...(service.gallery_urls||[])].filter(Boolean) as string[])] : [];
+  const isFixedPrice = service?.pricing_type === "fixed";
+
+  useEffect(() => {
+    if (service && new URLSearchParams(location.search).get("action") === "book") {
+      setRequestMode(isFixedPrice ? "booking" : "quote");
+    }
+  }, [service?.id, isFixedPrice, location.search]);
 
   function handleShare() {
     if (!service) return;
@@ -60,8 +68,6 @@ export default function ServiceDetailClient({ id }: { id: string }) {
   }
 
   const packages = Array.isArray(service.packages) ? service.packages : [];
-  const isFixedPrice = service.pricing_type === "fixed";
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
