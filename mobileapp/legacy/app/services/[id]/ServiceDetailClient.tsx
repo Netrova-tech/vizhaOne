@@ -33,7 +33,8 @@ export default function ServiceDetailClient({ id }: { id: string }) {
   const [bookingOpen, setBookingOpen] = useState(
     () =>
       typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("book") === "1",
+      (new URLSearchParams(window.location.search).get("book") === "1" ||
+        new URLSearchParams(window.location.search).get("action") === "book"),
   );
   const [submitting, setSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<Booking | null>(null);
