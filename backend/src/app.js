@@ -12,6 +12,7 @@ const { createReferralRouter } = require("./routes/referralRoutes");
 const { createSocialRouter } = require("./routes/socialRoutes");
 const { createQuoteRouter } = require("./routes/quoteRoutes");
 const { createProviderRouter } = require("./routes/providerRoutes");
+const { createAiPlannerRouter } = require("./routes/aiPlannerRoutes");
 
 function createApp({ store }) {
   const app = express();
@@ -90,6 +91,7 @@ function createApp({ store }) {
   app.use("/api/referrals", createReferralRouter());
   app.use("/api/social", createSocialRouter());
   app.use("/api/provider", createProviderRouter());
+  app.use("/api/ai", createAiPlannerRouter());
 
   return app;
 }
