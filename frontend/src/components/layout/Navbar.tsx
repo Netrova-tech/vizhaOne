@@ -64,7 +64,7 @@ export function Navbar() {
   const langLabel = lang === "en" ? "EN" : lang === "ta" ? "த" : lang === "hi" ? "हि" : lang === "ml" ? "മ" : "తె";
   const visibleNavLinks = user?.role === "service_provider"
     ? [
-        { href: "/profile", labelKey: "home", label: "Business" },
+        { href: "/vendor-dashboard", labelKey: "home", label: "Business" },
         { href: "/vendor-onboarding", labelKey: "services", label: "Services" },
       ]
     : navLinks;
@@ -219,7 +219,7 @@ export function Navbar() {
                             {[
                               { href: "/profile", icon: UserCircle2, label: "My Profile" },
                               ...(isAdmin ? [{ href: "/admin", icon: LayoutDashboard, label: "Admin Dashboard" }] : []),
-                              ...(user.role === "service_provider" ? [{ href: "/vendor-onboarding", icon: ShoppingBag, label: "Manage Services" }] : []),
+                              ...(user.role === "service_provider" ? [{ href: "/vendor-dashboard", icon: ShoppingBag, label: "Vendor workspace" }, { href: "/vendor-onboarding", icon: ShoppingBag, label: "Add a service" }] : []),
                               ...(user.role !== "service_provider" && !isAdmin ? [{ href: "/bookings", icon: ShoppingBag, label: "My Bookings" }, { href: "/calculator", icon: Calculator, label: "Event Planner" }] : []),
                               { href: "/about", icon: Info, label: "About Us" },
                             ].map((item) => (

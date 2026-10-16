@@ -28,7 +28,7 @@ export default function LoginPage() {
   function enter(user: Parameters<typeof saveWebSession>[0], token?: string) {
     saveWebSession(user, token);
     toast.success(`Welcome, ${user.name || "VizhaOne user"}!`);
-    navigate(user.role === "admin" ? "/admin" : user.role === "service_provider" ? "/profile" : "/", { replace: true });
+    navigate(user.role === "admin" ? "/admin" : user.role === "service_provider" ? "/vendor-dashboard" : "/", { replace: true });
   }
 
   async function submit(event: FormEvent) {

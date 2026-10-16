@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense, useTransition, useCallback } from "react";
+import { useState, useMemo, Suspense, useTransition, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -54,6 +54,18 @@ function ServicesContent() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [compareIds, setCompareIds] = useState<string[]>(() => typeof window === "undefined" ? [] : getCompareIds());
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    const shouldRestore = sessionStorage.getItem("vizha_services_restore_scroll") === "1";
+    const savedScroll = Number(sessionStorage.getItem("vizha_services_scroll") || 0);
+    sessionStorage.removeItem("vizha_services_restore_scroll");
+    if (!shouldRestore) return;
+
+    // Wait for the service cards and images to be laid out before restoring.
+    const restore = () => window.scrollTo({ top: savedScroll, behavior: "auto" });
+    const frame = requestAnimationFrame(() => requestAnimationFrame(restore));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const { services, loading } = useServices();
   const { categories } = useCategories();
@@ -174,6 +186,12 @@ function ServicesContent() {
     sessionStorage.setItem("vizha_selected_services", JSON.stringify([service.id]));
     toast.success(`${service.title} added to planner!`);
     navigate("/calculator");
+  }
+
+  function openService(serviceId: string) {
+    sessionStorage.setItem("vizha_services_scroll", String(window.scrollY));
+    sessionStorage.setItem("vizha_services_restore_scroll", "1");
+    navigate(`/services/${serviceId}`);
   }
 
   function handleWhatsAppSelected() {
@@ -348,7 +366,7 @@ function ServicesContent() {
                     {/* Image */}
                     <div
                       className="relative h-44 bg-gradient-to-br from-[#fff1f2] to-emerald-50 cursor-pointer"
-                      onClick={() => selectMode ? toggleSelect(service.id) : navigate(`/services/${service.id}`)}
+                      onClick={() => selectMode ? toggleSelect(service.id) : openService(service.id)}
                     >
                       {serviceImages.some(Boolean) ? (
                         <ServiceImageCarousel images={serviceImages} title={service.title} />
@@ -385,7 +403,7 @@ function ServicesContent() {
                     <div className="p-4">
                       <button
                         type="button"
-                        onClick={() => navigate(`/services/${service.id}`)}
+                        onClick={() => openService(service.id)}
                         className="block w-full text-left font-bold text-gray-900 text-sm mb-0.5 line-clamp-1 hover:text-[#e11d48] transition-colors"
                       >
                         {service.title}

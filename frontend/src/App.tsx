@@ -34,6 +34,7 @@ import { PackageDetailRoute } from "@/routes/PackageDetailRoute";
 import { ServiceDetailRoute } from "@/routes/ServiceDetailRoute";
 import ComparePage from "@/app/compare/page";
 import VendorLandingPage from "@/app/vendors/landing/page";
+import VendorDashboardPage from "@/app/vendor-dashboard/page";
 import { useAuth } from "@/context/AuthContext";
 
 function WebsiteHomeGate() {
@@ -51,7 +52,7 @@ function WebsiteHomeGate() {
   }
 
   if (!user) return <Navigate to="/auth/login" replace />;
-  return user.role === "service_provider" ? <Navigate to="/profile" replace /> : <HomePage />;
+  return user.role === "service_provider" ? <Navigate to="/vendor-dashboard" replace /> : <HomePage />;
 }
 
 export default function App() {
@@ -89,6 +90,7 @@ export default function App() {
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/create" element={<CreatePage />} />
         <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
+        <Route path="/vendor-dashboard" element={<VendorDashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/bookings" element={<BookingsPage />} />
         <Route path="**" element={<NotFoundPage />} />
