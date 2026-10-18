@@ -57,7 +57,7 @@ export default function CreatePage() {
           <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-amber-300/15 blur-3xl" />
           <div className="relative mx-auto max-w-5xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[.2em]">
-              <WandSparkles className="h-4 w-4" /> VizhaOne Celebration Studio
+              <WandSparkles className="h-4 w-4" /> VizhaOne Celebrations Studio
             </span>
             <h1 className="mx-auto mt-6 max-w-4xl font-display text-4xl font-bold leading-tight sm:text-6xl">
               Create, celebrate and earn—all in one place.
