@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import MobileHomePage from "@/app/mobile-home/page";
 import AboutPage from "@/app/about/page";
@@ -41,6 +42,13 @@ import { NotFoundPage } from "@/routes/NotFoundPage";
 import { PackageDetailRoute } from "@/routes/PackageDetailRoute";
 import { ServiceDetailRoute } from "@/routes/ServiceDetailRoute";
 import { useAuth } from "@/context/AuthContext";
+
+function ProviderOnly({children}:{children:ReactNode}) {
+  const {user}=useAuth();
+  if(!user)return <Navigate to="/vendor-login" replace/>;
+  if(user.role!=="service_provider"&&user.role!=="admin")return <Navigate to="/profile" replace/>;
+  return children;
+}
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -91,13 +99,15 @@ function AppRoutes() {
         <Route path="/invite/:slug" element={<PublicInvitationPage />} />
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/create" element={<CreatePage />} />
-        <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
+        <Route path="/vendor-onboarding" element={<ProviderOnly><VendorOnboardingPage /></ProviderOnly>} />
         <Route path="/bookings" element={<MobileBookingsPage />} />
         <Route path="/saved" element={<MobileSavedPage />} />
         <Route path="/profile" element={<MobileProfilePage />} />
+        <Route path="/vendor-login" element={<Navigate to="/sign-in?mode=vendor" replace />} />
+        <Route path="/vendor-register" element={<Navigate to="/sign-up?mode=vendor" replace />} />
         <Route path="/sign-in" element={<MobileSignInPage />} />
         <Route path="/sign-up" element={<MobileSignUpPage />} />
-        <Route path="/provider-dashboard" element={<ProviderDashboardPage />} />
+        <Route path="/provider-dashboard" element={<ProviderOnly><ProviderDashboardPage /></ProviderOnly>} />
         <Route path="/reels" element={<ReelsPage />} />
         <Route path="/vendor/:id" element={<VendorProfilePage />} />
         <Route path="/planner" element={<CelebrationPlannerPage />} />

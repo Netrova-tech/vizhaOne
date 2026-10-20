@@ -16,7 +16,7 @@ const navItems = [
 export function MobileBottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const isAdminPath = pathname.startsWith("/admin");
   const items = isAdminPath && isAdmin
     ? [
@@ -24,7 +24,9 @@ export function MobileBottomNav() {
         { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
         { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
       ]
-    : navItems;
+    : user?.role === "service_provider"
+      ? [{ href: "/provider-dashboard", label: "Workspace", icon: LayoutDashboard }, ...navItems.slice(1)]
+      : navItems;
 
   async function handleSignOut() {
     await signOut();

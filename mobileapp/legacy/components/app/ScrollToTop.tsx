@@ -5,7 +5,8 @@ export function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Explore restores its position after its catalog has loaded.
+    if (pathname !== "/services") window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;

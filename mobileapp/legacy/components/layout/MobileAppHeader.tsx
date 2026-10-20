@@ -136,14 +136,14 @@ export function MobileAppHeader() {
               {links.map(([label, href, Icon]) => (
                 <Link
                   key={href}
-                  to={href}
+                  to={isProvider&&href==="/bookings"?"/provider-dashboard?tab=bookings":!user&&href==="/vendor-onboarding"?"/vendor-login":href}
                   onClick={() => setOpen(false)}
                   className="flex w-full touch-manipulation items-center gap-3 rounded-2xl px-3 py-3.5 text-left text-sm font-bold text-gray-700 active:bg-rose-50"
                 >
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-rose-600">
                     <Icon className="h-5 w-5" />
                   </span>
-                  {label}
+                  {isProvider&&href==="/bookings"?"Manage Bookings":label}
                 </Link>
               ))}
             </nav>

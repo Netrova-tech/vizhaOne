@@ -610,6 +610,7 @@ export default function MobileProfilePage() {
           </div>
         )}
 
+        {provider&&<Link to="/provider-dashboard" className="mt-5 block rounded-2xl bg-rose-600 p-4 text-center text-sm font-black text-white">Manage services & bookings</Link>}
         {canPublish && (
           <section className="mt-5 rounded-3xl border border-rose-100 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
