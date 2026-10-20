@@ -11,6 +11,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
 import { formatServicePrice } from "@/lib/utils";
 import type { Hall,Service } from "@/types";
+import { getAppScrollTop, scrollAppTo } from "@/lib/appScroll";
 import { ServiceImageCarousel } from "@/components/features/ServiceImageCarousel";
 
 type FoodPreference="all"|"pure-veg"|"veg-non-veg"|"non-veg";
@@ -44,7 +45,7 @@ function Explore(){
  useEffect(()=>{
   if(loading||restored.current)return;
   const frame=requestAnimationFrame(()=>{
-   window.scrollTo({top:saved?.scrollY??0,behavior:"instant"});
+   scrollAppTo(saved?.scrollY??0);
    if(tabsRef.current)tabsRef.current.scrollLeft=saved?.tabsLeft??0;
    restored.current=true;
   });
@@ -60,7 +61,7 @@ function Explore(){
  const shown=useMemo(()=>{const q=query.toLowerCase().trim().split(/\s+/).filter(Boolean);const result=all.filter(i=>{const text=[i.title,i.vendor,i.location,i.description,i.categoryName].filter(Boolean).join(" ").toLowerCase();return(!q.length||q.every(w=>text.includes(w)))&&(!category||i.categoryId===category)&&matchesFood(i,foodPreference)&&(location==="All locations"||i.location===location)&&(!budgetFilterActive||(i.price>0&&i.price<=maxPrice))&&(!onlyAvailable||i.available)&&(!minimumRating||Number(i.rating||0)>=minimumRating)&&(!guestCapacity||i.kind!=="hall"||Number(i.capacity||0)>=guestCapacity)});if(sort==="low")result.sort((a,b)=>(a.price||Number.MAX_SAFE_INTEGER)-(b.price||Number.MAX_SAFE_INTEGER));if(sort==="high")result.sort((a,b)=>b.price-a.price);if(sort==="rating")result.sort((a,b)=>Number(b.rating||0)-Number(a.rating||0));return result},[all,query,category,foodPreference,location,maxPrice,budgetFilterActive,onlyAvailable,minimumRating,guestCapacity,sort]);
  const tabs=[{id:"",name:"All"},{id:HALLS,name:"Wedding Halls"},...categories.map(c=>({id:c.id,name:c.category_name}))];
  const open=(i:Item,book=false)=>{
-  exploreSnapshots.set(route.key,{query,category,foodPreference,filters,location,maxPrice,budgetFilterActive,onlyAvailable,minimumRating,guestCapacity,sort,scrollY:window.scrollY,tabsLeft:tabsRef.current?.scrollLeft??0});
+  exploreSnapshots.set(route.key,{query,category,foodPreference,filters,location,maxPrice,budgetFilterActive,onlyAvailable,minimumRating,guestCapacity,sort,scrollY:getAppScrollTop(),tabsLeft:tabsRef.current?.scrollLeft??0});
   navigate(`/${i.kind==="hall"?"halls":"services"}/${i.id}${book?"?book=1":""}`);
  };
  const resetFilters=()=>{setQuery("");setCategory("");setFoodPreference("all");setLocation("All locations");setMaxPrice(1000000);setBudgetFilterActive(false);setOnlyAvailable(false);setMinimumRating(0);setGuestCapacity(0);setSort("recommended")};

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { scrollAppTo } from "@/lib/appScroll";
 import { useLocation } from "react-router-dom";
 
 export function ScrollToTop() {
@@ -6,7 +7,7 @@ export function ScrollToTop() {
 
   useEffect(() => {
     // Explore restores its position after its catalog has loaded.
-    if (pathname !== "/services") window.scrollTo(0, 0);
+    if (pathname !== "/services") scrollAppTo(0);
   }, [pathname]);
 
   return null;
