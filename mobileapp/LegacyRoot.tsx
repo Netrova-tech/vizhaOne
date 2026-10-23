@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { HashRouter, useLocation, useNavigate } from "react-router-dom";
 import App from "@/App";
+import { restorePush } from "@/lib/pushNotifications";
+import { fetchAccount, token } from "@/lib/mobileAuth";
 
 const publicRoutes = ["/sign-in", "/sign-up", "/auth/login", "/auth/verify", "/invite/"];
 
@@ -30,6 +32,21 @@ function AuthenticationGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function LegacyRoot() {
+  useEffect(() => {
+    const restore = () => { if (document.visibilityState === "visible") void restorePush().catch(() => undefined); };
+    restore();
+    window.addEventListener("vizha_auth_change", restore);
+    document.addEventListener("visibilitychange", restore);
+    const timer = window.setInterval(restore, 5 * 60 * 1000);
+    return () => { window.removeEventListener("vizha_auth_change", restore); document.removeEventListener("visibilitychange", restore); window.clearInterval(timer); };
+  }, []);
+  useEffect(() => {
+    const track = () => { if (document.visibilityState === "visible" && token()) void fetchAccount().catch(() => undefined); };
+    track();
+    document.addEventListener("visibilitychange", track);
+    const timer = window.setInterval(track, 60000);
+    return () => { document.removeEventListener("visibilitychange", track); window.clearInterval(timer); };
+  }, []);
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       window.dispatchEvent(new Event("vizha_app_ready"));

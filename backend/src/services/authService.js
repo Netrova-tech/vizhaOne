@@ -1,3 +1,4 @@
+const { recordUserActivity } = require("./userActivityService");
 const crypto = require("node:crypto");
 const { getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
@@ -38,8 +39,8 @@ function verifyMobileJwt(token){try{const[h,p,s]=String(token||"").split("."),un
 const publicMobileUser=(u)=>u&&({id:u.id,role:u.role,name:u.name,mobile:u.mobile,phone:u.mobile,email:u.email,location:u.location||"",provider:u.provider||"email",avatar_url:u.avatar_url||"",created_at:u.created_at});
 const passwordDigest=(password,salt)=>crypto.scryptSync(password,salt,64).toString("hex");
 function passwordMatches(password,salt,digest){const a=Buffer.from(passwordDigest(password,salt),"hex"),b=Buffer.from(digest||"","hex");return a.length===b.length&&crypto.timingSafeEqual(a,b);}
-async function registerMobileAccount(payload={}){const name=String(payload.name||"").trim(),email=String(payload.email||"").trim().toLowerCase(),mobile=String(payload.mobile||payload.phone||"").trim(),password=String(payload.password||""),location=String(payload.location||"").trim(),role=payload.role==="service_provider"?"service_provider":"customer";if(name.length<3||!/^\S+@\S+\.\S+$/.test(email)||password.length<8||!mobile||!location){const e=new Error("Valid name, email, 8-character password, phone and location are required");e.status=400;throw e;}const salt=crypto.randomBytes(16).toString("hex"),hash=`${salt}:${passwordDigest(password,salt)}`;try{const u=(await query(`INSERT INTO users(role,name,email,mobile,password_hash,location,provider) VALUES($1,$2,$3,$4,$5,$6,'email') RETURNING *`,[role,name,email,mobile,hash,location])).rows[0],user=publicMobileUser(u);return{success:true,token:signMobileJwt(user),user};}catch(error){if(error.code==="23505"){const e=new Error("This email already has an account");e.status=409;throw e;}throw error;}}
-async function loginMobileAccount(payload={}){const email=String(payload.email||"").trim().toLowerCase(),u=(await query("SELECT * FROM users WHERE email=$1",[email])).rows[0],[salt,digest]=String(u?.password_hash||"").split(":");if(!u||!salt||!passwordMatches(String(payload.password||""),salt,digest)){const e=new Error("Invalid email or password");e.status=401;throw e;}const user=publicMobileUser(u);return{success:true,token:signMobileJwt(user),user};}
+async function registerMobileAccount(payload={}){const name=String(payload.name||"").trim(),email=String(payload.email||"").trim().toLowerCase(),mobile=String(payload.mobile||payload.phone||"").trim(),password=String(payload.password||""),location=String(payload.location||"").trim(),role=payload.role==="service_provider"?"service_provider":"customer";if(name.length<3||!/^\S+@\S+\.\S+$/.test(email)||password.length<8||!mobile||!location){const e=new Error("Valid name, email, 8-character password, phone and location are required");e.status=400;throw e;}const salt=crypto.randomBytes(16).toString("hex"),hash=`${salt}:${passwordDigest(password,salt)}`;try{const u=(await query(`INSERT INTO users(role,name,email,mobile,password_hash,location,provider) VALUES($1,$2,$3,$4,$5,$6,'email') RETURNING *`,[role,name,email,mobile,hash,location])).rows[0],user=publicMobileUser(u);await recordUserActivity(user);return{success:true,token:signMobileJwt(user),user};}catch(error){if(error.code==="23505"){const e=new Error("This email already has an account");e.status=409;throw e;}throw error;}}
+async function loginMobileAccount(payload={}){const email=String(payload.email||"").trim().toLowerCase(),u=(await query("SELECT * FROM users WHERE email=$1",[email])).rows[0],[salt,digest]=String(u?.password_hash||"").split(":");if(!u||!salt||!passwordMatches(String(payload.password||""),salt,digest)){const e=new Error("Invalid email or password");e.status=401;throw e;}const user=publicMobileUser(u);await recordUserActivity(user);return{success:true,token:signMobileJwt(user),user};}
 function firebaseAuth(){
   if(!getApps().length) initializeApp({projectId:process.env.FIREBASE_PROJECT_ID||"vizhaone"});
   return getAuth();
@@ -54,15 +55,15 @@ async function loginGoogleAccount(payload={}){
   let row=(await query("SELECT * FROM users WHERE external_id=$1 OR email=$2 ORDER BY external_id=$1 DESC LIMIT 1",[`firebase:${decoded.uid}`,email])).rows[0];
   if(row){
     row=(await query("UPDATE users SET external_id=$1,provider='google',avatar_url=COALESCE(NULLIF(avatar_url,''),$2) WHERE id=$3 RETURNING *",[`firebase:${decoded.uid}`,String(decoded.picture||""),row.id])).rows[0];
-    const user=publicMobileUser(row);return{success:true,needsProfile:false,token:signMobileJwt(user),user};
+    const user=publicMobileUser(row);await recordUserActivity(user);return{success:true,needsProfile:false,token:signMobileJwt(user),user};
   }
   const name=String(payload.name||decoded.name||"").trim(),mobile=String(payload.mobile||payload.phone||"").trim(),location=String(payload.location||"").trim(),role=payload.role==="service_provider"?"service_provider":"customer";
   if(name.length<3||!mobile||!location)return{success:true,needsProfile:true,profile:{name:name||String(decoded.name||""),email,avatar_url:String(decoded.picture||"")}};
   row=(await query("INSERT INTO users(external_id,role,name,email,mobile,location,provider,avatar_url) VALUES($1,$2,$3,$4,$5,$6,'google',$7) RETURNING *",[`firebase:${decoded.uid}`,role,name,email,mobile,location,String(decoded.picture||"")])).rows[0];
-  const user=publicMobileUser(row);return{success:true,needsProfile:false,token:signMobileJwt(user),user};
+  const user=publicMobileUser(row);await recordUserActivity(user);return{success:true,needsProfile:false,token:signMobileJwt(user),user};
 }
 function mobileSession(req){const h=req.headers.authorization||"";return h.startsWith("Bearer ")?verifyMobileJwt(h.slice(7)):null;}
-async function getMobileAccount(req){const s=mobileSession(req);return s?publicMobileUser((await query("SELECT * FROM users WHERE id=$1",[s.sub])).rows[0]):null;}
+async function getMobileAccount(req){const s=mobileSession(req);const user=s?publicMobileUser((await query("SELECT * FROM users WHERE id=$1",[s.sub])).rows[0]):null;await recordUserActivity(user);return user;}
 async function updateMobileAccount(req,payload={}){const s=mobileSession(req);if(!s)return null;const name=String(payload.name||"").trim(),mobile=String(payload.mobile||"").trim(),location=String(payload.location||"").trim(),avatarUrl=payload.avatar_url===undefined?undefined:String(payload.avatar_url||"").trim();if(name.length<3||!mobile||!location){const e=new Error("Name, phone and location are required");e.status=400;throw e;}return publicMobileUser((await query("UPDATE users SET name=$1,mobile=$2,location=$3,avatar_url=COALESCE($4,avatar_url) WHERE id=$5 RETURNING *",[name,mobile,location,avatarUrl,s.sub])).rows[0]);}
 async function deleteMobileAccount(req){const s=mobileSession(req);if(!s)return false;return (await query("DELETE FROM users WHERE id=$1",[s.sub])).rowCount>0;}
 
@@ -187,6 +188,7 @@ async function verifyOtp(store, mobile, otp) {
     ON CONFLICT(external_id) DO UPDATE SET role=EXCLUDED.role,mobile=EXCLUDED.mobile,name=EXCLUDED.name`,
   [user.id,user.role,user.mobile,user.name]);
 
+  await recordUserActivity((await query("SELECT * FROM users WHERE external_id=$1", [user.id])).rows[0]);
   return { success: true, user };
 }
 

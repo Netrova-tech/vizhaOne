@@ -3,7 +3,17 @@ apply plugin: 'com.android.application'
 def releaseKeyPropertiesFile = rootProject.file('release-key.properties')
 def releaseKeyProperties = new Properties()
 if (releaseKeyPropertiesFile.exists()) {
-    releaseKeyProperties.load(new FileInputStream(releaseKeyPropertiesFile))
+    releaseKeyPropertiesFile.withInputStream { releaseKeyProperties.load(it) }
+    def requiredSigningProperties = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+    def missingSigningProperties = requiredSigningProperties.findAll {
+        !releaseKeyProperties.getProperty(it)?.trim()
+    }
+    if (!missingSigningProperties.isEmpty()) {
+        throw new GradleException("release-key.properties is missing: ${missingSigningProperties.join(', ')}")
+    }
+    if (!rootProject.file(releaseKeyProperties.getProperty('storeFile')).isFile()) {
+        throw new GradleException('The storeFile in release-key.properties does not point to an existing keystore. Use forward slashes for Windows paths.')
+    }
 }
 
 android {
@@ -13,8 +23,8 @@ android {
         applicationId "com.vizhaone.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 20
-        versionName "1.19"
+        versionCode 21
+        versionName "1.20"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -23,21 +33,41 @@ android {
         }
     }
     signingConfigs {
-        release {
-            if (releaseKeyPropertiesFile.exists()) {
-                storeFile rootProject.file(releaseKeyProperties['storeFile'])
-                storePassword releaseKeyProperties['storePassword']
-                keyAlias releaseKeyProperties['keyAlias']
-                keyPassword releaseKeyProperties['keyPassword']
+        // Leave signing unset when no local keystore is configured, so Android
+        // Studio can supply signing credentials through its signed bundle wizard.
+        if (releaseKeyPropertiesFile.exists()) {
+            release {
+                storeFile rootProject.file(releaseKeyProperties.getProperty('storeFile'))
+                storePassword releaseKeyProperties.getProperty('storePassword')
+                keyAlias releaseKeyProperties.getProperty('keyAlias')
+                keyPassword releaseKeyProperties.getProperty('keyPassword')
             }
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (releaseKeyPropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+// Fail before compilation instead of creating an unsigned Play Store artifact.
+def validateReleaseSigning = tasks.register('validateReleaseSigning') {
+    group = 'verification'
+    description = 'Checks that release signing credentials have been supplied.'
+    doLast {
+        if (!releaseKeyPropertiesFile.exists() && !project.hasProperty('android.injected.signing.store.file')) {
+            throw new GradleException('Release signing is not configured. Copy android/release-key.properties.example to android/release-key.properties and enter your EXISTING upload keystore details, or use Android Studio > Build > Generate Signed Bundle / APK. Do not generate a replacement key for an already published app.')
+        }
+    }
+}
+tasks.configureEach {
+    if (name == 'preReleaseBuild') {
+        dependsOn(validateReleaseSigning)
     }
 }
 

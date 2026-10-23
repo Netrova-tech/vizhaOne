@@ -10,6 +10,14 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS users_mobile_idx ON users(mobile);
 
+-- One authenticated user per India calendar day, regardless of login frequency.
+CREATE TABLE IF NOT EXISTS user_daily_activity (
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_date date NOT NULL DEFAULT ((now() AT TIME ZONE 'Asia/Kolkata')::date),
+  PRIMARY KEY (activity_date, user_id)
+);
+CREATE INDEX IF NOT EXISTS users_created_at_idx ON users(created_at);
+
 CREATE TABLE IF NOT EXISTS vendors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   business_name text NOT NULL, description text, phone text NOT NULL, location text,
@@ -187,3 +195,11 @@ CREATE TABLE IF NOT EXISTS signups (id uuid PRIMARY KEY DEFAULT gen_random_uuid(
 
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
 DO $$ DECLARE t text; BEGIN FOREACH t IN ARRAY ARRAY['users','vendors','categories','services','halls','event_packages','bookings','invitations','referral_wallets','planner_events','inquiries','admin_pins'] LOOP EXECUTE format('DROP TRIGGER IF EXISTS %I_updated_at ON %I',t,t); EXECUTE format('CREATE TRIGGER %I_updated_at BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION set_updated_at()',t,t); END LOOP; END $$;
+
+CREATE TABLE IF NOT EXISTS push_devices (
+  token text PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  platform text NOT NULL CHECK (platform = 'android'),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS push_devices_user_idx ON push_devices(user_id);

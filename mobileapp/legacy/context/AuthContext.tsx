@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { apiUrl } from "@/lib/utils";
+import { unregisterPushDevice } from "@/lib/pushNotifications";
+import { clearMobileSession } from "@/lib/mobileAuth";
 import type { User } from "@/types";
 import type { Session } from "@/lib/supabase";
 
@@ -179,6 +181,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function signOut() {
+    try { await unregisterPushDevice(); } catch { /* Native unregister is also attempted offline. */ }
+    clearMobileSession();
     try { await supabase.auth.signOut(); } catch { void 0; }
     try {
       await fetch(apiUrl("/api/auth/logout"), {

@@ -1,5 +1,6 @@
 "use client";
 
+import { UserActivity } from "@/components/admin/UserActivity";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -885,7 +886,6 @@ export default function AdminPage() {
   }
 
   const stats = [
-    { label: "Total Users",    value: mounted ? signups.length : 0,                          icon: Users,      color: "rose"   },
     { label: "Total Services", value: mounted ? services.length : 0,                         icon: Package,    color: "green"  },
     { label: "Total Bookings", value: mounted ? bookings.length : 0,                         icon: ShoppingBag,color: "blue"   },
     { label: "Active Halls",   value: mounted ? halls.filter((h) => h.is_active).length : 0, icon: Building2,  color: "rose" },
@@ -994,6 +994,7 @@ export default function AdminPage() {
         {/* ─── Dashboard Tab ─── */}
         {tab === "dashboard" && (
           <div>
+            <UserActivity />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {stats.map((stat) => (
                 <motion.div

@@ -1,0 +1,7 @@
+# Copy to release-key.properties and fill in your EXISTING Play upload key.
+# Use forward slashes for Windows paths. Relative paths start at android/.
+# Enter passwords exactly as stored; do not wrap values in quotes.
+storeFile=C:/path/to/your-existing-upload-key.jks
+storePassword=
+keyAlias=
+keyPassword=

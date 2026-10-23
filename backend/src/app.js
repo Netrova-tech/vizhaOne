@@ -1,3 +1,4 @@
+const { createPushRouter } = require("./routes/pushRoutes");
 const express = require("express");
 const cors = require("cors");
 const { healthController } = require("./controllers/healthController");
@@ -80,6 +81,7 @@ function createApp({ store }) {
       },
     });
   });
+  app.use("/api/notifications", createPushRouter());
   app.use("/api/auth", createAuthRouter({ store }));
   app.use("/api/catalog", createCatalogRouter({ store }));
   app.use("/api/bookings", createBookingRouter({ store }));

@@ -1,5 +1,7 @@
 "use client";
 
+import { PushNotificationSettings } from "@/components/features/PushNotificationSettings";
+
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -64,12 +66,6 @@ const menu = [
     hint: "Invites, hashtags and more",
     href: "/create",
     icon: WandSparkles,
-  },
-  {
-    label: "Notifications",
-    hint: "Booking and offer updates",
-    href: "/bookings",
-    icon: Bell,
   },
   {
     label: "Saved",
@@ -889,6 +885,7 @@ export default function MobileProfilePage() {
             )}
           </section>
         )}
+        <PushNotificationSettings />
         <section className="mt-5 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
           {menu.map(({ label, hint, href, icon: Icon }, i) => (
             <Link

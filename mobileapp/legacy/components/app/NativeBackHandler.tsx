@@ -20,6 +20,8 @@ export function NativeBackHandler() {
 
     void CapacitorApp.addListener("backButton", ({ canGoBack }) => {
       if (!active) return;
+      const updateDialog = document.querySelector<HTMLDialogElement>("dialog[data-app-update][open]");
+      if (updateDialog) { updateDialog.close(); return; }
 
       // Main navigation tabs should always return to Home instead of closing
       // the Android activity or reopening an unrelated route.

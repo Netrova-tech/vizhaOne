@@ -7,7 +7,6 @@ import {
   Camera,
   ChevronDown,
   ChevronRight,
-  Download,
   Gift,
   Heart,
   IndianRupee,
@@ -18,13 +17,12 @@ import {
   Sparkles,
   UtensilsCrossed,
   WandSparkles,
-  X,
 } from "lucide-react";
 import { MobileAppHeader } from "@/components/layout/MobileAppHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ExternalImg } from "@/components/ui/ExternalImg";
 import { useCatalog } from "@/hooks/useCatalog";
-import { apiUrl, formatPriceOrQuote } from "@/lib/utils";
+import { formatPriceOrQuote } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 const quick = [
   [
@@ -132,12 +130,6 @@ export default function MobileHomePage() {
   const [maxPrice, setMaxPrice] = useState(1000000);
   const [category, setCategory] = useState("");
   const [featuredTab, setFeaturedTab] = useState<(typeof featuredTabs)[number]>("All");
-  const [update, setUpdate] = useState<{
-    version: string;
-    message: string;
-    storeUrl: string;
-    force: boolean;
-  } | null>(null);
   const touch = useRef<number | null>(null);
   const autoLocated = useRef(false);
   useEffect(() => {
@@ -246,41 +238,6 @@ export default function MobileHomePage() {
       void locate();
     }
   }, [locate, user]);
-  useEffect(() => {
-    if (!user) return;
-    let active = true;
-    (async () => {
-      try {
-        const [{ Capacitor }, { App }] = await Promise.all([
-          import("@capacitor/core"),
-          import("@capacitor/app"),
-        ]);
-        if (!Capacitor.isNativePlatform()) return;
-        const [info, response] = await Promise.all([
-          App.getInfo(),
-          fetch(apiUrl("/api/app-config"), { cache: "no-store" }),
-        ]);
-        if (!response.ok) return;
-        const config = (await response.json()).android;
-        const installed = Number(info.build || 0),
-          latest = Number(config?.latestVersionCode || 0);
-        if (active && latest > installed)
-          setUpdate({
-            version: String(config.latestVersionName || latest),
-            message: String(
-              config.message || "A new VizhaOne update is available.",
-            ),
-            storeUrl: String(config.storeUrl),
-            force: Boolean(config.forceUpdate),
-          });
-      } catch {
-        void 0;
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [user]);
   function searchServices(e: FormEvent) {
     e.preventDefault();
     const p = new URLSearchParams();
@@ -322,59 +279,6 @@ export default function MobileHomePage() {
   return (
     <div className="native-mobile-page min-h-dvh bg-[#fffafb] pb-24">
       <MobileAppHeader />
-      {update && (
-        <div
-          className="fixed inset-0 z-[180] grid place-items-end bg-black/55 p-4 pb-[calc(20px+env(safe-area-inset-bottom,0px))]"
-          role="dialog"
-          aria-modal="true"
-          aria-label="VizhaOne update available"
-        >
-          <section className="w-full rounded-[30px] bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-[#7c1749] text-white shadow-lg">
-                <Download className="h-7 w-7" />
-              </span>
-              {!update.force && (
-                <button
-                  type="button"
-                  onClick={() => setUpdate(null)}
-                  aria-label="Remind me later"
-                  className="rounded-full bg-gray-100 p-2 text-gray-500"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-            <p className="mt-5 text-[10px] font-black uppercase tracking-[.2em] text-rose-600">
-              New version {update.version}
-            </p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight text-gray-950">
-              Update VizhaOne
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-gray-500">
-              {update.message}
-            </p>
-            <a
-              href={update.storeUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 py-4 text-sm font-black text-white shadow-lg shadow-rose-200"
-            >
-              <Download className="h-4 w-4" />
-              Update from Play Store
-            </a>
-            {!update.force && (
-              <button
-                type="button"
-                onClick={() => setUpdate(null)}
-                className="mt-2 w-full py-3 text-xs font-bold text-gray-500"
-              >
-                Remind me later
-              </button>
-            )}
-          </section>
-        </div>
-      )}
       <main className="px-4 pt-[88px]">
         <button
           onClick={locate}

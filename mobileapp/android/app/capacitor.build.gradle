@@ -13,8 +13,10 @@ dependencies {
     implementation project(':capacitor-app')
     implementation project(':capacitor-geolocation')
     implementation project(':capacitor-local-notifications')
+    implementation project(':capacitor-push-notifications')
     implementation project(':capacitor-share')
     implementation project(':capacitor-splash-screen')
+    implementation project(':capawesome-capacitor-app-update')
 
 }
 

@@ -1,3 +1,4 @@
+import { AppUpdatePrompt } from "@/components/app/AppUpdatePrompt";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
@@ -88,6 +89,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <GoogleTranslationBridge />
         <DiagnosticsBridge />
         <NetworkStatus />
+        <AppUpdatePrompt />
         <AppErrorBoundary>{children}</AppErrorBoundary>
         <VizhaOneAssistant />
         <Toaster richColors position="top-center" toastOptions={{ duration: 3000 }} />

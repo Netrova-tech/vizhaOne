@@ -1,3 +1,4 @@
+const { notifyBookingStatus } = require("../services/pushService");
 const express = require("express");
 const crypto = require("node:crypto");
 const { query, transaction } = require("../db/pool");
@@ -107,6 +108,7 @@ function createProviderRouter() {
         return (await client.query("UPDATE bookings SET status=$2,rejection_reason=$3,updated_at=now() WHERE id=$1 RETURNING *",[current.id,status,status==='cancelled'?reason:null])).rows[0];
       });
       await syncBookingReward(booking.id,status);
+      await notifyBookingStatus(booking);
       return res.json(booking);
     } catch (error) { return res.status(error.status||500).json({ error: error.message }); }
   });

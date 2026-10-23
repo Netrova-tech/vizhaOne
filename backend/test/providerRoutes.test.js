@@ -19,6 +19,7 @@ function setup({ session = { sub: "vendor-user", role: "service_provider" }, cur
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../src/routes/providerRoutes.js"), "utf8"), {
     module,
     require(name) {
+      if (name === "../services/pushService") return { notifyBookingStatus: async () => {} };
       if (name === "express") return { Router: () => router };
       if (name === "node:crypto") return require(name);
       if (name === "../db/pool") return { query, transaction: fn => fn({ query }) };
