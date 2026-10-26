@@ -40,6 +40,13 @@ const links = [
   ["Referral Rewards", "/referrals", Gift],
   ["Add Your Service", "/vendor-onboarding", PlusCircle],
 ] as const;
+const providerLinks = [
+  ["Manage Services", "/provider-dashboard", BriefcaseBusiness],
+  ["Manage Bookings", "/provider-dashboard?tab=bookings", CalendarDays],
+  ["Add Service", "/vendor-onboarding", PlusCircle],
+  ["My Profile & Posts", "/profile", UserRound],
+  ["About VizhaOne", "/about", Info],
+] as const;
 export function MobileAppHeader() {
   const [open, setOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -65,16 +72,16 @@ export function MobileAppHeader() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link to="/" aria-label="VizhaOne home" className="min-w-0 justify-self-center text-center">
+          <Link to={isProvider ? "/provider-dashboard" : "/"} aria-label={isProvider ? "Provider workspace" : "VizhaOne home"} className="min-w-0 justify-self-center text-center">
             <VizhaLogo size="md" light className="origin-center scale-[1.06]" />
           </Link>
           <div className="relative flex items-center gap-1.5"><button type="button" onClick={()=>setLanguageOpen(value=>!value)} aria-label="Change language" className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fff3dd] text-[#6b3b00] shadow-sm"><Languages className="h-5 w-5"/><span className="absolute -bottom-0.5 text-[7px] font-black">{lang.toUpperCase()}</span></button><Link
-            to="/cart"
-            aria-label={`Cart with ${count} items`}
+            to={isProvider ? "/profile" : "/cart"}
+            aria-label={isProvider ? "My provider profile" : `Cart with ${count} items`}
             className="relative grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#f50057] to-[#c60045] text-white shadow-lg shadow-black/20"
           >
-            <ShoppingBag className="h-5 w-5"/>
-            {count>0&&<span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count>99?"99+":count}</span>}
+            {isProvider ? <UserRound className="h-5 w-5"/> : <ShoppingBag className="h-5 w-5"/>}
+            {!isProvider&&count>0&&<span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border-2 border-white bg-gray-950 px-1 text-[9px] font-black text-white">{count>99?"99+":count}</span>}
           </Link>{languageOpen&&<div className="absolute right-0 top-14 z-[110] w-56 overflow-hidden rounded-3xl border border-rose-100 bg-white p-2 shadow-2xl"><div className="flex items-center justify-between px-2 pb-2 pt-1"><div><p className="text-xs font-black text-gray-950">Choose language</p><p className="text-[9px] text-gray-400">Translate the complete app</p></div><button type="button" onClick={()=>setLanguageOpen(false)} aria-label="Close language menu" className="grid h-8 w-8 place-items-center rounded-full bg-gray-100 text-gray-700"><X className="h-4 w-4"/></button></div>{languages.map(item=><button type="button" key={item.code} onClick={()=>changeLanguage(item.code)} className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left text-xs font-black ${lang===item.code?"bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-sm":"text-gray-800 active:bg-rose-50"}`}><span>{item.label}</span><span className={`rounded-full px-2 py-1 text-[9px] ${lang===item.code?"bg-white/20":"bg-rose-50 text-rose-700"}`}>{item.short}</span></button>)}</div>}</div>
         </div>
       </header>
@@ -121,29 +128,17 @@ export function MobileAppHeader() {
               )}
             </div>
             <nav className="flex-1 overflow-y-auto p-3">
-              {isProvider && (
-                <Link
-                  to="/provider-dashboard"
-                  onClick={() => setOpen(false)}
-                  className="mb-1 flex items-center gap-3 rounded-2xl bg-rose-600 px-3 py-3.5 text-sm font-bold text-white"
-                >
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15">
-                    <BriefcaseBusiness className="h-5 w-5" />
-                  </span>
-                  Provider Dashboard
-                </Link>
-              )}
-              {links.map(([label, href, Icon]) => (
+              {(isProvider ? providerLinks : links).map(([label, href, Icon]) => (
                 <Link
                   key={href}
-                  to={isProvider&&href==="/bookings"?"/provider-dashboard?tab=bookings":!user&&href==="/vendor-onboarding"?"/vendor-login":href}
+                  to={!user&&href==="/vendor-onboarding"?"/vendor-login":href}
                   onClick={() => setOpen(false)}
                   className="flex w-full touch-manipulation items-center gap-3 rounded-2xl px-3 py-3.5 text-left text-sm font-bold text-gray-700 active:bg-rose-50"
                 >
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-rose-50 text-rose-600">
                     <Icon className="h-5 w-5" />
                   </span>
-                  {isProvider&&href==="/bookings"?"Manage Bookings":label}
+                  {label}
                 </Link>
               ))}
             </nav>

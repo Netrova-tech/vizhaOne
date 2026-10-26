@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, BarChart2, LayoutDashboard, LogOut, MessageSquare, PlaySquare, UserRound } from "lucide-react";
+import { Home, PlusCircle, LayoutGrid, BarChart2, LayoutDashboard, LogOut, MessageSquare, PlaySquare, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
@@ -25,7 +25,12 @@ export function MobileBottomNav() {
         { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
       ]
     : user?.role === "service_provider"
-      ? [{ href: "/provider-dashboard", label: "Workspace", icon: LayoutDashboard }, ...navItems.slice(1)]
+      ? [
+          { href: "/provider-dashboard", label: "Workspace", icon: LayoutDashboard },
+          { href: "/vendor-onboarding", label: "Add Service", icon: PlusCircle },
+          { href: "/reels", label: "Reels", icon: PlaySquare },
+          { href: "/profile", label: "Profile", icon: UserRound },
+        ]
       : navItems;
 
   async function handleSignOut() {

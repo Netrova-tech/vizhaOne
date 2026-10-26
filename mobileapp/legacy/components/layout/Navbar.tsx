@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { VizhaLogo } from "@/components/ui/VizhaLogo";
 import { useCart } from "@/hooks/useCart";
 
+import { MobileAppHeader } from "./MobileAppHeader";
+
 export const NAVBAR_HEIGHT = 68;
 
 const navLinks = [
@@ -65,6 +67,8 @@ export function Navbar() {
   }
 
   const langLabel = lang.toUpperCase();
+
+  if (user?.role === "service_provider") return <MobileAppHeader />;
 
   return (
     <>
