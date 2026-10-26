@@ -1,7 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs"), vm = require("node:vm"), path = require("node:path");
-function setup(devices = [], responses = []) {
+function setup(devices = [], responses = [], owners = []) {
   const calls = [], messages = [], module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../src/services/pushService.js"), "utf8"), {
     module, process: { env: {} }, console,
@@ -12,7 +12,7 @@ function setup(devices = [], responses = []) {
         return { successCount: responses.filter(r => r.success).length, failureCount: responses.filter(r => !r.success).length, responses };
       } }) };
       if (name === "../db/pool") return { query: async (sql, values) => {
-        calls.push({ sql, values }); return { rows: sql.startsWith("SELECT token") ? devices : [] };
+        calls.push({ sql, values }); return { rows: sql.startsWith("SELECT token") ? devices : sql.startsWith("SELECT DISTINCT v.user_id") ? owners : [] };
       } };
       throw new Error(name);
     },
@@ -48,4 +48,17 @@ test("accounts without devices do not call Firebase", async () => {
   assert.equal(s.messages.length, 0);
   await s.notifyBookingStatus({ user_id: null, status: "approved" });
   assert.equal(s.calls.length, 1);
+});
+
+test("new booking alerts target the listing owner and open provider bookings", async () => {
+  const s = setup([{token:"vendor-device"}], [{success:true}], [{user_id:"provider-1"}]);
+  await s.notifyNewBooking({service_id:"service-1"});
+  assert.equal(s.calls[0].values[0], "service-1");
+  assert.match(s.calls[0].sql, /s.id=\$1 OR h.id=\$2/);
+  assert.equal(s.calls[1].values[0], "provider-1");
+  assert.equal(s.messages[0].data.route, "/provider-dashboard?tab=bookings");
+});
+test("unowned listings do not send provider alerts", async () => {
+  const s = setup(); await s.notifyNewBooking({service_id:"unowned"});
+  assert.equal(s.messages.length, 0);
 });

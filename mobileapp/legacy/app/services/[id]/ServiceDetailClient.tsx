@@ -1,4 +1,5 @@
 "use client";
+import { useAuth } from "@/context/AuthContext";
 
 import { FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -27,6 +28,7 @@ import { ServiceDetailGallery } from "@/components/features/ServiceDetailGallery
 
 export default function ServiceDetailClient({ id }: { id: string }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { services, categories, loading } = useCatalog();
   const { isFavorite, toggle } = useFavorites();
   const { items: cartItems, add: addToCart } = useCart();
@@ -40,12 +42,12 @@ export default function ServiceDetailClient({ id }: { id: string }) {
   const [confirmation, setConfirmation] = useState<Booking | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [form, setForm] = useState({
-    name: "",
-    mobile: "",
+    name: user?.name || "",
+    mobile: user?.mobile?.replace(/\D/g, "").slice(-10) || "",
     date: "",
     guests: "",
     eventType: "",
-    location: "",
+    location: user?.location || "",
     message: "",
   });
   const resolvedId =
@@ -406,6 +408,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
               </div>
             ) : (
               <form onSubmit={submitBooking} className="mt-5 space-y-3">
+                {user && <p className="rounded-xl bg-rose-50 p-3 text-xs text-gray-600">Booking as {user.name} ? {user.mobile}. Contact details are taken from your profile. Event location can be changed below.</p>}
                 {[
                   ["Full name", "name", "text"],
                   ["Phone number", "mobile", "tel"],
@@ -413,7 +416,7 @@ export default function ServiceDetailClient({ id }: { id: string }) {
                   ["Guest count", "guests", "number"],
                   ["Event type", "eventType", "text"],
                   ["Event location", "location", "text"],
-                ].map(([label, key, type]) => (
+                ].filter(([, key]) => !(key === "name" && user?.name) && !(key === "mobile" && user?.mobile)).map(([label, key, type]) => (
                   <label
                     key={key}
                     className="block text-[11px] font-bold text-gray-600"

@@ -43,4 +43,14 @@ async function notifyBookingStatus(booking) {
     await sendUserPush(booking.user_id, "Booking update", `Your booking is now ${String(booking.status).replace(/_/g, " ")}.`);
   } catch { console.warn("Booking push notification could not be delivered"); }
 }
-module.exports = { registerDevice, removeDevice, sendUserPush, notifyBookingStatus };
+async function notifyNewBooking(booking) {
+  if (!booking) return;
+  try {
+    const owners = (await query(`SELECT DISTINCT v.user_id FROM vendors v
+      LEFT JOIN services s ON s.vendor_id=v.id LEFT JOIN halls h ON h.vendor_id=v.id
+      WHERE (s.id=$1 OR h.id=$2) AND v.user_id IS NOT NULL`, [booking.service_id || null, booking.hall_id || null])).rows;
+    await Promise.all(owners.map(owner => sendUserPush(owner.user_id, "New booking request",
+      "You have a new booking request. Open your workspace to review the event details.", "/provider-dashboard?tab=bookings")));
+  } catch { console.warn("Provider booking push notification could not be delivered"); }
+}
+module.exports = { registerDevice, removeDevice, sendUserPush, notifyBookingStatus, notifyNewBooking };
