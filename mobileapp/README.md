@@ -2,6 +2,31 @@
 
 Next.js static application prepared for Android/iOS packaging with Capacitor.
 
+## Android web updates
+
+The app uses the Capacitor 7 Capawesome Live Update plugin with self-hosted, RSA-signed ZIP bundles. Updates download after the app renders and on foreground checks (at most once per 15 minutes). They take effect on the next cold launch, without interrupting forms or bookings. Offline devices continue using their installed files. If an updated app fails to signal readiness within 30 seconds, the plugin restores the APK's bundled web files and blocks that failed bundle.
+
+**One initial Play Store release is required:** versionCode 22 / versionName 1.21 introduces this native plugin. Existing version 21 installations cannot receive these updates. Native plugins, permissions, Gradle settings and Capacitor native configuration still require a new Play release; increment versionCode whenever the native layer changes. Web releases target exactly one versionCode.
+
+### Signing key
+
+The initial key pair has been created locally. Commit `web-update-public.pem` with the app. Back up `.web-update-keys/private.pem` securely outside the repository. It is ignored by Git and must never be included in a ZIP, backend image or public hosting. This is a separate key from the Play Store upload keystore. CI may supply the private key path via `WEB_UPDATE_PRIVATE_KEY`. Do not run the `init` command to replace keys for an existing installation: changing the trusted public key requires a new APK.
+
+### Publish a UI/JavaScript release
+
+1. Keep native dependencies and configuration identical to the Android version receiving the update. Test the UI changes, then run from `mobileapp`:
+   ```powershell
+   npm run web:release -- https://vizhaone-backend-450892873561.asia-south1.run.app/api/web-updates/
+   ```
+   This builds the static app and writes a signed ZIP plus `latest.json` into `web-releases/<versionCode>/`. The ZIP contains the contents of `out/`, with `index.html` at its root.
+2. Copy that version directory into `backend/src/web-updates/` and deploy the backend image from this prepared local source. Its existing Dockerfile includes `src/`; the new `/api/web-updates` static route serves these files. For Git-triggered Cloud Build deployments, the release artifacts must be supplied to the build context too; local ignored files are not included in a Git-triggered build. Keep prior version directories available for older installed apps.
+3. For separate HTTPS object hosting/CDN, build the initial APK with `NEXT_PUBLIC_WEB_UPDATE_URL` set to the hosting directory and pass the same directory URL to `web:release`. Upload the ZIP before replacing `<versionCode>/latest.json`. Serve manifests with `Cache-Control: no-store`, allow the app's origin for manifest fetches, and keep ZIP URLs immutable.
+4. Open an installed version 22 app, let it finish downloading, fully close it and reopen. Confirm the changed screen, authentication, booking flow and native plugins on a real device. Re-publishing a previous tested manifest rolls users back on their next download/restart; do not reuse a failed bundle ID.
+
+The hosting/deployment steps are required before devices receive updates. The updater safely ignores missing manifests. The existing Google Play update prompt remains in place for native releases.
+
+Reference: [Capawesome Live Update](https://capawesome.io/docs/sdks/capacitor/live-update/).
+
 ## Local development
 
 1. Copy `.env.example` to `.env.local` and configure the live API and website URLs.

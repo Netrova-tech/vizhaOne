@@ -5,6 +5,7 @@ import { HashRouter, useLocation, useNavigate } from "react-router-dom";
 import App from "@/App";
 import { restorePush } from "@/lib/pushNotifications";
 import { fetchAccount, token } from "@/lib/mobileAuth";
+import { checkWebUpdate, markWebUpdateReady } from "@/lib/webUpdate";
 
 const publicRoutes = ["/sign-in", "/sign-up", "/auth/login", "/auth/verify", "/invite/"];
 
@@ -50,8 +51,14 @@ export default function LegacyRoot() {
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       window.dispatchEvent(new Event("vizha_app_ready"));
+      void markWebUpdateReady().then(checkWebUpdate).catch(() => undefined);
     });
     return () => window.cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
+    const check = () => { if (document.visibilityState === "visible") void checkWebUpdate(); };
+    document.addEventListener("visibilitychange", check);
+    return () => document.removeEventListener("visibilitychange", check);
   }, []);
 
   return (

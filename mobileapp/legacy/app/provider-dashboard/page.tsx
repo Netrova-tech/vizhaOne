@@ -5,15 +5,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { MobileAppHeader } from "@/components/layout/MobileAppHeader";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { apiUrl } from "@/lib/utils";
-import { token } from "@/lib/mobileAuth";
+import { providerRequest as request } from "@/lib/providerApi";
 
 type ProviderService={id:string;title:string;description:string;vendor_name:string;vendor_mobile:string;location:string;price:string|number|null;availability_status:boolean;verified:boolean};
 type Booking={id:string;service_name:string;customer_name:string;mobile:string;event_date:string;start_date:string;end_date:string;guests:number|null;message:string;status:string;rejection_reason:string};
-async function request(path:string,body?:unknown){
- const response=await fetch(apiUrl(`/api/provider${path}`),{method:body?"PATCH":"GET",headers:{Authorization:`Bearer ${token()}`,"Content-Type":"application/json"},...(body?{body:JSON.stringify(body)}:{})});
- const data=await response.json();if(!response.ok)throw new Error(data.error||"Unable to load workspace");return data;
-}
 const actions:Record<string,{status:string;label:string}[]>={pending:[{status:"approved",label:"Accept booking"},{status:"cancelled",label:"Decline"}],approved:[{status:"in_progress",label:"Start service"},{status:"cancelled",label:"Cancel booking"}],in_progress:[{status:"completed",label:"Mark completed"}]};
 const field="mt-1 min-h-12 w-full rounded-xl border border-rose-100 bg-white px-3 text-sm font-medium text-gray-900";
 export default function ProviderDashboardPage(){
