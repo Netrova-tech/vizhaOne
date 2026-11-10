@@ -1,9 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-const PRODUCTION_API_BASE_URL =
-  "https://vizhaone-backend-450892873561.asia-south1.run.app";
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -23,7 +20,7 @@ export function apiUrl(path: string): string {
     // Capacitor serves bundled files from localhost without a port. API calls
     // must go to the hosted backend instead of the embedded static server.
     if (isLocal && !port) {
-      return `${PRODUCTION_API_BASE_URL}${cleanPath}`;
+      return `https://vizhaone.onrender.com${cleanPath}`;
     }
 
     if (isLocal && port !== "5000") {
@@ -31,7 +28,7 @@ export function apiUrl(path: string): string {
     }
   }
 
-  return `${PRODUCTION_API_BASE_URL}${cleanPath}`;
+  return cleanPath;
 }
 
 type PriceValue = number | string | null | undefined;

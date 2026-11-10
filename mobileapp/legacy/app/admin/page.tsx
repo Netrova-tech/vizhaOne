@@ -1,6 +1,5 @@
 "use client";
 
-import { UserActivity } from "@/components/admin/UserActivity";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -90,7 +89,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loading && !isAdmin) {
       toast.error("Restricted access. Admins only!");
-      navigate("/sign-in");
+      navigate("/auth/login?role=admin");
     }
   }, [loading, isAdmin, navigate]);
 
@@ -223,7 +222,6 @@ export default function AdminPage() {
     title: "", description: "", price_min: "", price_max: "", category_id: "",
     vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true,
     verified: false,
-    food_preference: "" as "" | "pure-veg" | "veg-non-veg" | "non-veg",
     image_urls: "",
   });
 
@@ -283,7 +281,7 @@ export default function AdminPage() {
   }, []);
 
   function openAddForm() {
-    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, verified: false, food_preference: "", image_urls: "" });
+    setForm({ title: "", description: "", price_min: "", price_max: "", category_id: "", vendor_name: "", vendor_mobile: "", pincode: "", location: "", place_name: "", availability_status: true, verified: false, image_urls: "" });
     setImageFiles([]);
     setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -306,7 +304,6 @@ export default function AdminPage() {
       place_name: service.place_name || "",
       availability_status: service.availability_status,
       verified: Boolean(service.verified),
-      food_preference: service.food_preference || "",
       image_urls: "",
     });
     setImagePreviews(gallery);
@@ -434,7 +431,6 @@ export default function AdminPage() {
         place_name: form.place_name,
         availability_status: form.availability_status,
         verified: form.verified,
-        food_preference: form.food_preference || undefined,
         image_url: galleryUrls[0] || "",
         gallery_urls: galleryUrls,
       };
@@ -888,6 +884,7 @@ export default function AdminPage() {
   }
 
   const stats = [
+    { label: "Total Users",    value: mounted ? signups.length : 0,                          icon: Users,      color: "rose"   },
     { label: "Total Services", value: mounted ? services.length : 0,                         icon: Package,    color: "green"  },
     { label: "Total Bookings", value: mounted ? bookings.length : 0,                         icon: ShoppingBag,color: "blue"   },
     { label: "Active Halls",   value: mounted ? halls.filter((h) => h.is_active).length : 0, icon: Building2,  color: "rose" },
@@ -926,7 +923,7 @@ export default function AdminPage() {
         <h1 className="text-xl font-bold text-gray-900">Opening admin panel...</h1>
         <p className="mt-2 text-sm text-gray-500">Please verify admin access if this takes more than a moment.</p>
         <Link
-          to="/sign-in"
+          to="/auth/login?role=admin"
           className="mt-5 rounded-2xl bg-[#e11d48] px-5 py-2.5 text-sm font-bold text-white"
         >
           Admin Login
@@ -991,7 +988,6 @@ export default function AdminPage() {
         {/* ─── Dashboard Tab ─── */}
         {tab === "dashboard" && (
           <div>
-            <UserActivity />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {stats.map((stat) => (
                 <motion.div
@@ -2238,28 +2234,6 @@ export default function AdminPage() {
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3} placeholder="Describe the service..."
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#e11d48] resize-none" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Food preference</label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {([
-                      ["", "Not applicable"],
-                      ["pure-veg", "Pure Veg Only"],
-                      ["veg-non-veg", "Veg & Non-Veg"],
-                      ["non-veg", "Non-Veg Only"],
-                    ] as const).map(([value, label]) => (
-                      <button
-                        key={value || "none"}
-                        type="button"
-                        onClick={() => setForm({ ...form, food_preference: value })}
-                        className={`min-h-11 rounded-xl border px-2 py-2 text-xs font-bold transition-colors ${form.food_preference === value ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-200 bg-gray-50 text-gray-700"}`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-2 text-xs text-gray-500">Select this for catering and food services. Customers can filter using the same option.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

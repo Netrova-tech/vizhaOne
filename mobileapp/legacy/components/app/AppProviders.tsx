@@ -1,11 +1,8 @@
-import { AppUpdatePrompt } from "@/components/app/AppUpdatePrompt";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { VizhaOneAssistant } from "@/components/app/VizhaOneAssistant";
-import { NetworkStatus } from "@/components/app/NetworkStatus";
-import { AppErrorBoundary } from "@/components/app/AppErrorBoundary";
 
 declare global {
   interface Window {
@@ -88,9 +85,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <LanguageProvider>
         <GoogleTranslationBridge />
         <DiagnosticsBridge />
-        <NetworkStatus />
-        <AppUpdatePrompt />
-        <AppErrorBoundary>{children}</AppErrorBoundary>
+        {children}
         <VizhaOneAssistant />
         <Toaster richColors position="top-center" toastOptions={{ duration: 3000 }} />
       </LanguageProvider>

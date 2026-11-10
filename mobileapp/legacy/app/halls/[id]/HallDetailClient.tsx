@@ -1,5 +1,4 @@
 "use client";
-import { useAuth } from "@/context/AuthContext";
 
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +48,6 @@ function getTodayLocalDateString() {
 }
 
 export default function HallDetailClient({ id }: { id: string }) {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { t, lang } = useLang();
   const { halls, services: allServices, categories, loading } = useCatalog();
@@ -317,12 +315,11 @@ export default function HallDetailClient({ id }: { id: string }) {
       return;
     }
 
-    if (!user?.name || !user?.mobile) { toast.error("Sign in and complete your profile before booking"); return; }
     setBooking(true);
 
     const price = 0; // Price not defined yet
-    const fallbackName = user.name;
-    const fallbackMobile = user.mobile;
+    const fallbackName = "Guest";
+    const fallbackMobile = "0000000000";
 
     try {
       await createInquiry({

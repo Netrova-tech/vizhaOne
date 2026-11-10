@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import MobileHomePage from "@/app/mobile-home/page";
 import AboutPage from "@/app/about/page";
 import AdminPage from "@/app/admin/page";
@@ -43,16 +42,8 @@ import { PackageDetailRoute } from "@/routes/PackageDetailRoute";
 import { ServiceDetailRoute } from "@/routes/ServiceDetailRoute";
 import { useAuth } from "@/context/AuthContext";
 
-function ProviderOnly({children}:{children:ReactNode}) {
-  const {user}=useAuth();
-  if(!user)return <Navigate to="/vendor-login" replace/>;
-  if(user.role!=="service_provider"&&user.role!=="admin")return <Navigate to="/profile" replace/>;
-  return children;
-}
-
 function AppRoutes() {
   const { user, loading } = useAuth();
-  const { pathname } = useLocation();
   if (loading) return <div className="grid min-h-dvh place-items-center bg-[#fffafb]"><div className="h-10 w-10 animate-spin rounded-full border-4 border-rose-600 border-t-transparent" /></div>;
 
   if (user?.role === "admin") {
@@ -67,16 +58,6 @@ function AppRoutes() {
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </>;
-  }
-
-  // Providers use a business workspace; customer discovery and booking routes
-  // must also be unavailable through deep links and browser history.
-  if (user?.role === "service_provider") {
-    const providerPaths = ["/provider-dashboard", "/vendor-onboarding", "/profile", "/reels", "/create", "/about", "/faq", "/terms", "/privacy", "/partner-plans"];
-    const normalizedPath = pathname.replace(/\/+$/, "") || "/";
-    if (!providerPaths.includes(normalizedPath) && normalizedPath !== `/vendor/${user.id}`) {
-      return <Navigate to="/provider-dashboard" replace />;
-    }
   }
 
   return (
@@ -110,15 +91,13 @@ function AppRoutes() {
         <Route path="/invite/:slug" element={<PublicInvitationPage />} />
         <Route path="/referrals" element={<ReferralsPage />} />
         <Route path="/create" element={<CreatePage />} />
-        <Route path="/vendor-onboarding" element={<ProviderOnly><VendorOnboardingPage /></ProviderOnly>} />
+        <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
         <Route path="/bookings" element={<MobileBookingsPage />} />
         <Route path="/saved" element={<MobileSavedPage />} />
         <Route path="/profile" element={<MobileProfilePage />} />
-        <Route path="/vendor-login" element={<Navigate to="/sign-in?mode=vendor" replace />} />
-        <Route path="/vendor-register" element={<Navigate to="/sign-up?mode=vendor" replace />} />
         <Route path="/sign-in" element={<MobileSignInPage />} />
         <Route path="/sign-up" element={<MobileSignUpPage />} />
-        <Route path="/provider-dashboard" element={<ProviderOnly><ProviderDashboardPage /></ProviderOnly>} />
+        <Route path="/provider-dashboard" element={<ProviderDashboardPage />} />
         <Route path="/reels" element={<ReelsPage />} />
         <Route path="/vendor/:id" element={<VendorProfilePage />} />
         <Route path="/planner" element={<CelebrationPlannerPage />} />

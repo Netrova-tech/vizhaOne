@@ -1,4 +1,3 @@
-const { createPushRouter } = require("./routes/pushRoutes");
 const express = require("express");
 const cors = require("cors");
 const { healthController } = require("./controllers/healthController");
@@ -56,32 +55,6 @@ function createApp({ store }) {
   app.use(express.urlencoded({ extended: true }));
 
   app.get("/api/health", healthController);
-  app.get("/api/app-config", (_req, res) => {
-    const updateEnabled = process.env.ANDROID_UPDATE_ENABLED === "true";
-    const configuredVersionCode = Number(
-      process.env.ANDROID_LATEST_VERSION_CODE || 0,
-    );
-    res.set("Cache-Control", "no-store");
-    res.json({
-      android: {
-        updateEnabled,
-        latestVersionCode:
-          updateEnabled && configuredVersionCode > 0
-            ? configuredVersionCode
-            : 0,
-        latestVersionName: process.env.ANDROID_LATEST_VERSION_NAME || "",
-        forceUpdate:
-          updateEnabled && process.env.ANDROID_FORCE_UPDATE === "true",
-        storeUrl:
-          process.env.ANDROID_STORE_URL ||
-          "https://play.google.com/store/apps/details?id=com.vizhaone.app",
-        message:
-          process.env.ANDROID_UPDATE_MESSAGE ||
-          "A new VizhaOne update is ready with improvements and important fixes.",
-      },
-    });
-  });
-  app.use("/api/notifications", createPushRouter());
   app.use("/api/auth", createAuthRouter({ store }));
   app.use("/api/catalog", createCatalogRouter({ store }));
   app.use("/api/bookings", createBookingRouter({ store }));

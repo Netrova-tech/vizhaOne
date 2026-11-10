@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense, useTransition, useCallback } from "react";
+import { useState, useMemo, Suspense, useTransition, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,7 +12,6 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { LuxuryBanner } from "@/components/layout/LuxuryBanner";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { VendorPromoPoster } from "@/components/app/VendorPromoPoster";
 import { useServices, useCategories } from "@/hooks/useServices";
 import { DEMO_SERVICES } from "@/data/demo";
 import { buildWhatsAppMessage, formatServicePrice, hasVisiblePrice } from "@/lib/utils";
@@ -25,7 +24,7 @@ import { getCompareIds, toggleCompare } from "@/lib/compare";
 
 type FoodPreference = "all" | "pure-veg" | "veg-non-veg" | "non-veg";
 const FOOD_FILTERS: Array<{ id: FoodPreference; label: string }> = [
-  { id: "all", label: "All Food" }, { id: "pure-veg", label: "Pure Veg Only" },
+  { id: "all", label: "All" }, { id: "pure-veg", label: "Pure Veg Only" },
   { id: "veg-non-veg", label: "Veg & Non-Veg" }, { id: "non-veg", label: "Non-Veg Only" },
 ];
 function matchesFoodPreference(service: Service, preference: FoodPreference, categoryName = "") {
@@ -55,6 +54,18 @@ function ServicesContent() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [compareIds, setCompareIds] = useState<string[]>(() => typeof window === "undefined" ? [] : getCompareIds());
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    const shouldRestore = sessionStorage.getItem("vizha_services_restore_scroll") === "1";
+    const savedScroll = Number(sessionStorage.getItem("vizha_services_scroll") || 0);
+    sessionStorage.removeItem("vizha_services_restore_scroll");
+    if (!shouldRestore) return;
+
+    // Wait for the service cards and images to be laid out before restoring.
+    const restore = () => window.scrollTo({ top: savedScroll, behavior: "auto" });
+    const frame = requestAnimationFrame(() => requestAnimationFrame(restore));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const { services, loading } = useServices();
   const { categories } = useCategories();
@@ -177,6 +188,12 @@ function ServicesContent() {
     navigate("/calculator");
   }
 
+  function openService(serviceId: string) {
+    sessionStorage.setItem("vizha_services_scroll", String(window.scrollY));
+    sessionStorage.setItem("vizha_services_restore_scroll", "1");
+    navigate(`/services/${serviceId}`);
+  }
+
   function handleWhatsAppSelected() {
     const serviceNames = selectedServices.map((s) => `• ${s.title}`).join("\n");
     const msg = encodeURIComponent(
@@ -188,8 +205,6 @@ function ServicesContent() {
   return (
     <div className="min-h-screen luxury-page">
       <Navbar />
-      <VendorPromoPoster />
-
       <LuxuryBanner
         image="/hero/slide-2.jpg"
         badge={<><Sparkles className="h-4 w-4 text-amber-300" /> Verified Vendors</>}
@@ -351,7 +366,7 @@ function ServicesContent() {
                     {/* Image */}
                     <div
                       className="relative h-44 bg-gradient-to-br from-[#fff1f2] to-emerald-50 cursor-pointer"
-                      onClick={() => selectMode ? toggleSelect(service.id) : navigate(`/services/${service.id}`)}
+                      onClick={() => selectMode ? toggleSelect(service.id) : openService(service.id)}
                     >
                       {serviceImages.some(Boolean) ? (
                         <ServiceImageCarousel images={serviceImages} title={service.title} />
@@ -388,7 +403,7 @@ function ServicesContent() {
                     <div className="p-4">
                       <button
                         type="button"
-                        onClick={() => navigate(`/services/${service.id}`)}
+                        onClick={() => openService(service.id)}
                         className="block w-full text-left font-bold text-gray-900 text-sm mb-0.5 line-clamp-1 hover:text-[#e11d48] transition-colors"
                       >
                         {service.title}

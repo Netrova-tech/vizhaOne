@@ -1,8 +1,6 @@
-const { notifyBookingStatus } = require("../services/pushService");
 const express = require("express");
 const crypto = require("node:crypto");
 const { query, transaction } = require("../db/pool");
-const { syncBookingReward } = require("../services/referralService");
 const { mobileSession } = require("../services/authService");
 
 function providerSession(req, res) {
@@ -46,71 +44,91 @@ function createProviderRouter() {
     }
   });
 
-  router.patch("/services/:id", async (req, res) => {
-    const session = providerSession(req, res);
-    if (!session) return;
-    const p = req.body || {};
-    const title = clean(p.title, 180), location = clean(p.location, 220);
-    const phone = cleanPhone(p.vendor_mobile), price = p.price === "" || p.price == null ? null : Number(p.price);
-    if (!title || !location || phone.length !== 10 || (price !== null && (!Number.isFinite(price) || price < 0)) || typeof p.availability_status !== "boolean") {
-      return res.status(400).json({ error: "Valid title, location, phone, price and availability are required" });
-    }
-    try {
-      const result = await query(`UPDATE services s SET title=$1,description=$2,location=$3,place_name=$3,
-        vendor_name=$4,vendor_mobile=$5,price=$6,price_min=$6,availability_status=$7,
-        pricing_type=$8,updated_at=now() FROM vendors v
-        WHERE s.id=$9 AND s.vendor_id=v.id AND v.user_id=$10 RETURNING s.*`,
-        [title,clean(p.description,1000),location,clean(p.vendor_name,160),phone,price,p.availability_status,price ? "starting" : "quote",req.params.id,session.sub]);
-      if (!result.rowCount) return res.status(404).json({ error: "Service not found" });
-      return res.json(serviceClient(result.rows[0]));
-    } catch (error) { return res.status(500).json({ error: error.message }); }
-  });
-
   router.get("/bookings", async (req, res) => {
     const session = providerSession(req, res);
     if (!session) return;
     try {
-      const bookings = (await query(`SELECT b.*,COALESCE(s.title,h.name) AS service_name FROM bookings b
-        LEFT JOIN services s ON s.id=b.service_id LEFT JOIN halls h ON h.id=b.hall_id
-        JOIN vendors v ON v.id=COALESCE(s.vendor_id,h.vendor_id)
-        WHERE v.user_id=$1 ORDER BY b.created_at DESC`, [session.sub])).rows;
-      return res.json(bookings);
-    } catch (error) { return res.status(500).json({ error: error.message }); }
+      const result = await query(`
+        SELECT b.*, s.title AS service_title
+        FROM bookings b
+        JOIN services s ON s.id = b.service_id
+        JOIN vendors v ON v.id = s.vendor_id
+        WHERE v.user_id=$1
+        ORDER BY b.created_at DESC
+      `, [session.sub]);
+      return res.json({ bookings: result.rows.map((row) => ({
+        id: row.id,
+        serviceId: row.service_id,
+        serviceName: row.service_title || row.hall_name || "Service booking",
+        customerName: row.customer_name,
+        mobile: row.mobile,
+        date: row.start_date || row.event_date,
+        endDate: row.end_date,
+        guests: row.guests,
+        price: row.price == null ? null : Number(row.price),
+        message: row.message || "",
+        status: row.status,
+        rejectionReason: row.rejection_reason || "",
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      })) });
+    } catch (error) {
+      return res.status(500).json({ error: error.message || "Unable to load booking requests" });
+    }
   });
 
   router.patch("/bookings/:id", async (req, res) => {
     const session = providerSession(req, res);
     if (!session) return;
-    const status = req.body?.status, reason = clean(req.body?.rejectionReason,500);
-    const transitions = { pending:["approved","cancelled"], approved:["in_progress","cancelled"], in_progress:["completed"] };
-    if (!["approved","cancelled","in_progress","completed"].includes(status) || (status === "cancelled" && !reason)) {
-      return res.status(400).json({ error: "Choose a valid status and give a reason when declining" });
+    const status = clean(req.body.status, 30);
+    const reason = clean(req.body.rejectionReason, 500);
+    if (!["approved", "rejected", "in_progress", "completed", "cancelled"].includes(status)) {
+      return res.status(400).json({ error: "Unsupported booking status" });
+    }
+    if (["rejected", "cancelled"].includes(status) && !reason) {
+      return res.status(400).json({ error: "Please provide a reason" });
     }
     try {
-      const booking = await transaction(async client => {
-        const current = (await client.query(`SELECT b.* FROM bookings b
-          LEFT JOIN services s ON s.id=b.service_id LEFT JOIN halls h ON h.id=b.hall_id
-          JOIN vendors v ON v.id=COALESCE(s.vendor_id,h.vendor_id)
-          WHERE b.id=$1 AND v.user_id=$2 FOR UPDATE OF b`, [req.params.id,session.sub])).rows[0];
-        if (!current) throw Object.assign(new Error("Booking not found"),{status:404});
-        if (!transitions[current.status]?.includes(status)) throw Object.assign(new Error("Booking status has changed. Refresh and try again."),{status:409});
-        if (status === "approved" && current.hall_id) {
-          // Serialize acceptances for the same venue to prevent overlapping bookings.
-          await client.query("SELECT id FROM halls WHERE id=$1 FOR UPDATE",[current.hall_id]);
-          const conflict = await client.query(`SELECT id FROM bookings WHERE id<>$1 AND hall_id=$2
-            AND status IN ('approved','in_progress','completed')
-            AND COALESCE(start_date,event_date)<=COALESCE($4::date,$3::date)
-            AND COALESCE(end_date,start_date,event_date)>=$3::date
-            AND (slot=$5 OR slot='fullday' OR $5='fullday')`,
-            [current.id,current.hall_id,current.start_date||current.event_date,current.end_date||current.start_date||current.event_date,current.slot||'fullday']);
-          if (conflict.rowCount) throw Object.assign(new Error("This venue is already booked for that slot"),{status:409});
-        }
-        return (await client.query("UPDATE bookings SET status=$2,rejection_reason=$3,updated_at=now() WHERE id=$1 RETURNING *",[current.id,status,status==='cancelled'?reason:null])).rows[0];
-      });
-      await syncBookingReward(booking.id,status);
-      await notifyBookingStatus(booking);
-      return res.json(booking);
-    } catch (error) { return res.status(error.status||500).json({ error: error.message }); }
+      const owned = await query(`SELECT b.id FROM bookings b JOIN services s ON s.id=b.service_id JOIN vendors v ON v.id=s.vendor_id WHERE b.id=$1 AND v.user_id=$2`, [req.params.id, session.sub]);
+      if (!owned.rowCount) return res.status(404).json({ error: "Booking not found" });
+      const result = await query("UPDATE bookings SET status=$1,rejection_reason=$2,updated_at=now() WHERE id=$3 RETURNING *", [status, reason || null, req.params.id]);
+      const row = result.rows[0];
+      return res.json({ id: row.id, status: row.status, rejectionReason: row.rejection_reason || "", updatedAt: row.updated_at });
+    } catch (error) {
+      return res.status(500).json({ error: error.message || "Unable to update booking" });
+    }
+  });
+
+  router.patch("/profile", async (req, res) => {
+    const session = providerSession(req, res);
+    if (!session) return;
+    const businessName = clean(req.body.businessName, 160);
+    const phone = cleanPhone(req.body.phone);
+    const location = clean(req.body.location, 220);
+    const description = clean(req.body.description, 1000);
+    if (!businessName || phone.length !== 10 || !location) return res.status(400).json({ error: "Business name, valid 10-digit phone and location are required" });
+    try {
+      const result = await query(`UPDATE vendors SET business_name=$1,phone=$2,location=$3,description=$4,updated_at=now() WHERE user_id=$5 RETURNING *`, [businessName, phone, location, description || null, session.sub]);
+      if (!result.rowCount) return res.status(404).json({ error: "Create a service before editing your business profile" });
+      await query("UPDATE users SET name=$1,mobile=$2,location=$3,updated_at=now() WHERE id=$4", [clean(req.body.name, 120) || businessName, phone, location, session.sub]);
+      return res.json({ vendor: result.rows[0] });
+    } catch (error) { return res.status(500).json({ error: error.message || "Unable to update profile" }); }
+  });
+
+  router.patch("/services/:id", async (req, res) => {
+    const session = providerSession(req, res);
+    if (!session) return;
+    const title = clean(req.body.title, 180);
+    const description = clean(req.body.description, 1000);
+    const priceValue = Number(req.body.price);
+    const price = Number.isFinite(priceValue) && priceValue > 0 ? priceValue : null;
+    const availability = req.body.availability !== false;
+    if (!title) return res.status(400).json({ error: "Service title is required" });
+    try {
+      const result = await query(`UPDATE services s SET title=$1,description=$2,price=$3,price_min=$3,pricing_type=$4,availability_status=$5,updated_at=now() FROM vendors v WHERE s.vendor_id=v.id AND v.user_id=$6 AND s.id=$7 RETURNING s.*`, [title, description || null, price, price ? "starting" : "quote", availability, session.sub, req.params.id]);
+      if (!result.rowCount) return res.status(404).json({ error: "Service not found" });
+      return res.json({ service: serviceClient(result.rows[0]) });
+    } catch (error) { return res.status(500).json({ error: error.message || "Unable to update service" }); }
   });
 
   router.post("/publish", async (req, res) => {

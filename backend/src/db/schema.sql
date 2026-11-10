@@ -10,14 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS users_mobile_idx ON users(mobile);
 
--- One authenticated user per India calendar day, regardless of login frequency.
-CREATE TABLE IF NOT EXISTS user_daily_activity (
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  activity_date date NOT NULL DEFAULT ((now() AT TIME ZONE 'Asia/Kolkata')::date),
-  PRIMARY KEY (activity_date, user_id)
-);
-CREATE INDEX IF NOT EXISTS users_created_at_idx ON users(created_at);
-
 CREATE TABLE IF NOT EXISTS vendors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   business_name text NOT NULL, description text, phone text NOT NULL, location text,
@@ -38,7 +30,6 @@ CREATE TABLE IF NOT EXISTS services (
   created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE services ADD COLUMN IF NOT EXISTS verified boolean NOT NULL DEFAULT false;
-ALTER TABLE services ADD COLUMN IF NOT EXISTS food_preference text CHECK (food_preference IN ('pure-veg','veg-non-veg','non-veg'));
 ALTER TABLE services ADD COLUMN IF NOT EXISTS pricing_type text NOT NULL DEFAULT 'quote';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS price_unit text NOT NULL DEFAULT 'per event';
 ALTER TABLE services ADD COLUMN IF NOT EXISTS packages jsonb NOT NULL DEFAULT '[]'::jsonb;
@@ -51,6 +42,7 @@ ALTER TABLE services ADD COLUMN IF NOT EXISTS rating numeric(3,2);
 ALTER TABLE services ADD COLUMN IF NOT EXISTS review_count integer NOT NULL DEFAULT 0;
 ALTER TABLE services ADD COLUMN IF NOT EXISTS response_time text;
 ALTER TABLE services ADD COLUMN IF NOT EXISTS video_urls text[] NOT NULL DEFAULT '{}';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS food_preference text CHECK(food_preference IN ('pure-veg','veg-non-veg','non-veg'));
 CREATE INDEX IF NOT EXISTS services_category_idx ON services(category_id);
 CREATE INDEX IF NOT EXISTS services_location_idx ON services(location);
 
@@ -144,35 +136,8 @@ ALTER TABLE reels ALTER COLUMN vendor_id DROP NOT NULL;
 ALTER TABLE reels ADD COLUMN IF NOT EXISTS owner_id uuid REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE reels ADD COLUMN IF NOT EXISTS service_name text;
 ALTER TABLE reels ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'reel';
-ALTER TABLE reels ADD COLUMN IF NOT EXISTS visibility text NOT NULL DEFAULT 'public';
 CREATE INDEX IF NOT EXISTS reels_public_feed_idx ON reels(published,created_at DESC);
 CREATE INDEX IF NOT EXISTS reels_owner_idx ON reels(owner_id);
-CREATE TABLE IF NOT EXISTS social_follows (
-  follower_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  following_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY(follower_id,following_id), CHECK(follower_id <> following_id)
-);
-CREATE INDEX IF NOT EXISTS social_follows_following_idx ON social_follows(following_id);
-CREATE TABLE IF NOT EXISTS social_reactions (
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  reel_id uuid NOT NULL REFERENCES reels(id) ON DELETE CASCADE,
-  reaction text NOT NULL CHECK(reaction IN ('like','save')),
-  created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(user_id,reel_id,reaction)
-);
-CREATE INDEX IF NOT EXISTS social_reactions_reel_idx ON social_reactions(reel_id,reaction);
-CREATE TABLE IF NOT EXISTS social_comments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), reel_id uuid NOT NULL REFERENCES reels(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, body text NOT NULL CHECK(char_length(body) BETWEEN 1 AND 500),
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS social_comments_reel_idx ON social_comments(reel_id,created_at DESC);
-CREATE TABLE IF NOT EXISTS booking_reviews (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), booking_id text NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE SET NULL,
-  rating integer NOT NULL CHECK(rating BETWEEN 1 AND 5), body text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS booking_reviews_service_idx ON booking_reviews(service_id,created_at DESC);
 CREATE TABLE IF NOT EXISTS saved_services (
   user_id uuid REFERENCES users(id) ON DELETE CASCADE, service_id text REFERENCES services(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now(), PRIMARY KEY(user_id,service_id)
@@ -195,11 +160,3 @@ CREATE TABLE IF NOT EXISTS signups (id uuid PRIMARY KEY DEFAULT gen_random_uuid(
 
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
 DO $$ DECLARE t text; BEGIN FOREACH t IN ARRAY ARRAY['users','vendors','categories','services','halls','event_packages','bookings','invitations','referral_wallets','planner_events','inquiries','admin_pins'] LOOP EXECUTE format('DROP TRIGGER IF EXISTS %I_updated_at ON %I',t,t); EXECUTE format('CREATE TRIGGER %I_updated_at BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION set_updated_at()',t,t); END LOOP; END $$;
-
-CREATE TABLE IF NOT EXISTS push_devices (
-  token text PRIMARY KEY,
-  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  platform text NOT NULL CHECK (platform = 'android'),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS push_devices_user_idx ON push_devices(user_id);
