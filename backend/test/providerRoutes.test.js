@@ -4,10 +4,11 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const path = require("node:path");
 
-function setup({ session = { sub: "vendor-user", role: "service_provider" }, current, missing = false } = {}) {
+function setup({ session = { sub: "vendor-user", role: "service_provider" }, current, missing = false, database } = {}) {
   const handlers = {}, calls = [], rewards = [];
   const query = async (sql, values) => {
     calls.push({ sql, values });
+    if (database) return database(sql, values);
     if (sql.includes("FOR UPDATE OF b")) return { rows: current ? [current] : [] };
     if (sql.startsWith("UPDATE bookings")) return { rows: [{ ...current, status: values[1] }] };
     if (sql.startsWith("UPDATE services")) return { rowCount: missing ? 0 : 1, rows: [{ id: "service-1", verified: false }] };
@@ -32,7 +33,7 @@ function setup({ session = { sub: "vendor-user", role: "service_provider" }, cur
   return {
     calls, rewards,
     async invoke(route, body = {}) {
-      const res = { code: 200, status(code) { this.code = code; return this; }, json(value) { this.body = value; return this; } };
+      const res = { code: 200, set() { return this; }, status(code) { this.code = code; return this; }, json(value) { this.body = value; return this; } };
       await handlers[route]({ params: { id: "item-1" }, body }, res);
       return res;
     },
@@ -47,6 +48,34 @@ test("vendor endpoints reject missing and customer sessions before database acce
       assert.equal(app.calls.length, 0);
     }
   }
+});
+
+test("published service belongs to the signed-in vendor and appears in their dashboard", async () => {
+  let saved;
+  const app = setup({ database: async (sql, values) => {
+    if (sql.includes("SELECT id,role FROM users")) return { rows: [{ id: "vendor-user", role: "service_provider" }] };
+    if (sql.includes("INSERT INTO vendors") || sql.includes("SELECT * FROM vendors")) {
+      assert.equal(values[0], "vendor-user");
+      return { rows: [{ id: "vendor-1", user_id: "vendor-user" }] };
+    }
+    if (sql.includes("INSERT INTO services")) {
+      assert.equal(values[1], "vendor-1");
+      saved = { id: values[0], vendor_id: values[1], title: values[3], availability_status: true, verified: false };
+      return { rows: [saved] };
+    }
+    if (sql.includes("SELECT * FROM services")) {
+      assert.equal(values[0], "vendor-1");
+      return { rows: [saved] };
+    }
+    throw new Error(`Unexpected SQL: ${sql}`);
+  } });
+  const published = await app.invoke("post /publish", { vendorName: "Studio", phone: "9876543210", serviceName: "Photography", location: "Chennai", imageUrls: ["https://example.com/photo.jpg"], verified: true, vendor_id: "another-vendor" });
+  assert.equal(published.code, 201);
+  assert.equal(published.body.service.verified, false);
+  const dashboard = await app.invoke("get /dashboard");
+  assert.equal(dashboard.body.services.length, 1);
+  assert.equal(dashboard.body.services[0].id, published.body.service.id);
+  assert.equal(dashboard.body.services[0].listingStatus, "published");
 });
 
 test("booking listing is restricted to the signed-in vendor", async () => {

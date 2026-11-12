@@ -25,19 +25,6 @@ export default function VendorOnboardingPage() {
     if (!form.location.trim()) return toast.error("Please enter your service location.");
     if (images.length < 1 || images.length > 5) return toast.error("Upload between 1 and 5 service images.");
 
-    const message = [
-      "*New VizhaOne Vendor Registration*", "",
-      `Name: ${form.vendorName.trim()}`,
-      `Business name: ${form.businessName.trim() || "Not provided"}`,
-      `Phone: +91 ${form.phone}`,
-      `Service: ${form.serviceName.trim()}`,
-      `Category: ${form.category || "Not selected"}`,
-      `Starting price: ${form.price ? `Rs ${form.price}` : "Contact for quote"}`,
-      `Location: ${form.location.trim()}`,
-      `About service: ${form.description.trim() || "Not provided"}`, "",
-      "Please help me add my service to VizhaOne.",
-    ].join("\n");
-
     setBusy(true);
     try {
       let authToken = localStorage.getItem("vizha_mobile_token") || "";
@@ -76,7 +63,6 @@ export default function VendorOnboardingPage() {
       if (!response.ok) throw new Error(published?.error || "Unable to publish your service.");
       setSubmitted(true);
       toast.success("Your profile and service are now published on VizhaOne.");
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`${message}\n\nService ID: ${published.service.id}`)}`, "_blank", "noopener,noreferrer");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to publish your service.");
     } finally {
@@ -102,7 +88,7 @@ export default function VendorOnboardingPage() {
             <p className="text-xs font-black uppercase tracking-[0.2em] text-rose-100">Vendor registration</p>
             <h1 className="mt-2 font-display text-3xl font-bold sm:text-4xl">Add your service</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-rose-50 sm:text-base">
-              Share your basic details and our team will contact you on WhatsApp to help complete your listing.
+              Publish your service and manage it from your vendor dashboard.
             </p>
           </div>
 
@@ -131,7 +117,7 @@ export default function VendorOnboardingPage() {
                 <label className="sm:col-span-2 block text-sm font-black text-gray-700"><span className="flex items-center gap-2"><ImagePlus className="h-4 w-4 text-rose-500" />Service images * (minimum 1, maximum 5)</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => { const selected=Array.from(e.target.files||[]); if(selected.length>5){toast.error("Maximum 5 images allowed");e.target.value="";return} if(selected.some(file=>file.size>5*1024*1024)){toast.error("Each image must be 5 MB or smaller");e.target.value="";return} setImages(selected); }} className="mt-2 block w-full rounded-2xl border border-dashed border-rose-200 bg-rose-50/40 px-4 py-5 text-sm font-medium file:mr-3 file:rounded-xl file:border-0 file:bg-rose-600 file:px-4 file:py-2 file:font-bold file:text-white" /><span className="mt-2 block text-xs font-medium text-gray-400">{images.length ? `${images.length} image${images.length===1?"":"s"} selected` : "JPG, PNG or WebP · up to 5 MB each"}</span></label>
                 <label className="sm:col-span-2 block text-sm font-black text-gray-700"><span className="flex items-center gap-2"><Video className="h-4 w-4 text-rose-500" />Service video (optional)</span><input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(e) => { const selected=e.target.files?.[0]||null; if(selected&&selected.size>25*1024*1024){toast.error("Video must be 25 MB or smaller");e.target.value="";setVideo(null);return} setVideo(selected); }} className="mt-2 block w-full rounded-2xl border border-gray-200 px-4 py-4 text-sm font-medium file:mr-3 file:rounded-xl file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:font-bold file:text-white" /><span className="mt-2 block text-xs font-medium text-gray-400">{video ? video.name : "MP4, WebM or MOV · up to 25 MB"}</span></label>
                 <label className="sm:col-span-2 text-sm font-black text-gray-700">About your service (optional)<textarea value={form.description} onChange={(e) => update("description", e.target.value)} rows={3} maxLength={500} placeholder="Your experience or service details" className="mt-2 w-full resize-none rounded-2xl border border-gray-200 px-4 py-4 font-medium outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100" /></label>
-                <button type="submit" disabled={busy} className="sm:col-span-2 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#16a34a] to-[#25D366] px-6 py-4 text-base font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60"><MessageCircle className="h-6 w-6" />{busy ? "Publishing service..." : "Publish Service & Notify on WhatsApp"}</button>
+                <button type="submit" disabled={busy} className="sm:col-span-2 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#16a34a] to-[#25D366] px-6 py-4 text-base font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60"><MessageCircle className="h-6 w-6" />{busy ? "Publishing service..." : "Publish Service"}</button>
                 <p className="sm:col-span-2 text-center text-xs leading-relaxed text-gray-400">Required: name, phone, service and location only. Need help? Call +91 81900 94755.</p>
               </form>
             )}

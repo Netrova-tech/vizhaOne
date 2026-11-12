@@ -54,6 +54,14 @@ function createApp({ store }) {
   }));
   app.use(express.json({ limit: "2mb" }));
   app.use(express.urlencoded({ extended: true }));
+  // Release files are produced by mobileapp's web:release command. Missing
+  // manifests mean there is no web update for that native build.
+  app.use("/api/web-updates", express.static(require("node:path").join(__dirname, "web-updates"), {
+    index: false,
+    setHeaders(res, file) {
+      res.set("Cache-Control", file.endsWith(".json") ? "no-store" : "public, max-age=31536000, immutable");
+    },
+  }));
 
   app.get("/api/health", healthController);
   app.get("/api/app-config", (_req, res) => {

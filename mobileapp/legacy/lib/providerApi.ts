@@ -5,6 +5,7 @@ export async function providerRequest(path: string, body?: unknown) {
   const hasBody = body !== undefined;
   const response = await fetch(apiUrl(`/api/provider${path}`), {
     method: hasBody ? "PATCH" : "GET",
+    cache: "no-store",
     headers: {
       Authorization: `Bearer ${token()}`,
       Accept: "application/json",

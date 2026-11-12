@@ -33,6 +33,7 @@ function createProviderRouter() {
   const router = express.Router();
 
   router.get("/dashboard", async (req, res) => {
+    res.set("Cache-Control", "no-store");
     const session = providerSession(req, res);
     if (!session) return;
     try {

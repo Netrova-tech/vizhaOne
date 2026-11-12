@@ -43,6 +43,7 @@ type PincodeLookupResponse = Array<{
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(apiUrl(url), {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...init?.headers,

@@ -44,6 +44,7 @@ type PincodeLookupResponse = Array<{
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(apiUrl(url), {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...init?.headers,
@@ -486,6 +487,18 @@ export default function AdminPage() {
       toast.error(error instanceof Error ? error.message : "Cloudinary upload or save failed");
     }
     setSaving(false);
+  }
+
+  async function toggleServiceVerification(service: Service) {
+    try {
+      const updated = await apiJson<Service>(`/api/catalog/services/${service.id}`, {
+        method: "PUT", body: JSON.stringify({ verified: !service.verified }),
+      });
+      setServices(prev => prev.map(item => item.id === service.id ? { ...item, ...updated } : item));
+      toast.success(updated.verified ? "VizhaOne Verified badge enabled" : "Verified badge removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Verification update failed");
+    }
   }
 
   async function handleDeleteService(id: string, title: string) {
@@ -1097,6 +1110,7 @@ export default function AdminPage() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">{service.title}</h3>
+                    <button type="button" aria-pressed={Boolean(service.verified)} onClick={() => void toggleServiceVerification(service)} className="mb-3 rounded-xl border px-3 py-2 text-xs font-bold text-emerald-700">{service.verified ? "VizhaOne Verified (Remove badge)" : "Assign VizhaOne Verified badge"}</button>
                     <p className="text-xs text-gray-500 line-clamp-1 mb-2">{service.vendor_name} • {service.location}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-base font-bold text-[#be123c]">Price on request</span>

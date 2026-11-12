@@ -7,6 +7,25 @@ const {
   getLinkedServices,
   saveLinkedServices,
 } = require("../services/catalogService");
+const { getAdminUserFromRequest, mobileSession } = require("../services/authService");
+const { query } = require("../db/pool");
+
+async function authorizeServiceVerification(req, res, table) {
+  if (table !== "services" || !Object.prototype.hasOwnProperty.call(req.body || {}, "verified")) return true;
+  const session = mobileSession(req);
+  const admin = session?.role === "admin"
+    ? (await query("SELECT role FROM users WHERE id=$1", [session.sub])).rows[0]
+    : await getAdminUserFromRequest(req);
+  if (admin?.role !== "admin") {
+    res.status(403).json({ error: "Only VizhaOne admins can assign verified badges" });
+    return false;
+  }
+  if (typeof req.body.verified !== "boolean") {
+    res.status(400).json({ error: "Verified must be a boolean" });
+    return false;
+  }
+  return true;
+}
 
 async function listCategoriesController(_req, res, store) {
   return res.json(await listCatalogItems(store, "categories"));
@@ -54,6 +73,7 @@ function createCrudControllers(table) {
   return {
     create: async (req, res, store) => {
       try {
+        if (!await authorizeServiceVerification(req, res, table)) return;
         const item = await createCatalogItem(store, table, req.body || {});
         return res.status(201).json(item);
       } catch (err) {
@@ -62,6 +82,7 @@ function createCrudControllers(table) {
     },
     update: async (req, res, store) => {
       try {
+        if (!await authorizeServiceVerification(req, res, table)) return;
         const item = await updateCatalogItem(store, table, req.params.id, req.body || {});
         if (!item) return res.status(404).json({ error: "Not found" });
         return res.json(item);
