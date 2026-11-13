@@ -1,4 +1,29 @@
 steps:
+  - id: Build Android application frontend
+    name: node:22-bookworm-slim
+    dir: mobileapp
+    entrypoint: bash
+    env:
+      - NEXT_PUBLIC_API_URL=${_APP_API_URL}
+      - NEXT_PUBLIC_WEB_UPDATE_URL=${_APP_API_URL}/api/web-updates
+      - NEXT_TELEMETRY_DISABLED=1
+    args:
+      - -ceu
+      - |
+        npm ci --include=dev
+        npm run build
+
+  - id: Sign and package Android UI update
+    name: node:22-bookworm-slim
+    dir: mobileapp
+    entrypoint: node
+    secretEnv: [WEB_UPDATE_SIGNING_KEY]
+    env:
+      - WEB_UPDATE_OUTPUT_DIR=/workspace/backend/src/web-updates
+    args:
+      - scripts/web-release.cjs
+      - ${_APP_API_URL}/api/web-updates/
+
   - id: Build backend image
     name: gcr.io/cloud-builders/docker
     args:
@@ -36,6 +61,13 @@ substitutions:
   _REGION: asia-south1
   _AR_REPOSITORY: cloud-run-source-deploy
   _SERVICE_NAME: vizhaone-backend
+  _APP_API_URL: https://vizhaone-backend-450892873561.asia-south1.run.app
+  _WEB_UPDATE_KEY_SECRET: vizhaone-web-update-signing-key
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/${_WEB_UPDATE_KEY_SECRET}/versions/latest
+      env: WEB_UPDATE_SIGNING_KEY
 
 options:
   logging: CLOUD_LOGGING_ONLY

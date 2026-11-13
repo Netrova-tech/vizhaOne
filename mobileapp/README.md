@@ -14,6 +14,35 @@ The initial key pair has been created locally. Commit `web-update-public.pem` wi
 
 ### Publish a UI/JavaScript release
 
+The root `cloudbuild.yaml` now builds `mobileapp/`, signs an update for the
+`versionCode` in `android/app/build.gradle`, and places the manifest and ZIP in
+`backend/src/web-updates/<versionCode>/` before building the existing backend
+image. It deploys both API changes and Android UI updates to the same Cloud Run
+service. No separate frontend service is needed.
+
+One-time GCP setup: store the **existing** `.web-update-keys/private.pem` in Secret
+Manager as `vizhaone-web-update-signing-key`, and grant the Cloud Build execution
+service account `roles/secretmanager.secretAccessor` on that secret only. The
+pipeline injects it into the signing step; the private key is never written to
+the backend image or update ZIP. The signing script verifies it against
+`web-update-public.pem` and stops if they do not match. Do not generate new keys.
+
+The trigger must use the root `cloudbuild.yaml` and include mobile app changes.
+This project's existing trigger tracks `supabase-migration`. Push the prepared
+changes to that branch to start the combined build. `_APP_API_URL` in the build
+substitutions controls both the API URL compiled into the update and update ZIP
+URLs. Its default is the existing production backend.
+
+Installed apps with the matching native build download the update on launch or
+foreground checks and apply it on their next cold launch. This does not install
+APKs or update native configuration. Keep the native version and dependencies
+unchanged for UI-only releases; increment the native build and distribute a new
+APK when native code, plugins, configuration, or permissions change. This image
+contains the current native build's release; preserve older version directories
+separately if you need to continue serving updates to earlier native builds.
+
+For a manual release instead of the automated pipeline:
+
 1. Keep native dependencies and configuration identical to the Android version receiving the update. Test the UI changes, then run from `mobileapp`:
    ```powershell
    npm run web:release -- https://vizhaone-backend-450892873561.asia-south1.run.app/api/web-updates/

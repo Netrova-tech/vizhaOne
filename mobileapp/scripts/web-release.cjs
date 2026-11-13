@@ -35,13 +35,15 @@ if (process.argv[2] === "init") {
   const zip = Buffer.from(zipSync(files, { level: 6 }));
   const hash = crypto.createHash("sha256").update(zip).digest();
   const bundleId = `android-${version}-${hash.toString("hex").slice(0, 24)}`;
-  const privateKey = fs.readFileSync(process.env.WEB_UPDATE_PRIVATE_KEY || keyPath);
+  // Cloud Build injects this from Secret Manager only into the signing step.
+  const privateKey = process.env.WEB_UPDATE_SIGNING_KEY || fs.readFileSync(process.env.WEB_UPDATE_PRIVATE_KEY || keyPath);
   const signature = crypto.sign("sha256", zip, privateKey).toString("base64");
   if (!crypto.verify("sha256", zip, fs.readFileSync(publicPath), Buffer.from(signature, "base64"))) throw new Error("Private key does not match this app's public key");
-  const output = path.join(root, "web-releases", version);
+  const outputRoot = process.env.WEB_UPDATE_OUTPUT_DIR || path.join(root, "web-releases");
+  const output = path.join(outputRoot, version);
   fs.mkdirSync(output, { recursive: true });
   fs.writeFileSync(path.join(output, `${bundleId}.zip`), zip);
   const manifest = { nativeBuild: version, bundleId, url: new URL(`${version}/${bundleId}.zip`, base.href.replace(/\/?$/, "/")).href, checksum: hash.toString("base64"), signature };
   fs.writeFileSync(path.join(output, "latest.json"), JSON.stringify(manifest, null, 2) + "\n");
-  console.log(`Signed release written to web-releases/${version}. Upload the ZIP first, then latest.json.`);
+  console.log(`Signed release for Android build ${version} written to ${output}.`);
 }

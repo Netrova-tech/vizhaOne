@@ -15,3 +15,5 @@ backend/.env.*
 *.png
 *.xml
 .tmp-*
+**/.web-update-keys
+**/private.pem

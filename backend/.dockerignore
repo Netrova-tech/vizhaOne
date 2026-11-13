@@ -11,3 +11,5 @@ backups
 coverage
 dist
 build
+**/.web-update-keys
+**/private.pem
