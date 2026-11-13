@@ -10,12 +10,16 @@ const {
 const { getAdminUserFromRequest, mobileSession } = require("../services/authService");
 const { query } = require("../db/pool");
 
-async function authorizeServiceVerification(req, res, table) {
-  if (table !== "services" || !Object.prototype.hasOwnProperty.call(req.body || {}, "verified")) return true;
+async function requestAdmin(req) {
   const session = mobileSession(req);
-  const admin = session?.role === "admin"
+  return session?.role === "admin"
     ? (await query("SELECT role FROM users WHERE id=$1", [session.sub])).rows[0]
     : await getAdminUserFromRequest(req);
+}
+
+async function authorizeServiceVerification(req, res, table) {
+  if (table !== "services" || !Object.prototype.hasOwnProperty.call(req.body || {}, "verified")) return true;
+  const admin = await requestAdmin(req);
   if (admin?.role !== "admin") {
     res.status(403).json({ error: "Only VizhaOne admins can assign verified badges" });
     return false;
@@ -92,6 +96,9 @@ function createCrudControllers(table) {
     },
     remove: async (req, res, store) => {
       try {
+        if (table === "services" && (await requestAdmin(req))?.role !== "admin") {
+          return res.status(403).json({ error: "Use your vendor dashboard to delete your own services" });
+        }
         const deleted = await deleteCatalogItem(store, table, req.params.id);
         if (!deleted) return res.status(404).json({ error: "Not found" });
         return res.status(204).send();

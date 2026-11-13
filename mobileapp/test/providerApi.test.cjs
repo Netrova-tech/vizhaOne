@@ -54,3 +54,11 @@ test("service edits send a serialized JSON body", async () => {
   assert.equal(s.calls[0][1].headers["Content-Type"], "application/json");
   assert.equal(s.calls[0][1].body, '{"title":"Photography"}');
 });
+
+test("service deletion sends an authenticated DELETE without a body", async () => {
+  const s = setup(response({ success: true, id: "service-1" }));
+  await s.request("/services/service-1", undefined, "DELETE");
+  assert.equal(s.calls[0][1].method, "DELETE");
+  assert.equal(s.calls[0][1].headers.Authorization, "Bearer session-token");
+  assert.equal(s.calls[0][1].body, undefined);
+});

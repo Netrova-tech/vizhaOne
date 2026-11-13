@@ -504,7 +504,7 @@ export default function AdminPage() {
   async function handleDeleteService(id: string, title: string) {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
     try {
-      await fetch(apiUrl(`/api/catalog/services/${id}`), { method: "DELETE" }).then((response) => {
+      await fetch(apiUrl(`/api/catalog/services/${id}`), { method: "DELETE", credentials: "include" }).then((response) => {
         if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       });
       setServices((prev) => prev.filter((s) => s.id !== id));

@@ -50,3 +50,11 @@ test("revoked admin roles and invalid badge values cannot update verification", 
   assert.equal((await app.invoke("update", { verified: "false" })).code, 400);
   assert.equal(app.writes.length, 0);
 });
+
+test("vendors cannot bypass ownership checks through the admin catalog delete endpoint", async () => {
+  for (const session of [null, { sub: "vendor-1", role: "service_provider" }]) {
+    const app = setup({ session });
+    assert.equal((await app.invoke("remove", {})).code, 403);
+    assert.equal(app.writes.length, 0);
+  }
+});

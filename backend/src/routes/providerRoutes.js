@@ -67,6 +67,24 @@ function createProviderRouter() {
     } catch (error) { return res.status(500).json({ error: error.message }); }
   });
 
+  router.delete("/services/:id", async (req, res) => {
+    const session = providerSession(req, res);
+    if (!session) return;
+    try {
+      await transaction(async (client) => {
+        const owned = await client.query(`SELECT s.id FROM services s JOIN vendors v ON v.id=s.vendor_id
+          WHERE s.id=$1 AND v.user_id=$2 FOR UPDATE OF s`, [req.params.id, session.sub]);
+        if (!owned.rows.length) throw Object.assign(new Error("Service not found"), { status: 404 });
+        const bookings = await client.query("SELECT id FROM bookings WHERE service_id=$1 LIMIT 1", [req.params.id]);
+        if (bookings.rows.length) throw Object.assign(new Error("This service has bookings and cannot be deleted. Mark it unavailable instead to preserve booking history."), { status: 409 });
+        await client.query("DELETE FROM services WHERE id=$1", [req.params.id]);
+      });
+      return res.json({ success: true, id: req.params.id });
+    } catch (error) {
+      return res.status(error.status || 500).json({ error: error.message || "Unable to delete service" });
+    }
+  });
+
   router.get("/bookings", async (req, res) => {
     const session = providerSession(req, res);
     if (!session) return;

@@ -1,10 +1,10 @@
 import { apiUrl } from "@/lib/utils";
 import { token } from "@/lib/mobileAuth";
 
-export async function providerRequest(path: string, body?: unknown) {
+export async function providerRequest(path: string, body?: unknown, method?: "DELETE") {
   const hasBody = body !== undefined;
   const response = await fetch(apiUrl(`/api/provider${path}`), {
-    method: hasBody ? "PATCH" : "GET",
+    method: method || (hasBody ? "PATCH" : "GET"),
     cache: "no-store",
     headers: {
       Authorization: `Bearer ${token()}`,

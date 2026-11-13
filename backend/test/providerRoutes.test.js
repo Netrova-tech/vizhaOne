@@ -15,7 +15,7 @@ function setup({ session = { sub: "vendor-user", role: "service_provider" }, cur
     return { rows: [], rowCount: 0 };
   };
   const router = {};
-  for (const method of ["get", "post", "patch"]) router[method] = (url, handler) => { handlers[`${method} ${url}`] = handler; };
+  for (const method of ["get", "post", "patch", "delete"]) router[method] = (url, handler) => { handlers[`${method} ${url}`] = handler; };
   const module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../src/routes/providerRoutes.js"), "utf8"), {
     module,
@@ -42,7 +42,7 @@ function setup({ session = { sub: "vendor-user", role: "service_provider" }, cur
 
 test("vendor endpoints reject missing and customer sessions before database access", async () => {
   for (const [session, code] of [[null, 401], [{ sub: "customer", role: "customer" }, 403]]) {
-    for (const route of ["get /dashboard", "get /bookings", "patch /services/:id", "patch /bookings/:id"]) {
+    for (const route of ["get /dashboard", "get /bookings", "patch /services/:id", "patch /bookings/:id", "delete /services/:id"]) {
       const app = setup({ session });
       assert.equal((await app.invoke(route)).code, code);
       assert.equal(app.calls.length, 0);
@@ -118,6 +118,35 @@ test("declining requires a reason; valid cancellation stores it", async () => {
 });
 
 const service = { title: "Photography", location: "Chennai", vendor_mobile: "9876543210", vendor_name: "Studio", price: 5000, availability_status: true };
+test("vendors can delete their own service without bookings", async () => {
+  const app = setup({ database: async (sql, values) => {
+    if (sql.includes("FOR UPDATE OF s")) {
+      assert.match(sql, /v.user_id=\$2/);
+      assert.deepEqual(Array.from(values), ["item-1", "vendor-user"]);
+      return { rows: [{ id: "item-1" }] };
+    }
+    return { rows: [] };
+  } });
+  const result = await app.invoke("delete /services/:id");
+  assert.equal(result.code, 200);
+  assert.equal(result.body.success, true);
+  assert.equal(app.calls.at(-1).sql, "DELETE FROM services WHERE id=$1");
+});
+
+test("missing or other vendors' services cannot be deleted", async () => {
+  const app = setup();
+  assert.equal((await app.invoke("delete /services/:id")).code, 404);
+  assert.equal(app.calls.length, 1);
+});
+
+test("services with bookings cannot be deleted", async () => {
+  const app = setup({ database: async sql => ({ rows: sql.includes("FOR UPDATE OF s") ? [{ id: "item-1" }] : [{ id: "booking-1" }] }) });
+  const result = await app.invoke("delete /services/:id");
+  assert.equal(result.code, 409);
+  assert.match(result.body.error, /Mark it unavailable/);
+  assert.ok(app.calls.every(call => !call.sql.startsWith("DELETE")));
+});
+
 test("service editing validates price and availability before writing", async () => {
   for (const edit of [{ price: -1 }, { price: "invalid" }, { availability_status: "true" }]) {
     const app = setup();
