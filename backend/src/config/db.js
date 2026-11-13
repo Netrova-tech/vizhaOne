@@ -1,7 +1,9 @@
 const { getPool } = require("../db/pool");
+const { ensureUserActivitySchema } = require("../services/userActivityService");
 
 async function connectDatabase() {
   await getPool().query("SELECT 1");
+  await ensureUserActivitySchema();
   await getPool().query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS rejection_reason text");
   await getPool().query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES users(id) ON DELETE SET NULL");
   await getPool().query("CREATE INDEX IF NOT EXISTS bookings_user_idx ON bookings(user_id)");

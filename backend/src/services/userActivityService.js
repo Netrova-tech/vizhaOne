@@ -1,13 +1,37 @@
 const { query } = require("../db/pool");
 
+let schemaReady;
+function ensureUserActivitySchema() {
+  if (!schemaReady) {
+    schemaReady = query(`CREATE TABLE IF NOT EXISTS user_daily_activity (
+      user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      activity_date date NOT NULL DEFAULT ((now() AT TIME ZONE 'Asia/Kolkata')::date),
+      PRIMARY KEY (activity_date, user_id)
+    )`).catch(error => { schemaReady = null; throw error; });
+  }
+  return schemaReady;
+}
+
 async function recordUserActivity(user) {
   if (!user || user.role === "admin") return;
-  await query(`INSERT INTO user_daily_activity(user_id, activity_date)
+  const record = () => query(`INSERT INTO user_daily_activity(user_id, activity_date)
     VALUES ($1, (now() AT TIME ZONE 'Asia/Kolkata')::date)
     ON CONFLICT DO NOTHING`, [user.id]);
+  try {
+    try { await record(); }
+    catch (error) {
+      if (error.code !== "42P01") throw error;
+      await ensureUserActivitySchema();
+      await record();
+    }
+  } catch (error) {
+    // Analytics must not prevent authenticated users from signing in.
+    console.warn("Unable to record user activity", { code: error.code || "UNKNOWN" });
+  }
 }
 
 async function getUserActivity() {
+  await ensureUserActivitySchema();
   const result = await query(`WITH days AS (
     SELECT ((now() AT TIME ZONE 'Asia/Kolkata')::date - n)::date AS date
     FROM generate_series(0, 29) n
@@ -29,4 +53,4 @@ async function getUserActivity() {
   return { timezone: "Asia/Kolkata", totalUsers: total.rows[0].count, today: result.rows[0], daily: result.rows };
 }
 
-module.exports = { recordUserActivity, getUserActivity };
+module.exports = { recordUserActivity, getUserActivity, ensureUserActivitySchema };
